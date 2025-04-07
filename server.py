@@ -1,7 +1,9 @@
 import os
+import random
 from http.server import HTTPServer
 from database import create_database
-from utils.__http_handler import CustomHandler  # ← import from the new file
+from utils.http_handler import CustomHandler  # ← import from the new file
+from utils.config import USE_KAREN_LOGO
 
 def run_server():
     os.chdir(os.getcwd())  # Optional: ensure project root
