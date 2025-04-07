@@ -3,7 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mega Manager</title>
+    <link rel="icon" type="image/png" href="resources/img/logo.png" />
+    <title>Mega Manager - Testing</title>
 
     <!-- Font Awesome -->
     <link
@@ -41,7 +42,7 @@
         </button>
 
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
-          <a class="navbar-brand mt-2 mt-lg-0" href="#">
+          <a class="navbar-brand mt-2 mt-lg-0" href="/">
             <img
               src="resources/img/logo.png"
               height="60"
@@ -49,19 +50,8 @@
               loading="lazy"
             />
           </a>
-          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-            <li class="nav-item">
-              <a class="nav-link" href="#">Files</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="#">Accounts</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="#">Settings</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="testing">Testing</a>
-            </li>
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0" id="navbarLinks">
+            <!-- dynamically loaded from /web/navbar/links.html -->
           </ul>
         </div>
       </div>
@@ -103,6 +93,7 @@
 
     <!-- MDB scripts -->
     <script src="https://cdn.jsdelivr.net/npm/mdb-ui-kit@9.0.0/js/mdb.umd.min.js"></script>
+    <script src="scripts/include.js"></script>
     <script>
       // Function to send a command to the backend
       function sendCommand(cmd) {
