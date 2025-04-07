@@ -1,0 +1,32 @@
+/* Custom CSS for MDBootstrap */
+/* This file is used to override the default MDBootstrap styles */
+/* You can add your custom styles here */
+
+/* Example: Change the primary color */
+/* You can also use CSS variables to customize the theme */
+:root {
+  --mdb-primary: #dd1405;
+  --mdb-secondary: #6c757d;
+  --mdb-success: #198754;
+  --mdb-danger: #dc3545;
+  --mdb-warning: #ffc107;
+  --mdb-info: #0dcaf0;
+  --mdb-light: #f8f9fa;
+  --mdb-dark: #212529;
+}
+
+/* Custom header/footer styles */
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex: 1;
+}

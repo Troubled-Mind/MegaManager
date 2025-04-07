@@ -1,0 +1,19 @@
+from http.server import HTTPServer, SimpleHTTPRequestHandler
+import os
+
+class CustomHandler(SimpleHTTPRequestHandler):
+    def translate_path(self, path):
+        # Force all paths to serve from ./web directory
+        path = super().translate_path(path)
+        relpath = os.path.relpath(path, os.getcwd())
+        return os.path.join(os.getcwd(), 'web', relpath)
+
+def run_server():
+    os.chdir(os.getcwd())  # Optional: make sure cwd is project root
+    server_address = ("localhost", 6342)
+    httpd = HTTPServer(server_address, CustomHandler)
+    print("Server running at http://localhost:6342/")
+    httpd.serve_forever()
+
+if __name__ == "__main__":
+    run_server()
