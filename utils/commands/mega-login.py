@@ -1,15 +1,9 @@
-
 import re
 import sqlite3
 import subprocess
 from datetime import datetime
 
 DB_PATH = "database.db"
-
-# all commands must have a run() function
-# all commands will be triggered by the post request using the file name
-# e.g. sendCommand: mega-login:1
-# this will call the run function in mega-login.py with 1 as argument
 
 def run(args=None):
     try:
@@ -37,6 +31,7 @@ def run(args=None):
 
     return {
         "status": 200,
+        "account_ids": account_ids,
         "message": "\n\n".join(results)
     }
 
@@ -54,12 +49,15 @@ def process_account(account_id):
     email, password = row
 
     try:
+        # Ensure clean session
         subprocess.run(["mega-logout"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=False)
 
+        # Log in
         result = subprocess.run(["mega-login", email, password], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
         login_output = result.stdout.strip()
         print(f"✅ Logged in: {email}")
 
+        # Get quota info
         print("🔍 Getting storage quota info...")
         quota_result = subprocess.run(["mega-df"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
         used_quota, total_quota = parse_mega_df(quota_result.stdout.strip())
@@ -72,13 +70,14 @@ def process_account(account_id):
         )
         conn.commit()
 
+        # Log out
         logout_result = subprocess.run(["mega-logout"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
         logout_output = logout_result.stdout.strip()
         print("👋 Logged out")
 
         return {
             "status": 200,
-            "message": f"{email} updated successfully.\nUsed: {used_quota} / {total_quota}"
+            "message": f"Login successful for account {email}"
         }
 
     except subprocess.CalledProcessError as e:
@@ -88,7 +87,6 @@ def process_account(account_id):
 
     finally:
         conn.close()
-
 
 def parse_mega_df(output):
     """
