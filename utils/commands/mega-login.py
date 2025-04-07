@@ -58,15 +58,30 @@ def process_account(account_id):
         print(f"✅ Logged in: {email}")
 
         # Get quota info
-        print("🔍 Getting storage quota info...")
         quota_result = subprocess.run(["mega-df"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
         used_quota, total_quota = parse_mega_df(quota_result.stdout.strip())
         print(f"💾 Used: {used_quota} / Total: {total_quota}")
 
+        whoami_result = subprocess.run(
+            ["mega-whoami", "-l"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            check=True
+        )
+        pro_level = parse_pro_level(whoami_result.stdout.strip())
+        is_pro = pro_level > 0
+        print(f"👤 Pro level: {pro_level} → {'✅ Pro' if is_pro else '❌ Free'}")
+        if is_pro:
+            pro_account = 1
+        else:
+            pro_account = 0
+
+
         now = datetime.utcnow().isoformat()
         cursor.execute(
-            "UPDATE mega_accounts SET used_quota = ?, total_quota = ?, storage_quota_updated = ?, last_login = ? WHERE id = ?",
-            (used_quota, total_quota, now, now, account_id)
+            "UPDATE mega_accounts SET is_pro_account = ?, used_quota = ?, total_quota = ?, storage_quota_updated = ?, last_login = ? WHERE id = ?",
+            (pro_account, used_quota, total_quota, now, now, account_id)
         )
         conn.commit()
 
@@ -101,3 +116,16 @@ def parse_mega_df(output):
                 total = match.group(2)
                 return used, total
     return "0", "0"
+
+def parse_pro_level(output):
+    """
+    Extracts the Pro level from the output of `mega-whoami -l`
+    Example line:
+    Pro level: 1
+    """
+    for line in output.splitlines():
+        if "Pro level:" in line:
+            match = re.search(r"Pro level:\s+(\d+)", line)
+            if match:
+                return int(match.group(1))
+    return 0
