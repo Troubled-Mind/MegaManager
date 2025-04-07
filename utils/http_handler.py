@@ -4,6 +4,7 @@ import importlib.util
 from http.server import SimpleHTTPRequestHandler
 from urllib.parse import parse_qs
 from database import create_database
+from utils.config import USE_KAREN_LOGO
 
 class CustomHandler(SimpleHTTPRequestHandler):
     def translate_path(self, path):
@@ -12,6 +13,11 @@ class CustomHandler(SimpleHTTPRequestHandler):
         relpath = os.path.relpath(path, os.getcwd())
         return os.path.join(os.getcwd(), 'web', relpath)
     
+    def do_GET(self):
+        if self.path == "/resources/img/logo.png" and USE_KAREN_LOGO:
+            self.path = "/resources/img/logo-karen.png"
+        return super().do_GET()
+
     def do_POST(self):
         if self.path == "/run-command":
             content_length = int(self.headers.get('Content-Length', 0))
