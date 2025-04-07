@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MDB Dark Home</title>
+    <title>Mega Manager</title>
 
     <!-- Font Awesome -->
     <link
@@ -18,7 +18,7 @@
     <!-- MDB stylesheets -->
     <link
       rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/6.4.0/mdb.min.css"
+      href="https://cdn.jsdelivr.net/npm/mdb-ui-kit@9.0.0/css/mdb.min.css"
     />
     <!-- Custom CSS styling -->
     <link rel="stylesheet" href="custom.css" />
@@ -26,37 +26,44 @@
 
   <body>
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <nav class="navbar navbar-expand bg-body-tertiary">
       <div class="container-fluid">
-        <a class="navbar-brand" href="index.html">Mega Manager</a>
         <button
+          data-mdb-collapse-init
           class="navbar-toggler"
           type="button"
-          data-mdb-toggle="collapse"
-          data-mdb-target="#navbarTabs"
+          data-mdb-target="#navbarSupportedContent"
+          aria-controls="navbarSupportedContent"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
         >
-          <span class="navbar-toggler-icon"></span>
+          <i class="fas fa-bars"></i>
         </button>
-        <div class="collapse navbar-collapse" id="navbarTabs">
-          <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <a class="navbar-brand mt-2 mt-lg-0" href="#">
+            <img
+              src="resources/img/logo.png"
+              height="60"
+              alt="Mega Manager Logo"
+              loading="lazy"
+            />
+          </a>
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
             <li class="nav-item">
-              <a class="nav-link active" aria-current="page" href="index.html"
-                >Home</a
-              >
+              <a class="nav-link" href="#">Files</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="accounts.html">Accounts</a>
+              <a class="nav-link" href="#">Accounts</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="files.html">Files</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="settings.html">Settings</a>
+              <a class="nav-link" href="#">Settings</a>
             </li>
           </ul>
         </div>
       </div>
     </nav>
+    <!-- Navbar -->
 
     <!-- Hero Section -->
     <header class="bg-dark text-white text-center py-5">
@@ -69,9 +76,51 @@
     </header>
 
     <!-- Content Section -->
-    <section class="container my-5"></section>
+    <section class="container my-5">
+      <div class="row">
+        <!--Grid column-->
+        <div class="col-lg-4 col-md-12 mb-4">
+          <div class="card mb-4">
+            <div class="card-body">
+              <h5 class="card-title">Files</h5>
+              <p class="card-text">
+                View files you have locally.
+              </p>
+              <button type="button" class="btn btn-danger" data-mdb-ripple-init>
+                Files
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4 col-md-12 mb-4">
+          <div class="card mb-4">
+            <div class="card-body">
+              <h5 class="card-title">Accounts</h5>
+              <p class="card-text">
+                View information about your Mega Accounts
+              </p>
+              <button type="button" class="btn btn-danger" data-mdb-ripple-init>
+                Accounts
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4 col-md-12 mb-4">
+          <div class="card mb-4">
+            <div class="card-body">
+              <h5 class="card-title">Settings</h5>
+              <p class="card-text">
+                Manage the settings of this app
+              </p>
+              <button type="button" class="btn btn-danger" data-mdb-ripple-init>
+                Settings
+              </button>
+            </div>
+          </div>
+        </div>
+    </section>
 
     <!-- MDB scripts -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/6.4.0/mdb.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mdb-ui-kit@9.0.0/js/mdb.umd.min.js"></script>
   </body>
 </html>
