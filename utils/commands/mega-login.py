@@ -16,24 +16,28 @@ def run(args=None):
         else:
             account_ids = [int(args)]
     except (TypeError, ValueError):
-        return {"status": 400, "message": "Invalid account ID"}
+        return {"status": 400, "message": "Invalid account ID"}, 400
     except Exception as e:
-        return {"status": 500, "message": f"Database error: {str(e)}"}
+        return {"status": 500, "message": f"Database error: {str(e)}"}, 500
     finally:
         conn.close()
 
+    overall_status = 200
     results = []
 
     for account_id in account_ids:
         print(f"\n🔁 Processing account ID {account_id}")
-        result = process_account(account_id)
+        result, status = process_account(account_id)
         results.append(f"Account {account_id}: {result['message']}")
+        
+        if status != 200:
+            overall_status = 500
 
     return {
-        "status": 200,
+        "status": overall_status,
         "account_ids": account_ids,
         "message": "\n\n".join(results)
-    }
+    }, overall_status
 
 def process_account(account_id):
     conn = sqlite3.connect(DB_PATH)
@@ -44,7 +48,7 @@ def process_account(account_id):
 
     if not row:
         conn.close()
-        return {"status": 404, "message": f"No account found with ID {account_id}"}
+        return {"status": 404, "message": f"No account found with ID {account_id}"}, 404
 
     email, password = row
 
@@ -93,12 +97,12 @@ def process_account(account_id):
         return {
             "status": 200,
             "message": f"Login successful for account {email}"
-        }
+        }, 200
 
     except subprocess.CalledProcessError as e:
         error_output = e.stderr.strip()
-        print(f"❌ Error for {email}: {error_output}")
-        return {"status": 500, "message": f"{email} - Error: {error_output}"}
+        print(f"❌ Error for {email}: {error_output} | status: 500")
+        return {"status": 500, "message": f"{email} - Error: {error_output}"}, 500
 
     finally:
         conn.close()

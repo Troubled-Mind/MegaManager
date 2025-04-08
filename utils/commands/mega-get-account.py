@@ -17,6 +17,8 @@ def run(args=None):
         WHERE id = ?
     """, (account_id,))
     row = cursor.fetchone()
+    cursor.execute("SELECT COUNT(*) FROM mega_files WHERE account_id = ?", (account_id,))
+    file_count = cursor.fetchone()[0]
     conn.close()
 
     if not row:
@@ -31,6 +33,7 @@ def run(args=None):
             "is_pro": bool(is_pro),
             "used_quota": int(used) if used else 0,
             "total_quota": int(total) if total else 0,
-            "last_login": last_login or ""
+            "last_login": last_login or "",
+            "linked_files": file_count
         }
     }
