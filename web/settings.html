@@ -102,6 +102,43 @@
         </div>
         <hr />
         <div class="alert alert-primary" role="alert" data-mdb-alert-init>
+          Select a number of local file paths where your files to be uploaded
+          are stored.
+        </div>
+        <div class="repeater mb-4">
+          <div data-repeater-list="folder_paths">
+            <div data-repeater-item class="mb-3 border p-3 rounded">
+              <div class="row">
+                <div class="col-md-10 mb-3">
+                  <div class="form-outline" data-mdb-input-init>
+                    <input
+                      type="text"
+                      name="local_paths"
+                      class="form-control"
+                      placeholder="/home/user/Documents"
+                    />
+                    <label class="form-label">Folder Path</label>
+                  </div>
+                </div>
+                <div class="col-md-2 d-flex align-items-end mb-3">
+                  <button
+                    data-repeater-delete
+                    type="button"
+                    class="btn btn-danger w-100"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <button data-repeater-create type="button" class="btn btn-secondary">
+            Add Another Folder
+          </button>
+        </div>
+
+        <hr />
+        <div class="alert alert-primary" role="alert" data-mdb-alert-init>
           If you wish to password protect MegaManager, you can enter one here.
           This will be required to access the web-ui if it is set. To remove
           password protection, set this to empty :)
@@ -132,7 +169,9 @@
       </div>
     </div>
     <!-- MDB scripts -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mdb-ui-kit@9.0.0/js/mdb.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery.repeater/jquery.repeater.min.js"></script>
     <script src="scripts/include.js"></script>
     <script src="scripts/settings.js"></script>
   </body>
