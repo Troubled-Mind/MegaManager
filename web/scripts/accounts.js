@@ -1,7 +1,13 @@
-// on page load, load all accounts
+const unverifiedAccounts = new Set();
 document.addEventListener("DOMContentLoaded", () => {
   if (document.getElementById("accountTableBody")) {
     loadAccountTable();
+  }
+  const verifyModalEl = document.getElementById("verifyAccountModal");
+  if (verifyModalEl) {
+    verifyModalEl.addEventListener("hidden.mdb.modal", () => {
+      document.getElementById("verificationLinkInput").value = "";
+    });
   }
 });
 
@@ -40,7 +46,6 @@ function refreshAccount(id, options = {}) {
   })
     .then((res) => res.json())
     .then((result) => {
-      console.log(result.status, result.message);
       if (!result || result.status !== 200) {
         throw new Error(result.message || "Unknown login error");
       }
@@ -61,11 +66,11 @@ function refreshAccount(id, options = {}) {
         body: `command=mega-get-account:${id}`,
       });
     })
-
     .then((res) => res.json())
     .then((data) => {
       const acc = data.account;
       const newRow = document.createElement("tr");
+
       newRow.id = `account-row-${acc.id}`;
       newRow.innerHTML = `
         <td>${acc.id}</td>
@@ -78,21 +83,52 @@ function refreshAccount(id, options = {}) {
           <button id="refresh-btn-${
             acc.id
           }" class="btn btn-sm btn-outline-light"
-            title="Log in and refresh quota"
-            onclick="refreshAccount(${acc.id})">
+            title="Log in and refresh quota" onclick="refreshAccount(${
+              acc.id
+            })">
             <i class="fas fa-sync-alt"></i>
           </button>
-          <button class="btn btn-sm btn-outline-danger"
-            onclick="confirmDeleteAccount(${acc.id}, '${acc.email}')"
-            title="Delete this account">
-            <i class="fas fa-trash-alt"></i>
-          </button>
+          <div class="btn-group dropdown">
+            <button type="button" class="btn btn-sm btn-tertiary dropdown-toggle dropdown-toggle-split" data-mdb-toggle="dropdown" aria-expanded="false">
+              <i class="fas fa-ellipsis-v"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-dark">
+              <li id="verify-${
+                acc.id
+              }" class="verify-button" style="display: none;">
+                <a class="dropdown-item text-warning" href="#" onclick="openVerifyModal(${
+                  acc.id
+                }, '${acc.email}')">
+                  <i class="fas fa-user-check me-2"></i> Verify Account
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item text-danger" href="#" onclick="confirmDeleteAccount(${
+                  acc.id
+                }, '${acc.email}')">
+                  <i class="fas fa-trash-alt me-2"></i> Delete Account
+                </a>
+              </li>
+            </ul>
+          </div>
         </td>
       `;
 
       const oldRow = document.getElementById(`account-row-${acc.id}`);
       if (oldRow) oldRow.replaceWith(newRow);
+
+      new mdb.Dropdown(
+        document.querySelector(`#account-row-${acc.id} .dropdown-toggle`)
+      );
       newRow.classList.add("flash-row");
+
+      // Show the button for unverified accounts
+      const verifyButton = newRow.querySelector(`#verify-${acc.id}`);
+      if (unverifiedAccounts.has(acc.id)) {
+        verifyButton.style.display = "block"; // Make it visible if unverified
+      } else {
+        verifyButton.style.display = "none"; // Keep it hidden for verified accounts
+      }
     })
     .catch((err) => {
       console.error(`Refresh for account ${id} failed:`, err);
@@ -106,22 +142,9 @@ function refreshAccount(id, options = {}) {
         const email = match[1];
         const reason = match[2];
         if (reason.toLowerCase().includes("unconfirmed account")) {
-          const row = document.getElementById(`account-row-${id}`);
-          const actionCell = row?.querySelector("td:last-child");
-
-          if (message.includes("unconfirmed account")) {
-            const row = document.getElementById(`account-row-${id}`);
-            if (row) {
-              const actionCell = row.querySelector("td:last-child");
-              const verifyBtn = document.createElement("button");
-              verifyBtn.className = "btn btn-sm btn-outline-warning ms-1";
-              verifyBtn.innerHTML = `<i class="fas fa-check-circle"></i>`;
-              verifyBtn.title = "Verify this account";
-              verifyBtn.onclick = () => openVerifyModal(id);
-              actionCell.appendChild(verifyBtn);
-            }
-          }
+          unverifiedAccounts.add(id); // Add to the unverified set
         }
+
         showToast(`❌ ${email} - ${reason}`, "bg-danger");
       } else {
         showToast(`❌ Failed to refresh account ${id}`, "bg-danger");
@@ -206,11 +229,29 @@ function loadAccountTable() {
               onclick="refreshAccount(${acc.id})">
               <i class="fas fa-sync-alt"></i>
             </button>
-            <button class="btn btn-sm btn-outline-danger"
-              onclick="confirmDeleteAccount(${acc.id}, '${acc.email}')"
-              title="Delete this account">
-              <i class="fas fa-trash-alt"></i>
-            </button>
+            <div class="btn-group dropdown">
+                  <button type="button" class="btn btn-sm btn-tertiary dropdown-toggle dropdown-toggle-split" data-mdb-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-ellipsis-v"></i>
+                  </button>
+                  <ul class="dropdown-menu dropdown-menu-dark">
+                    <li id="verify-${
+                      acc.id
+                    }" class="verify-button" style="display: none;">
+                      <a class="dropdown-item text-warning" href="#" onclick="openVerifyModal(${
+                        acc.id
+                      }, '${acc.email}')">
+                        <i class="fas fa-user-check me-2"></i> Verify Account
+                      </a>
+                    </li>
+                    <li>
+                      <a class="dropdown-item text-danger" href="#" onclick="confirmDeleteAccount(${
+                        acc.id
+                      }, '${acc.email}')">
+                        <i class="fas fa-trash-alt me-2"></i> Delete Account
+                      </a>
+                    </li>
+                  </ul>
+                </div>
           </td>
         `;
 
@@ -219,6 +260,8 @@ function loadAccountTable() {
         }
 
         tbody.appendChild(row);
+        const dropdownToggle = row.querySelector(".dropdown-toggle");
+        if (dropdownToggle) new mdb.Dropdown(dropdownToggle);
       });
 
       $("#accountTable").DataTable({

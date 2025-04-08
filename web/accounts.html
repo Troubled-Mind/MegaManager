@@ -28,41 +28,10 @@
     />
     <!-- Custom CSS styling -->
     <link rel="stylesheet" href="custom.css" />
+    <link rel="stylesheet" href="css/accounts.css" />
   </head>
 
   <body>
-    <style>
-      /* Custom CSS for flashing rows */
-      @keyframes rowGlow {
-        0% {
-          box-shadow: 0 0 0px #ffc107;
-        }
-        50% {
-          box-shadow: 0 0 10px #ffc107;
-        }
-        100% {
-          box-shadow: 0 0 0px transparent;
-        }
-      }
-
-      .flash-row {
-        animation: rowGlow 1s ease-in-out;
-      }
-      .table-stale td {
-        background-color: rgba(255, 193, 7, 0.15) !important;
-      }
-      .table-stale td:first-child {
-        border-left: 4px solid #ffc107;
-        padding-left: 1.1rem;
-      }
-      .table-error td {
-        background-color: rgba(255, 7, 7, 0.15) !important;
-      }
-      .table-error td:first-child {
-        border-left: 4px solid #ff0707;
-        padding-left: 1.1rem;
-      }
-    </style>
     <!-- Navbar -->
     <nav class="navbar navbar-expand bg-body-tertiary">
       <div class="container-fluid">
