@@ -83,10 +83,26 @@ function refreshAccount(id, options = {}) {
       }
       const newRow = document.createElement("tr");
 
+      const maskedPassword = acc.password.replace(/./g, "•");
+
       newRow.id = `account-row-${acc.id}`;
       newRow.innerHTML = `
         <td>${acc.id}</td>
         <td>${acc.email}</td>
+        <td>
+        <span id="password-${acc.id}" class="masked-password" data-password="${
+        acc.password
+      }">
+      ${"•".repeat(acc.password.length)}
+      </span>
+      <button id="toggle-password-${
+        acc.id
+      }" class="btn btn-sm btn-pwreveal btn-link" onclick="togglePasswordVisibility(${
+        acc.id
+      })">
+        <i class="fas fa-eye"></i>
+      </button>
+        </td>
         <td>${acc.is_pro ? "✅" : "❌"}</td>
         <td>
             <div class="progress" style="height: 20px;">
@@ -236,11 +252,27 @@ function loadAccountTable() {
         }
         const isStale = acc.last_login && acc.last_login < cutoff;
         const staleFlag = isStale ? 1 : 0;
+        const maskedPassword = acc.password.replace(/./g, "•");
         row.id = `account-row-${acc.id}`;
         row.innerHTML = `
           <td style="display: none !important;">${staleFlag}</td>
           <td>${acc.id}</td>
           <td>${acc.email}</td>
+          <td>
+
+          <span id="password-${
+            acc.id
+          }" class="masked-password" data-password="${acc.password}">
+          ${"•".repeat(acc.password.length)}
+        </span>
+        <button id="toggle-password-${
+          acc.id
+        }" class="btn btn-sm btn-pwreveal btn-link" onclick="togglePasswordVisibility(${
+          acc.id
+        })">
+          <i class="fas fa-eye"></i>
+        </button>
+          </td>
           <td>${acc.is_pro ? "✅" : "❌"}</td>
           <td>
             <div class="progress" style="height: 20px;">
@@ -467,6 +499,60 @@ function verifyAccount(accountId, link) {
       console.error(`Verification error for ${accountId}:`, err);
       showToast("❌ Failed to verify account", "bg-danger");
     });
+}
+
+let currentRevealedPasswordId = null;
+
+function togglePasswordVisibility(accountId) {
+  const passwordElement = document.getElementById(`password-${accountId}`);
+  const toggleButton = document.getElementById(`toggle-password-${accountId}`);
+  const password = passwordElement.getAttribute("data-password");
+
+  const maskedPassword = "•".repeat(password.length);
+
+  // If another password is already revealed, hide it first
+  if (currentRevealedPasswordId && currentRevealedPasswordId !== accountId) {
+    const previouslyRevealedPasswordElement = document.getElementById(
+      `password-${currentRevealedPasswordId}`
+    );
+    const previouslyRevealedToggleButton = document.getElementById(
+      `toggle-password-${currentRevealedPasswordId}`
+    );
+
+    // Hide the previously revealed password
+    previouslyRevealedPasswordElement.textContent = "•".repeat(
+      previouslyRevealedPasswordElement.getAttribute("data-password").length
+    );
+    previouslyRevealedToggleButton.innerHTML = '<i class="fas fa-eye"></i>';
+    previouslyRevealedPasswordElement.classList.add("masked-password");
+  }
+
+  // Reveal or hide the current password
+  if (passwordElement.classList.contains("masked-password")) {
+    // Reveal password
+    passwordElement.textContent = password;
+    toggleButton.innerHTML = '<i class="fas fa-eye-slash"></i>';
+    passwordElement.classList.remove("masked-password");
+
+    // Set this as the currently revealed password
+    currentRevealedPasswordId = accountId;
+
+    // Hide the password after 10 seconds
+    setTimeout(() => {
+      passwordElement.textContent = maskedPassword;
+      toggleButton.innerHTML = '<i class="fas fa-eye"></i>';
+      passwordElement.classList.add("masked-password");
+      currentRevealedPasswordId = null;
+    }, 10000);
+  } else {
+    // Hide password
+    passwordElement.textContent = maskedPassword;
+    toggleButton.innerHTML = '<i class="fas fa-eye"></i>';
+    passwordElement.classList.add("masked-password");
+
+    // Clear the revealed password tracking
+    currentRevealedPasswordId = null;
+  }
 }
 
 // format the bytes to human-readable format

@@ -12,7 +12,7 @@ def run(args=None):
     cursor = conn.cursor()
 
     cursor.execute("""
-        SELECT id, email, is_pro_account, used_quota, total_quota, last_login
+        SELECT id, email, password, is_pro_account, used_quota, total_quota, last_login
         FROM mega_accounts
         WHERE id = ?
     """, (account_id,))
@@ -24,12 +24,13 @@ def run(args=None):
     if not row:
         return {"status": 404, "message": f"No account found with ID {account_id}"}
 
-    id, email, is_pro, used, total, last_login = row
+    id, email, password, is_pro, used, total, last_login = row
     return {
         "status": 200,
         "account": {
             "id": id,
             "email": email,
+            "password": password,
             "is_pro": bool(is_pro),
             "used_quota": int(used) if used else 0,
             "total_quota": int(total) if total else 0,
