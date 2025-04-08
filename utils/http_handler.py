@@ -27,10 +27,18 @@ class CustomHandler(SimpleHTTPRequestHandler):
 
             result = self.run_command(command)
 
-            self.send_response(result.get("status", 200))
+            # If the result is a tuple like (dict, status_code), unpack it
+            if isinstance(result, tuple) and len(result) == 2 and isinstance(result[0], dict):
+                payload, status = result
+            else:
+                payload = result
+                status = result.get("status", 200) if isinstance(result, dict) else 200
+
+            self.send_response(status)
             self.send_header("Content-Type", "application/json")
             self.end_headers()
-            self.wfile.write(json.dumps(result).encode())
+            self.wfile.write(json.dumps(payload).encode())
+
 
     # Dynamically load commands from /utils/commands directory
     def run_command(self, command):
