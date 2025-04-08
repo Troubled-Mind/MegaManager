@@ -10,9 +10,13 @@ def run(args=None):
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
 
+        print(f"📥 args = {args!r} (type = {type(args).__name__})")
+
         if args == "all" or args is None:
             cursor.execute("SELECT id FROM mega_accounts")
             account_ids = [row[0] for row in cursor.fetchall()]
+        elif isinstance(args, list):
+            account_ids = [int(id) for id in args]
         else:
             account_ids = [int(args)]
     except (TypeError, ValueError):
@@ -54,15 +58,15 @@ def process_account(account_id):
 
     try:
         # Ensure clean session
-        subprocess.run(["mega-logout"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=False)
+        subprocess.run(["mega-logout"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True, check=False)
 
         # Log in
-        result = subprocess.run(["mega-login", email, password], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
+        result = subprocess.run(["mega-login", email, password], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True, check=True)
         login_output = result.stdout.strip()
         print(f"✅ Logged in: {email}")
 
         # Get quota info
-        quota_result = subprocess.run(["mega-df"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
+        quota_result = subprocess.run(["mega-df"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True, check=True)
         used_quota, total_quota = parse_mega_df(quota_result.stdout.strip())
         print(f"💾 Used: {used_quota} / Total: {total_quota}")
 
@@ -71,6 +75,7 @@ def process_account(account_id):
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
+            shell=True,
             check=True
         )
         pro_level = parse_pro_level(whoami_result.stdout.strip())
@@ -90,7 +95,7 @@ def process_account(account_id):
         conn.commit()
 
         # Log out
-        logout_result = subprocess.run(["mega-logout"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
+        logout_result = subprocess.run(["mega-logout"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True, check=True)
         logout_output = logout_result.stdout.strip()
         print("👋 Logged out")
 
