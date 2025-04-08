@@ -308,6 +308,167 @@ function loadAccountTable() {
     .catch((err) => console.error("Failed to load accounts:", err));
 }
 
+function refreshAllAccounts() {
+  const btn = document.getElementById("refreshAllBtn");
+  const icon = document.getElementById("refreshAllIcon");
+
+  btn.classList.remove("btn-primary", "btn-success", "btn-danger");
+  btn.classList.add("btn-warning");
+  icon.classList.add("fa-spin");
+  btn.disabled = true;
+
+  fetch("/run-command", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: `command=mega-login:all`,
+  })
+    .then((res) => res.json())
+    .then(async (data) => {
+      const ids = data.account_ids || [];
+      const total = ids.length;
+
+      let failedCount = 0;
+
+      for (let i = 0; i < total; i++) {
+        const id = ids[i];
+        btn.innerHTML = `<i class="fas fa-sync-alt me-2 fa-spin" id="refreshAllIcon"></i> Refreshing account ${
+          i + 1
+        } / ${total}...`;
+
+        const success = await refreshAccount(id, { silent: true });
+        if (!success) failedCount++;
+      }
+
+      // ✅ Finished
+      btn.innerHTML = `<i class="fas fa-check me-2"></i> All accounts refreshed!`;
+      btn.classList.remove("btn-warning");
+      btn.classList.add("btn-success");
+    })
+    .catch((err) => {
+      console.error("Refresh all failed:", err);
+      btn.innerHTML = `<i class="fas fa-exclamation-triangle me-2"></i> Refresh failed`;
+      btn.classList.remove("btn-warning");
+      btn.classList.add("btn-danger");
+    })
+    .finally(() => {
+      icon.classList.remove("fa-spin");
+      setTimeout(() => {
+        btn.innerHTML = `<i class="fas fa-sync-alt me-2" id="refreshAllIcon"></i> Refresh login for all accounts`;
+        btn.classList.remove("btn-success", "btn-danger");
+        btn.classList.add("btn-primary");
+        btn.disabled = false;
+      }, 4000);
+    });
+}
+
+let deleteTargetAccountId = null;
+
+function confirmDeleteAccount(id, email) {
+  deleteTargetAccountId = id;
+
+  fetch("/run-command", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: `command=mega-get-account:${id}`,
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      const fileCount = data.account.linked_files || 0;
+      const modalBody = document.getElementById("deleteAccountModalBody");
+
+      modalBody.innerHTML = `
+        Are you sure you wish to delete the account:<br />
+        <strong>${email}</strong>?
+        <br /><br />
+        <span class="text-danger">
+          This account has <strong>${fileCount}</strong> linked file${
+        fileCount === 1 ? "" : "s"
+      } in this program.
+        </span>
+        <br />
+        <small class="text-muted">
+          No files will be deleted from your MEGA drive, but all references to them will be removed from Mega Manager.
+        </small>
+      `;
+
+      const modal = new mdb.Modal(
+        document.getElementById("deleteAccountModal")
+      );
+      modal.show();
+
+      const confirmBtn = document.getElementById("confirmDeleteBtn");
+      confirmBtn.onclick = () => {
+        deleteAccount(deleteTargetAccountId);
+        modal.hide();
+      };
+    });
+}
+
+function deleteAccount(id) {
+  fetch("/run-command", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: `command=mega-delete-account:${id}`,
+  })
+    .then((res) => res.json())
+    .then(() => {
+      const row = document.getElementById(`account-row-${id}`);
+      if (row) row.remove();
+
+      const table = $("#accountTable").DataTable();
+      table.row(`#account-row-${id}`).remove().draw();
+      showToast("Account deleted successfully!", "bg-success");
+      console.log(`Account ${id} deleted.`);
+    })
+    .catch((err) => {
+      console.error(`Failed to delete account ${id}:`, err);
+      showToast("Account failed to delete!", "bg-danger");
+      alert("An error occurred while deleting the account.");
+    });
+}
+
+let verifyTargetId = null;
+
+function openVerifyModal(accountId) {
+  verifyTargetId = accountId;
+  const modal = new mdb.Modal(document.getElementById("verifyAccountModal"));
+  modal.show();
+
+  document.getElementById("submitVerifyBtn").onclick = () => {
+    const link = document.getElementById("verificationLinkInput").value.trim();
+    if (!link) {
+      showToast("Please paste a valid verification link", "bg-warning");
+      return;
+    }
+
+    verifyAccount(verifyTargetId, link);
+    modal.hide();
+  };
+}
+
+function verifyAccount(accountId, link) {
+  fetch("/run-command", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: `command=mega-verify-account:${accountId}|${encodeURIComponent(
+      link
+    )}`,
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      if (data.status === 200) {
+        showToast(`✅ Account ${accountId} verified`, "bg-success");
+        refreshAccount(accountId);
+      } else {
+        showToast(`❌ Verification failed: ${data.message}`, "bg-danger");
+      }
+    })
+    .catch((err) => {
+      console.error(`Verification error for ${accountId}:`, err);
+      showToast("❌ Failed to verify account", "bg-danger");
+    });
+}
+
 // format the bytes to human-readable format
 function formatBytes(bytes) {
   const units = ["B", "KB", "MB", "GB", "TB"];
