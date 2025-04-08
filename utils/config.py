@@ -23,6 +23,11 @@ class Settings:
 
     def get(self, key, default=None):
         return self._values.get(key, default)
+    
+    def get_megacmd_path(self):
+        # Get megacmd path in a format suitable for subprocess runs
+        path = self.get("megacmd_path")
+        return rf"{path}\\" if path else ""
 
     def __getitem__(self, key):
         return self._values.get(key)
