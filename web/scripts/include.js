@@ -25,3 +25,20 @@ document.addEventListener("DOMContentLoaded", () => {
     })
     .catch((err) => console.error("Failed to load navbar links:", err));
 });
+
+window.showToast = function (message, color = "bg-success") {
+  const toastEl = document.getElementById("universalToast");
+  const toastBody = document.getElementById("universalToastBody");
+
+  // Reset any old color classes
+  toastEl.className = "toast fade";
+  toastBody.className = "toast-body text-white";
+
+  // Apply new color
+  toastEl.classList.add(color);
+  toastBody.textContent = message;
+
+  // Show the toast
+  const toast = new mdb.Toast(toastEl);
+  toast.show();
+};
