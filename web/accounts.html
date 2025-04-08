@@ -68,25 +68,26 @@
     <section class="container my-5">
       <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0">Mega Accounts</h2>
-        <button
-          id="addNewAccountsBtn"
-          class="btn btn-primary"
-          onclick="addNewAccounts()"
-          title="Add new accounts from CSV file"
-        >
-          <i class="fas fa-sync-alt me-2" id="addNewAccountsIcon"></i>
-          Add new accounts
-        </button>
 
-        <button
-          id="refreshAllBtn"
-          class="btn btn-primary"
-          onclick="refreshAllAccounts()"
-          title="Log in to all accounts"
-        >
-          <i class="fas fa-sync-alt me-2" id="refreshAllIcon"></i>
-          Refresh login for all accounts
-        </button>
+        <div class="btn-group" style="gap: 4px">
+          <button
+            class="btn btn-primary"
+            data-bs-toggle="modal"
+            data-bs-target="#fileUploadModal"
+            id="addNewAccountsBtn"
+          >
+            Import CSV
+          </button>
+          <button
+            id="refreshAllBtn"
+            class="btn btn-primary"
+            onclick="refreshAllAccounts()"
+            title="Log in to all accounts"
+          >
+            <i class="fas fa-sync-alt me-2" id="refreshAllIcon"></i>
+            Refresh login for all accounts
+          </button>
+        </div>
       </div>
 
       <div id="accountTableWrapper">
@@ -159,6 +160,7 @@
         </div>
       </div>
     </div>
+    <!-- Verify account modal -->
     <div
       class="modal fade"
       id="verifyAccountModal"
@@ -197,6 +199,43 @@
             <button class="btn btn-primary" id="submitVerifyBtn">
               Submit & Refresh
             </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- File upload modal -->
+    <!-- Modal for File Upload -->
+    <div
+      class="modal fade"
+      id="fileUploadModal"
+      tabindex="-1"
+      aria-labelledby="fileUploadModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="fileUploadModalLabel">Upload CSV</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <form id="fileUploadForm">
+              <div class="mb-3">
+                <label for="csvFile" class="form-label">Choose CSV file</label>
+                <input
+                  type="file"
+                  class="form-control"
+                  id="csvFile"
+                  accept=".csv"
+                />
+              </div>
+              <button type="submit" class="btn btn-primary">Upload</button>
+            </form>
           </div>
         </div>
       </div>

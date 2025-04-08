@@ -4,20 +4,23 @@ from models import MegaAccount
 
 def run(args=None):
     try:
-        file_path = str(args)
-    except (TypeError, ValueError):
-        return {"status": 400, "message": "Invalid file path"}
+        # Ensure args is passed and has valid data
+        if not args or len(args) < 1:
+            return {"status": 400, "message": "Invalid CSV data"}, 400
 
-    # Get database session
-    db = next(get_db())
-
-    with open(file_path, mode="r") as f:
-        reader = csv.DictReader(f)
+        # Get database session
+        db = next(get_db())
+        
         account_ids = []
 
-        for row in reader:
-            email = row["email"] or row["Email"]
-            password = row["password"] or row["Password"]
+        # Loop through the incoming CSV data rows (args)
+        for row in args:
+            # Split each row by comma to get email and password
+            email, password = row.split(',')
+
+            # Trim extra spaces from email and password
+            email = email.strip()
+            password = password.strip()
 
             # Check if the account already exists in the database
             account = db.query(MegaAccount).filter(MegaAccount.email == email).first()
@@ -31,13 +34,17 @@ def run(args=None):
                 db.add(new_account)
 
                 # Get ID of the new account
-                db.flush()
+                db.flush()  # Ensure the account is flushed to get the ID
                 account_ids.append(new_account.id)
 
                 db.commit()
                 print(f"Added account: {email}")
-    
-    return {
-        "status": 200,
-        "account_ids": account_ids
-    }
+
+        return {
+            "status": 200,
+            "account_ids": account_ids
+        }, 200
+
+    except Exception as e:
+        print(f"Error while processing CSV data: {e}")
+        return {"status": 500, "message": "Internal server error"}, 500

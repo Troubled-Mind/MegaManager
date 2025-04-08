@@ -49,7 +49,7 @@ class CustomHandler(SimpleHTTPRequestHandler):
 
         command_path = f"utils/commands/{command_name}.py"
         if not os.path.exists(command_path):
-            return {"status": 400, "message": f"Unknown command: {command_name}"}
+            return {"status": 400, "message": f"Unknown command: {command_name}"}, 400
 
         try:
             spec = importlib.util.spec_from_file_location(command_name, command_path)

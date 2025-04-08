@@ -1,13 +1,53 @@
 document.addEventListener("DOMContentLoaded", () => {
+  // Load the account table
   if (document.getElementById("accountTableBody")) {
     loadAccountTable();
   }
+
+  // Initialize the verify modal event
   const verifyModalEl = document.getElementById("verifyAccountModal");
   if (verifyModalEl) {
     verifyModalEl.addEventListener("hidden.mdb.modal", () => {
       document.getElementById("verificationLinkInput").value = "";
     });
   }
+
+  // Initialize the file upload modal
+  const fileUploadModal = new mdb.Modal(
+    document.getElementById("fileUploadModal")
+  );
+
+  // Add event listener to the "Import CSV" button to trigger modal open
+  const importCsvButton = document.querySelector('[data-bs-toggle="modal"]');
+  importCsvButton.addEventListener("click", function () {
+    fileUploadModal.show(); // Show the modal programmatically
+  });
+
+  // Handle the form submission for file upload
+  const fileUploadForm = document.getElementById("fileUploadForm");
+
+  fileUploadForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+
+    const fileInput = document.getElementById("csvFile");
+    const file = fileInput.files[0];
+
+    if (!file) {
+      alert("Please choose a file to upload");
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = function (event) {
+      const csvData = event.target.result;
+      const parsedData = parseCSV(csvData);
+      addNewAccounts(parsedData); // Process the parsed data
+      fileUploadModal.hide(); // Close the modal after uploading
+    };
+
+    reader.readAsText(file);
+  });
 });
 
 function formatDate(isoString) {
@@ -93,15 +133,15 @@ function refreshAccount(id, options = {}) {
         <span id="password-${acc.id}" class="masked-password" data-password="${
         acc.password
       }">
-      ${"•".repeat(acc.password.length)}
-      </span>
-      <button id="toggle-password-${
-        acc.id
-      }" class="btn btn-sm btn-pwreveal btn-link" onclick="togglePasswordVisibility(${
+        ${"•".repeat(acc.password.length)}
+        </span>
+        <button id="toggle-password-${
+          acc.id
+        }" class="btn btn-sm btn-pwreveal btn-link" onclick="togglePasswordVisibility(${
         acc.id
       })">
-        <i class="fas fa-eye"></i>
-      </button>
+          <i class="fas fa-eye"></i>
+        </button>
         </td>
         <td>${acc.is_pro ? "✅" : "❌"}</td>
         <td>
@@ -116,10 +156,9 @@ function refreshAccount(id, options = {}) {
         <td>
           <button id="refresh-btn-${
             acc.id
-          }" class="btn btn-sm btn-outline-light"
-            title="Log in and refresh quota" onclick="refreshAccount(${
-              acc.id
-            })">
+          }" class="btn btn-sm btn-outline-light" title="Log in and refresh quota" onclick="refreshAccount(${
+        acc.id
+      })">
             <i class="fas fa-sync-alt"></i>
           </button>
           <div class="btn-group dropdown">
@@ -160,13 +199,13 @@ function refreshAccount(id, options = {}) {
       console.error(`Refresh for account ${id} failed:`, err);
 
       const message = err.message || "Unknown error";
-      console.log("Error Message:", message); // Log error message for debugging
+      console.log("Error Message:", message);
 
       // If the error message contains "unconfirmed account", add the class and show the verify button
       if (message.toLowerCase().includes("unconfirmed account")) {
         const row = document.getElementById(`account-row-${id}`);
         if (row) {
-          row.classList.add("table-unverified"); // Add the table-unverified class here
+          row.classList.add("table-unverified");
         }
         showToast(`❌ Account ${id} is unverified: ${message}`, "bg-danger");
       } else {
@@ -259,7 +298,6 @@ function loadAccountTable() {
           <td>${acc.id}</td>
           <td>${acc.email}</td>
           <td>
-
           <span id="password-${
             acc.id
           }" class="masked-password" data-password="${acc.password}">
@@ -286,8 +324,9 @@ function loadAccountTable() {
           <td>
             <button id="refresh-btn-${
               acc.id
-            }" class="btn btn-sm btn-outline-light"
-              onclick="refreshAccount(${acc.id})">
+            }" class="btn btn-sm btn-outline-light" onclick="refreshAccount(${
+          acc.id
+        })">
               <i class="fas fa-sync-alt"></i>
             </button>
             <div class="btn-group dropdown">
@@ -567,51 +606,56 @@ function formatBytes(bytes) {
 }
 
 // Add new accounts from csv
-async function addNewAccounts() {
+async function addNewAccounts(parsedData) {
   const btn = document.getElementById("addNewAccountsBtn");
-  const icon = document.getElementById("addNewAccountsIcon");
-
-  btn.classList.remove("btn-primary", "btn-success", "btn-danger");
-  btn.classList.add("btn-warning");
-  icon.classList.add("fa-spin");
   btn.disabled = true;
 
-  const filename = "accounts.csv"; // TODO: replace with actual filename
-
   try {
+    // We need to ensure parsedData contains only the rows (no headers)
+    const rows = parsedData.slice(1); // Remove header row if included
+
     const res = await fetch("/run-command", {
       method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: `command=csv-load-accounts:${filename}`,
+      headers: {
+        "Content-Type": "application/json", // Use JSON content type
+      },
+      body: JSON.stringify({
+        command: "csv-load-accounts",
+        args: rows, // Pass only the rows of CSV data
+      }),
     });
+
     const data = await res.json();
     const ids = data.account_ids || [];
     const total = ids.length;
 
     loadAccountTable(); // Reload the account table after adding new accounts
 
+    // Iterate over account ids and refresh them one by one
     for (let i = 0; i < total; i++) {
       const id = ids[i];
-      btn.innerHTML = `<i class="fas fa-sync-alt me-2 fa-spin" id="addNewAccountsIcon"></i> Logging in account ${i + 1} / ${total}...`;
-      await refreshAccount(id, { silent: true});
+      await refreshAccount(id, { silent: true });
     }
 
-    // Finished
-    btn.innerHTML = `<i class="fas fa-check me-2"></i> New accounts added!`;
-    btn.classList.remove("btn-warning");
-    btn.classList.add("btn-success");
+    showToast("New accounts added!", "bg-success");
   } catch (err) {
     console.error("Adding new accounts failed:", err);
-    btn.innerHTML = `<i class="fas fa-exclamation-triangle me-2"></i> Add failed`;
-    btn.classList.remove("btn-warning");
-    btn.classList.add("btn-danger");
+    showToast("Add failed", "bg-danger");
   } finally {
-    icon.classList.remove("fa-spin");
     setTimeout(() => {
-      btn.innerHTML = `<i class="fas fa-sync-alt me-2" id="addNewAccountsIcon"></i> Add new accounts`;
-      btn.classList.remove("btn-success", "btn-danger");
-      btn.classList.add("btn-primary");
       btn.disabled = false;
     }, 4000);
   }
+}
+
+function parseCSV(csvData) {
+  const lines = csvData.split("\n");
+  const result = [];
+
+  lines.forEach((line) => {
+    if (line.trim() === "") return; // Skip empty lines
+    result.push(line); // Push each row as a string
+  });
+
+  return result;
 }
