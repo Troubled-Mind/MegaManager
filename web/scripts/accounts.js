@@ -215,7 +215,7 @@ function refreshAllAccounts() {
 }
 
 // Add new accounts from csv
-function addNewAccounts() {
+async function addNewAccounts() {
   const btn = document.getElementById("addNewAccountsBtn");
   const icon = document.getElementById("addNewAccountsIcon");
 
@@ -226,24 +226,40 @@ function addNewAccounts() {
 
   const filename = "accounts.csv"; // TODO: replace with actual filename
 
-  return fetch("/run-command", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: `command=csv-load-accounts:${filename}`,
-  }).then((res) => res.json()).then(() => {
+  try {
+    const res = await fetch("/run-command", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: `command=csv-load-accounts:${filename}`,
+    });
+    const data = await res.json();
+    const ids = data.account_ids || [];
+    const total = ids.length;
+
     loadAccountTable(); // Reload the account table after adding new accounts
+
+    for (let i = 0; i < total; i++) {
+      const id = ids[i];
+      btn.innerHTML = `<i class="fas fa-sync-alt me-2 fa-spin" id="addNewAccountsIcon"></i> Logging in account ${i + 1} / ${total}...`;
+      await refreshAccount(id, { silent: true});
+    }
 
     // Finished
     btn.innerHTML = `<i class="fas fa-check me-2"></i> New accounts added!`;
     btn.classList.remove("btn-warning");
     btn.classList.add("btn-success");
-  }).finally(() => {
+  } catch (err) {
+    console.error("Adding new accounts failed:", err);
+    btn.innerHTML = `<i class="fas fa-exclamation-triangle me-2"></i> Add failed`;
+    btn.classList.remove("btn-warning");
+    btn.classList.add("btn-danger");
+  } finally {
     icon.classList.remove("fa-spin");
-      setTimeout(() => {
-        btn.innerHTML = `<i class="fas fa-sync-alt me-2" id="addNewAccountsIcon"></i> Add new accounts`;
-        btn.classList.remove("btn-success", "btn-danger");
-        btn.classList.add("btn-primary");
-        btn.disabled = false;
-      }, 4000);
-  })
+    setTimeout(() => {
+      btn.innerHTML = `<i class="fas fa-sync-alt me-2" id="addNewAccountsIcon"></i> Add new accounts`;
+      btn.classList.remove("btn-success", "btn-danger");
+      btn.classList.add("btn-primary");
+      btn.disabled = false;
+    }, 4000);
+  }
 }

@@ -28,10 +28,13 @@ def run(args=None):
             else:
                 # Add new account to the database
                 new_account = MegaAccount(email=email, password=password)
-                account_ids.append(new_account.id)
                 db.add(new_account)
-                db.commit()
 
+                # Get ID of the new account
+                db.flush()
+                account_ids.append(new_account.id)
+
+                db.commit()
                 print(f"Added account: {email}")
     
     return {
