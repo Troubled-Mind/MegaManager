@@ -60,3 +60,7 @@ ul.dropdown-menu-dark .dropdown-item:hover {
 .progress-bar {
   border-radius: 8px;
 }
+
+.btn-pwreveal {
+  padding: 0.1em;
+}
