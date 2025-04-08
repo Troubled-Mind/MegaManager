@@ -55,3 +55,8 @@ ul.dropdown-menu-dark .dropdown-item:hover {
 .btn-tertiary {
   padding-left: 1em;
 }
+
+.progress,
+.progress-bar {
+  border-radius: 8px;
+}

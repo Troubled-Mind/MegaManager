@@ -68,6 +68,19 @@ function refreshAccount(id, options = {}) {
     .then((res) => res.json())
     .then((data) => {
       const acc = data.account;
+      const usedQuota = acc.used_quota;
+      const totalQuota = acc.total_quota;
+      const remainingQuota = totalQuota - usedQuota;
+      let usagePercentage = (usedQuota / totalQuota) * 100;
+      if (isNaN(usagePercentage)) {
+        usagePercentage = 0;
+      }
+      let progressColor = "success";
+      if (usagePercentage > 50 && usagePercentage <= 80) {
+        progressColor = "warning";
+      } else if (usagePercentage > 80) {
+        progressColor = "danger";
+      }
       const newRow = document.createElement("tr");
 
       newRow.id = `account-row-${acc.id}`;
@@ -75,8 +88,14 @@ function refreshAccount(id, options = {}) {
         <td>${acc.id}</td>
         <td>${acc.email}</td>
         <td>${acc.is_pro ? "✅" : "❌"}</td>
-        <td>${formatBytes(acc.used_quota)}</td>
-        <td>${formatBytes(acc.total_quota)}</td>
+        <td>
+            <div class="progress" style="height: 20px;">
+              <div class="progress-bar bg-${progressColor}" role="progressbar" style="width: ${usagePercentage}%" aria-valuenow="${usagePercentage}" aria-valuemin="0" aria-valuemax="100">
+                ${Math.round(usagePercentage)}%
+              </div>
+            </div>
+        </td>
+        <td>${formatBytes(remainingQuota)}</td>
         <td>${formatDate(acc.last_login)}</td>
         <td>
           <button id="refresh-btn-${
@@ -202,6 +221,19 @@ function loadAccountTable() {
 
       sortedAccounts.forEach((acc) => {
         const row = document.createElement("tr");
+        const usedQuota = acc.used_quota;
+        const totalQuota = acc.total_quota;
+        const remainingQuota = totalQuota - usedQuota;
+        let usagePercentage = (usedQuota / totalQuota) * 100;
+        if (isNaN(usagePercentage)) {
+          usagePercentage = 0;
+        }
+        let progressColor = "success";
+        if (usagePercentage > 50 && usagePercentage <= 80) {
+          progressColor = "warning";
+        } else if (usagePercentage > 80) {
+          progressColor = "danger";
+        }
         const isStale = acc.last_login && acc.last_login < cutoff;
         const staleFlag = isStale ? 1 : 0;
         row.id = `account-row-${acc.id}`;
@@ -210,8 +242,14 @@ function loadAccountTable() {
           <td>${acc.id}</td>
           <td>${acc.email}</td>
           <td>${acc.is_pro ? "✅" : "❌"}</td>
-          <td>${formatBytes(acc.used_quota)}</td>
-          <td>${formatBytes(acc.total_quota)}</td>
+          <td>
+            <div class="progress" style="height: 20px;">
+              <div class="progress-bar bg-${progressColor}" role="progressbar" style="width: ${usagePercentage}%" aria-valuenow="${usagePercentage}" aria-valuemin="0" aria-valuemax="100">
+                ${Math.round(usagePercentage)}%
+              </div>
+            </div>
+          </td>
+          <td>${formatBytes(remainingQuota)}</td>
           <td>${formatDate(acc.last_login)}</td>
           <td>
             <button id="refresh-btn-${
