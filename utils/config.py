@@ -1,12 +1,8 @@
 import random
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from database import get_db
 from models import Setting
 
 USE_KAREN_LOGO = random.randint(1, 20) == 1
-
-engine = create_engine("sqlite:///database.db")
-Session = sessionmaker(bind=engine)
 
 state = {
     "authenticated": False
@@ -15,10 +11,9 @@ state = {
 class Settings:
     def __init__(self):
         self._values = {}
-        self.load()
 
     def load(self):
-        session = Session()
+        session = next(get_db())
         try:
             self._values = {
                 setting.key: setting.value for setting in session.query(Setting).all()

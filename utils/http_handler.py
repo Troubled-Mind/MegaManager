@@ -3,8 +3,6 @@ import json
 import importlib.util
 from http.server import SimpleHTTPRequestHandler
 from urllib.parse import parse_qs
-from database import create_database
-from utils.config import USE_KAREN_LOGO
 from utils.config import settings, state
 
 class CustomHandler(SimpleHTTPRequestHandler):

@@ -1,10 +1,6 @@
+from database import get_db
 from models import Setting
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import SQLAlchemyError
-
-engine = create_engine("sqlite:///database.db")
-Session = sessionmaker(bind=engine)
 
 def run(args=None):
     print(f"📥 args = {args!r} (type = {type(args).__name__})")
@@ -15,7 +11,7 @@ def run(args=None):
     valid_keys = {"app_password", "megacmd_path", "mega_email", "mega_passwords"}
     updates = []
 
-    session = Session()
+    session = next(get_db())
 
     try:
         for key in valid_keys:
