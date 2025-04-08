@@ -12,7 +12,7 @@ class CustomHandler(SimpleHTTPRequestHandler):
         path = super().translate_path(path)
         relpath = os.path.relpath(path, os.getcwd())
         return os.path.join(os.getcwd(), 'web', relpath)
-    
+
     def do_GET(self):
         if self.path == "/resources/img/logo.png" and USE_KAREN_LOGO:
             self.path = "/resources/img/logo-karen.png"
@@ -22,30 +22,55 @@ class CustomHandler(SimpleHTTPRequestHandler):
         if self.path == "/run-command":
             content_length = int(self.headers.get('Content-Length', 0))
             post_data = self.rfile.read(content_length).decode()
-            data = parse_qs(post_data)
-            command = data.get('command', [''])[0]
+            content_type = self.headers.get("Content-Type", "")
 
-            result = self.run_command(command)
+            try:
+                # Parse body based on content type
+                if "application/json" in content_type:
+                    data = json.loads(post_data)
+                    command = data.get("command", "")
+                    args = data.get("args", [])
+                else:
+                    data = parse_qs(post_data)
+                    command = data.get("command", [""])[0]
+                    args = data.get("args", [])  # this will be a list if provided, else empty
 
-            # If the result is a tuple like (dict, status_code), unpack it
-            if isinstance(result, tuple) and len(result) == 2 and isinstance(result[0], dict):
-                payload, status = result
-            else:
-                payload = result
-                status = result.get("status", 200) if isinstance(result, dict) else 200
+                print(f"📥 Command Received = {command!r}")
+                print(f"📥 Arguments = {args!r} (type = {type(args).__name__})")
 
-            self.send_response(status)
-            self.send_header("Content-Type", "application/json")
-            self.end_headers()
-            self.wfile.write(json.dumps(payload).encode())
+                # Extract argument from command (e.g. mega-login:1)
+                if ":" in command and (not args or args == [""]):
+                    _, _, arg_str = command.partition(":")
+                    args = arg_str if arg_str else None
 
+                result = self.run_command(command, args)
 
-    # Dynamically load commands from /utils/commands directory
-    def run_command(self, command):
+                # Unpack result
+                if isinstance(result, tuple) and len(result) == 2 and isinstance(result[0], dict):
+                    payload, status = result
+                else:
+                    payload = result
+                    status = result.get("status", 200) if isinstance(result, dict) else 200
+
+                self.send_response(status)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+
+                if isinstance(payload, dict):
+                    self.wfile.write(json.dumps(payload).encode())
+                else:
+                    self.wfile.write(json.dumps({"status": 500, "message": str(payload)}).encode())
+
+            except json.JSONDecodeError:
+                self.send_error_response(400, "Invalid JSON payload")
+            except Exception as e:
+                self.send_error_response(500, f"Unexpected error: {str(e)}")
+
+    def run_command(self, command, args=None):
         if ":" in command:
-            command_name, _, arg_str = command.partition(":")
+            command_name, _, _ = command.partition(":")
         else:
-            command_name, arg_str = command, ""
+            command_name = command
 
         command_path = f"utils/commands/{command_name}.py"
         if not os.path.exists(command_path):
@@ -57,8 +82,14 @@ class CustomHandler(SimpleHTTPRequestHandler):
             spec.loader.exec_module(module)
 
             if hasattr(module, "run"):
-                return module.run(arg_str)
+                return module.run(args)
             else:
                 return {"status": 500, "message": f"{command_name} does not define a run() function."}
         except Exception as e:
             return {"status": 500, "message": str(e)}
+
+    def send_error_response(self, status, message):
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json")
+        self.end_headers()
+        self.wfile.write(json.dumps({"status": status, "message": message}).encode())

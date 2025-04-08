@@ -1,4 +1,3 @@
-import csv
 from database import get_db
 from models import MegaAccount
 
@@ -16,7 +15,11 @@ def run(args=None):
         # Loop through the incoming CSV data rows (args)
         for row in args:
             # Split each row by comma to get email and password
-            email, password = row.split(',')
+            parts = row.strip().split(',')
+            if len(parts) != 2:
+                print(f"Invalid row format: {row}")
+                continue  # or return 400 with error message
+            email, password = parts
 
             # Trim extra spaces from email and password
             email = email.strip()
