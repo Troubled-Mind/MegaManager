@@ -1,0 +1,62 @@
+/* Custom CSS for flashing rows */
+@keyframes rowGlow {
+  0% {
+    box-shadow: 0 0 0px #ffc107;
+  }
+  50% {
+    box-shadow: 0 0 10px #ffc107;
+  }
+  100% {
+    box-shadow: 0 0 0px transparent;
+  }
+}
+
+.flash-row {
+  animation: rowGlow 1s ease-in-out;
+}
+.table-stale td {
+  background-color: rgba(255, 193, 7, 0.15) !important;
+}
+.table-stale td:first-child {
+  border-left: 4px solid #ffc107;
+  padding-left: 1.1rem;
+}
+.table-error td {
+  background-color: rgba(255, 7, 7, 0.15) !important;
+}
+.table-error td:first-child {
+  border-left: 4px solid #ff0707;
+  padding-left: 1.1rem;
+}
+/* Style only dark dropdowns */
+ul.dropdown-menu-dark {
+  background-color: #1e1e1e !important;
+  color: #f1f1f1;
+  border-radius: 0.5rem !important;
+  border: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+/* Prevent corner loss on hover */
+ul.dropdown-menu-dark .dropdown-item {
+  border-radius: 0.5rem !important;
+}
+
+/* Hover style */
+ul.dropdown-menu-dark .dropdown-item:hover {
+  background-color: #333 !important;
+  color: #fff !important;
+}
+
+.table-unverified > td > div > ul > li.verify-button {
+  display: block !important;
+}
+
+.btn-tertiary {
+  padding-left: 1em;
+}
+
+.progress,
+.progress-bar {
+  border-radius: 8px;
+}
