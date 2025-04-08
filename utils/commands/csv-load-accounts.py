@@ -2,12 +2,18 @@ import csv
 from database import get_db
 from models import MegaAccount
 
-def load_accounts_from_csv(file_path):
+def run(args=None):
+    try:
+        file_path = str(args)
+    except (TypeError, ValueError):
+        return {"status": 400, "message": "Invalid file path"}
+
     # Get database session
     db = next(get_db())
 
     with open(file_path, mode="r") as f:
         reader = csv.DictReader(f)
+        account_ids = []
 
         for row in reader:
             email = row["email"] or row["Email"]
@@ -22,7 +28,13 @@ def load_accounts_from_csv(file_path):
             else:
                 # Add new account to the database
                 new_account = MegaAccount(email=email, password=password)
+                account_ids.append(new_account.id)
                 db.add(new_account)
                 db.commit()
 
                 print(f"Added account: {email}")
+    
+    return {
+        "status": 200,
+        "account_ids": account_ids
+    }

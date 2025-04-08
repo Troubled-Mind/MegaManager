@@ -213,3 +213,37 @@ function refreshAllAccounts() {
       }, 4000);
     });
 }
+
+// Add new accounts from csv
+function addNewAccounts() {
+  const btn = document.getElementById("addNewAccountsBtn");
+  const icon = document.getElementById("addNewAccountsIcon");
+
+  btn.classList.remove("btn-primary", "btn-success", "btn-danger");
+  btn.classList.add("btn-warning");
+  icon.classList.add("fa-spin");
+  btn.disabled = true;
+
+  const filename = "accounts.csv"; // TODO: replace with actual filename
+
+  return fetch("/run-command", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: `command=csv-load-accounts:${filename}`,
+  }).then((res) => res.json()).then(() => {
+    loadAccountTable(); // Reload the account table after adding new accounts
+
+    // Finished
+    btn.innerHTML = `<i class="fas fa-check me-2"></i> New accounts added!`;
+    btn.classList.remove("btn-warning");
+    btn.classList.add("btn-success");
+  }).finally(() => {
+    icon.classList.remove("fa-spin");
+      setTimeout(() => {
+        btn.innerHTML = `<i class="fas fa-sync-alt me-2" id="addNewAccountsIcon"></i> Add new accounts`;
+        btn.classList.remove("btn-success", "btn-danger");
+        btn.classList.add("btn-primary");
+        btn.disabled = false;
+      }, 4000);
+  })
+}
