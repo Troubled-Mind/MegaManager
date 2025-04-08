@@ -59,7 +59,63 @@
     <!-- Navbar -->
 
     <!-- Content Section -->
-    <section class="container my-5"></section>
+    <section class="container my-5">
+      <h2 class="mb-4">Settings</h2>
+      <form id="settingsForm">
+        <div class="alert alert-primary" role="alert" data-mdb-alert-init>
+          Please provide the <strong>full</strong> path to where MegaCMD is
+          installed.<br />🪟 <em>Windows</em>: Likely to be
+          %LOCALAPPDATA%/MEGAcmd<br />🍎 <em>macOS</em>: Likely to be
+          /Applications/MegaCMD.app/Contents/MacOS<br />🐧 <em>Linux</em>:
+          Likely to be /usr/bin/mega-cmd, though may depend on your distro.
+        </div>
+        <div class="form-outline mb-4" data-mdb-input-init>
+          <input type="text" id="megacmd_path" class="form-control" />
+          <label class="form-label" for="megacmd_path"
+            >Path where MegaCMD is installed.</label
+          >
+        </div>
+        <hr />
+        <div class="row">
+          <div class="alert alert-primary" role="alert" data-mdb-alert-init>
+            When MegaManager creates an account, it will use this email and
+            password combination.<br />
+            The emails will be "email+mm#@gmail.com". For example
+            john+mm2@gmail.com.<br />
+            Provide your full gmail account.
+          </div>
+          <div class="col-md-6">
+            <div class="form-outline mb-4" data-mdb-input-init>
+              <input type="email" id="mega_email" class="form-control" />
+              <label class="form-label" for="mega_email">Mega Email</label>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="form-outline mb-4" data-mdb-input-init>
+              <input type="password" id="mega_passwords" class="form-control" />
+              <label class="form-label" for="mega_passwords"
+                >Mega Password</label
+              >
+            </div>
+          </div>
+        </div>
+        <hr />
+        <div class="alert alert-primary" role="alert" data-mdb-alert-init>
+          If you wish to password protect MegaManager, you can enter one here.
+          This will be required to access the web-ui if it is set. To remove
+          password protection, set this to empty :)
+        </div>
+        <div class="form-outline mb-4" data-mdb-input-init>
+          <input type="password" id="app_password" class="form-control" />
+          <label class="form-label" for="app_password"
+            >Password to protect this app.</label
+          >
+        </div>
+
+        <button type="submit" class="btn btn-primary">Save Settings</button>
+      </form>
+    </section>
 
     <!-- Universal Toast -->
     <div class="position-fixed top-0 end-0 p-3" style="z-index: 1055">
@@ -78,5 +134,6 @@
     <!-- MDB scripts -->
     <script src="https://cdn.jsdelivr.net/npm/mdb-ui-kit@9.0.0/js/mdb.umd.min.js"></script>
     <script src="scripts/include.js"></script>
+    <script src="scripts/settings.js"></script>
   </body>
 </html>
