@@ -1,5 +1,6 @@
 from database import get_db
 from models import Setting
+from utils.config import settings
 from sqlalchemy.exc import SQLAlchemyError
 
 def run(args=None):
@@ -30,6 +31,7 @@ def run(args=None):
         session.rollback()
         return {"status": 500, "message": f"Database error: {str(e)}"}, 500
     finally:
+        settings.load() # Reload settings from the database
         session.close()
 
     return {

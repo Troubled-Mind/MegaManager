@@ -2,6 +2,7 @@ import re
 import sqlite3
 import subprocess
 from datetime import datetime
+from utils.config import settings
 
 DB_PATH = "database.db"
 
@@ -57,21 +58,24 @@ def process_account(account_id):
     email, password = row
 
     try:
+        # Get megacmd path from settings
+        path = settings.get_megacmd_path()
+
         # Ensure clean session
-        subprocess.run(["mega-logout"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True, check=False)
+        subprocess.run([rf"{path}mega-logout"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True, check=False)
 
         # Log in
-        result = subprocess.run(["mega-login", email, password], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True, check=True)
+        result = subprocess.run([rf"{path}mega-login", email, password], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True, check=True)
         login_output = result.stdout.strip()
         print(f"✅ Logged in: {email}")
 
         # Get quota info
-        quota_result = subprocess.run(["mega-df"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True, check=True)
+        quota_result = subprocess.run([rf"{path}mega-df"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True, check=True)
         used_quota, total_quota = parse_mega_df(quota_result.stdout.strip())
         print(f"💾 Used: {used_quota} / Total: {total_quota}")
 
         whoami_result = subprocess.run(
-            ["mega-whoami", "-l"],
+            [rf"{path}mega-whoami", "-l"],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
@@ -95,7 +99,7 @@ def process_account(account_id):
         conn.commit()
 
         # Log out
-        logout_result = subprocess.run(["mega-logout"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True, check=True)
+        logout_result = subprocess.run([rf"{path}mega-logout"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True, check=True)
         logout_output = logout_result.stdout.strip()
         print("👋 Logged out")
 
