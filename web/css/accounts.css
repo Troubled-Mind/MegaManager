@@ -48,7 +48,7 @@ ul.dropdown-menu-dark .dropdown-item:hover {
   color: #fff !important;
 }
 
-.table-error > td > div > ul > li.verify-button {
+.table-unverified > td > div > ul > li.verify-button {
   display: block !important;
 }
 
