@@ -14,11 +14,17 @@ class CustomHandler(SimpleHTTPRequestHandler):
         return os.path.join(os.getcwd(), 'web', relpath)
 
     def do_GET(self):
-        public_paths = [
-            "/login.html",
-            "/api/settings",
-        ]
+        public_paths = ["/login.html"]
         is_static = self.path.startswith("/resources/") or self.path.startswith("/scripts/")
+
+        # Handle /api/settings by returning current settings from the global Settings instance
+        if self.path == "/api/settings":
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            print("settings._values:", settings._values)
+            self.wfile.write(json.dumps(settings._values).encode())
+            return
 
         if self.path in public_paths or is_static:
             return super().do_GET()
@@ -32,6 +38,7 @@ class CustomHandler(SimpleHTTPRequestHandler):
             return
 
         return super().do_GET()
+
 
     def do_POST(self):
         if self.path == "/run-command":
