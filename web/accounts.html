@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/png" href="resources/img/logo.png" />
-    <title>Mega Manager</title>
+    <title>Mega Manager - Accounts</title>
 
     <!-- Font Awesome -->
     <link
@@ -26,6 +26,24 @@
   </head>
 
   <body>
+    <style>
+      /* Custom CSS for flashing rows */
+      @keyframes rowGlow {
+        0% {
+          box-shadow: 0 0 0px #ffc107;
+        }
+        50% {
+          box-shadow: 0 0 10px #ffc107;
+        }
+        100% {
+          box-shadow: 0 0 0px transparent;
+        }
+      }
+
+      .flash-row {
+        animation: rowGlow 1s ease-in-out;
+      }
+    </style>
     <!-- Navbar -->
     <nav class="navbar navbar-expand bg-body-tertiary">
       <div class="container-fluid">
@@ -58,63 +76,44 @@
     </nav>
     <!-- Navbar -->
 
-    <!-- Hero Section -->
-    <header class="bg-dark text-white text-center py-5">
-      <div class="container">
-        <h1 class="display-4">Welcome to Mega Manager</h1>
-        <p class="lead">
-          This web-ui will help you manage your local and cloud files.
-        </p>
-      </div>
-    </header>
-
     <!-- Content Section -->
     <section class="container my-5">
-      <div class="row">
-        <!--Grid column-->
-        <div class="col-lg-4 col-md-12 mb-4">
-          <div class="card mb-4">
-            <div class="card-body">
-              <h5 class="card-title">Files</h5>
-              <p class="card-text">
-                View files you have locally.
-              </p>
-              <button type="button" class="btn btn-danger" data-mdb-ripple-init>
-                Files
-              </button>
-            </div>
-          </div>
-        </div>
-        <div class="col-lg-4 col-md-12 mb-4">
-          <div class="card mb-4">
-            <div class="card-body">
-              <h5 class="card-title">Accounts</h5>
-              <p class="card-text">
-                View information about your Mega Accounts
-              </p>
-              <button type="button" class="btn btn-danger" data-mdb-ripple-init>
-                Accounts
-              </button>
-            </div>
-          </div>
-        </div>
-        <div class="col-lg-4 col-md-12 mb-4">
-          <div class="card mb-4">
-            <div class="card-body">
-              <h5 class="card-title">Settings</h5>
-              <p class="card-text">
-                Manage the settings of this app
-              </p>
-              <button type="button" class="btn btn-danger" data-mdb-ripple-init>
-                Settings
-              </button>
-            </div>
-          </div>
-        </div>
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Mega Accounts</h2>
+        <button
+          id="refreshAllBtn"
+          class="btn btn-primary"
+          onclick="refreshAllAccounts()"
+          title="Log in to all accounts"
+        >
+          <i class="fas fa-sync-alt me-2" id="refreshAllIcon"></i>
+          Refresh login for all accounts
+        </button>
+      </div>
+
+      <div id="accountTableWrapper">
+        <table class="table table-dark table-hover">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Email</th>
+              <th>Pro</th>
+              <th>Used</th>
+              <th>Total</th>
+              <th>Last Login</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="accountTableBody">
+            <!-- JS will insert rows here -->
+          </tbody>
+        </table>
+      </div>
     </section>
 
     <!-- MDB scripts -->
     <script src="https://cdn.jsdelivr.net/npm/mdb-ui-kit@9.0.0/js/mdb.umd.min.js"></script>
     <script src="scripts/include.js"></script>
+    <script src="scripts/accounts.js"></script>
   </body>
 </html>
