@@ -69,6 +69,16 @@
       <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0">Mega Accounts</h2>
         <button
+          id="addNewAccountsBtn"
+          class="btn btn-primary"
+          onclick="addNewAccounts()"
+          title="Add new accounts from CSV file"
+        >
+          <i class="fas fa-sync-alt me-2" id="addNewAccountsIcon"></i>
+          Add new accounts
+        </button>
+
+        <button
           id="refreshAllBtn"
           class="btn btn-primary"
           onclick="refreshAllAccounts()"

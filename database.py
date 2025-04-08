@@ -1,27 +1,25 @@
-import sqlite3
 import os
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from models import Base
 
-def create_database():
-    db_file = "database.db"
-    
-    # Get the directory of the current script
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    
-    # Construct the absolute path to the schema.sql file
-    schema_path = os.path.join(script_dir, "web", "resources", "dbschema.sql")
+DB_FILE = "database.db"
+DATABASE_URL = f"sqlite:///{DB_FILE}"
 
-    if not os.path.exists(db_file):
-        conn = sqlite3.connect(db_file)
-        cursor = conn.cursor()
+# Create the SQLAlchemy engine + a session factory
+engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+LocalSession = sessionmaker(bind=engine)
 
-        # Read schema from SQL file and execute it
-        if os.path.exists(schema_path):
-            with open(schema_path, "r") as f:
-                schema = f.read()
-                cursor.executescript(schema)
+def create_database():    
+    # Create the database file from the models if it doesn't exist
+    if not os.path.exists(DB_FILE):
+        Base.metadata.create_all(engine)
 
-            conn.commit()
-            conn.close()
-        else:
-            print(f"Schema file not found at {schema_path}")
-            os.remove(db_file)  # Clean up the database file if schema is not found
+def get_db():
+    # Get a new database session
+    db = LocalSession()
+    try:
+        yield db
+    finally:
+        # Close the session when done
+        db.close()
