@@ -33,3 +33,9 @@ class MegaFile(Base):
     sharing_link = Column(String, nullable=True)
     sharing_link_expiry = Column(DateTime, nullable=True)
     file_indices = Column(Text, nullable=True)
+
+class Setting(Base):
+    __tablename__ = "app_settings"
+    id = Column(Integer, primary_key=True)
+    key = Column(String, unique=True, nullable=False)
+    value = Column(String)

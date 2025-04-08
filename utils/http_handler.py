@@ -16,6 +16,15 @@ class CustomHandler(SimpleHTTPRequestHandler):
     def do_GET(self):
         if self.path == "/resources/img/logo.png" and USE_KAREN_LOGO:
             self.path = "/resources/img/logo-karen.png"
+        elif self.path == "/api/settings":
+            from utils.config import settings
+
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+
+            self.wfile.write(json.dumps(settings._values).encode())
+            return
         return super().do_GET()
 
     def do_POST(self):
