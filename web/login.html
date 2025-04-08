@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en" data-mdb-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="resources/img/logo.png" />
+    <title>Mega Manager</title>
+
+    <!-- Font Awesome -->
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <!-- Google Fonts -->
+    <link
+      href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
+      rel="stylesheet"
+    />
+    <!-- MDB stylesheets -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/mdb-ui-kit@9.0.0/css/mdb.min.css"
+    />
+    <!-- Custom CSS styling -->
+    <link rel="stylesheet" href="custom.css" />
+  </head>
+
+  <body class="d-flex justify-content-center align-items-center vh-100">
+    <form id="loginForm" class="text-center">
+      <img src="resources/img/logo.png" />
+      <h1>MegaManager</h1>
+      <h6>by TroubledMind & hades-is-here</h6>
+      <div class="form-outline mb-4" data-mdb-input-init>
+        <input type="password" id="password" class="form-control" />
+        <label class="form-label" for="password">MegaManager Password</label>
+      </div>
+      <button type="submit" class="btn btn-primary">Login</button>
+    </form>
+
+    <script>
+      document
+        .getElementById("loginForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const password = document.getElementById("password").value;
+
+          const res = await fetch("/run-command", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              command: "login",
+              args: { password },
+            }),
+          });
+
+          const result = await res.json();
+          if (result.status === 200) {
+            window.location.href = "/"; // redirect to main page
+          } else {
+            alert(result.message || "Invalid password");
+          }
+        });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/mdb-ui-kit@9.0.0/js/mdb.umd.min.js"></script>
+    <script src="scripts/include.js"></script>
+  </body>
+</html>

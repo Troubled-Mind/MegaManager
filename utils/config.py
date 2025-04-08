@@ -8,6 +8,10 @@ USE_KAREN_LOGO = random.randint(1, 20) == 1
 engine = create_engine("sqlite:///database.db")
 Session = sessionmaker(bind=engine)
 
+state = {
+    "authenticated": False
+}
+
 class Settings:
     def __init__(self):
         self._values = {}
@@ -31,5 +35,4 @@ class Settings:
     def __contains__(self, key):
         return key in self._values
 
-# Global singleton instance
 settings = Settings()

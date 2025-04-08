@@ -5,26 +5,32 @@ from http.server import SimpleHTTPRequestHandler
 from urllib.parse import parse_qs
 from database import create_database
 from utils.config import USE_KAREN_LOGO
+from utils.config import settings, state
 
 class CustomHandler(SimpleHTTPRequestHandler):
     def translate_path(self, path):
-        # Force all paths to serve from ./web directory
         path = super().translate_path(path)
         relpath = os.path.relpath(path, os.getcwd())
         return os.path.join(os.getcwd(), 'web', relpath)
 
     def do_GET(self):
-        if self.path == "/resources/img/logo.png" and USE_KAREN_LOGO:
-            self.path = "/resources/img/logo-karen.png"
-        elif self.path == "/api/settings":
-            from utils.config import settings
+        public_paths = [
+            "/login.html",
+            "/api/settings",
+        ]
+        is_static = self.path.startswith("/resources/") or self.path.startswith("/scripts/")
 
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
+        if self.path in public_paths or is_static:
+            return super().do_GET()
+
+        # 🔐 Protect everything else if password is set and not authenticated
+        if settings.get("app_password") and not state["authenticated"]:
+            print(f"🔒 Access blocked to {self.path} → not authenticated")
+            self.send_response(302)
+            self.send_header("Location", "/login.html")
             self.end_headers()
-
-            self.wfile.write(json.dumps(settings._values).encode())
             return
+
         return super().do_GET()
 
     def do_POST(self):
