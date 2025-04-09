@@ -16,7 +16,8 @@ def run(command_args=None):
 
     password = settings.get("mega_password")
     if not password:
-        safe_punctuation = string.punctuation.translate(str.maketrans('', '', "\\'\"&"))
+        unsafe = r"|&;<>()$`\"\' !*?~#=%@^,:{}[]+"
+        safe_punctuation = string.punctuation.translate(str.maketrans('', '', unsafe))
         chars = string.ascii_letters + string.digits + safe_punctuation
         password = ''.join(random.SystemRandom().choice(chars) for _ in range(22))
 

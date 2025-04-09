@@ -22,9 +22,9 @@ def run(args=None):
         else:
             account_ids = [int(args)]
     except (TypeError, ValueError):
-        return {"status": 400, "message": "Invalid account ID"}, 400
+        return {"status": 400, "message": "Invalid account ID"}
     except Exception as e:
-        return {"status": 500, "message": f"Database error: {str(e)}"}, 500
+        return {"status": 500, "message": f"Database error: {str(e)}"}
     finally:
         conn.close()
 
@@ -33,22 +33,20 @@ def run(args=None):
 
     for account_id in account_ids:
         print(f"\n🔁 Processing account ID {account_id}")
-        result, status = process_account(account_id)
+        result = process_account(account_id)
         results.append(f"Account {account_id}: {result['message']}")
         
-        if status != 200:
+        if result.get("status") != 200:
             overall_status = 500
 
     return {
         "status": overall_status,
         "account_ids": account_ids,
         "message": "\n\n".join(results)
-    }, overall_status
+    }
 
 
 def format_command(exe, *args):
-    if os.sep in exe:
-        exe = f'"{exe}"'
     return f"{exe} {' '.join(args)}"
 
 
@@ -61,66 +59,79 @@ def process_account(account_id):
 
     if not row:
         conn.close()
-        return {"status": 404, "message": f"No account found with ID {account_id}"}, 404
+        return {"status": 404, "message": f"No account found with ID {account_id}"}
 
     email, password = row
     print(f"🔑 Email: {email} | Password: {password}")
 
     try:
+        # Resolve executable paths
         base_cmd_path = settings.get("megacmd_path")
-        if base_cmd_path:
-            base_cmd_path = os.path.normpath(base_cmd_path)
-            mega_logout = os.path.join(base_cmd_path, "mega-logout")
-            mega_login = os.path.join(base_cmd_path, "mega-login")
-            mega_df = os.path.join(base_cmd_path, "mega-df")
-            mega_whoami = os.path.join(base_cmd_path, "mega-whoami")
-        else:
-            mega_logout = "mega-logout"
-            mega_login = "mega-login"
-            mega_df = "mega-df"
-            mega_whoami = "mega-whoami"
+        def cmd(name):
+            return os.path.join(base_cmd_path, name) if base_cmd_path else name
 
-        subprocess.run(format_command(mega_logout), stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True)
+        # Logout to reset session
+        subprocess.run([cmd("mega-logout")], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
-        login_cmd = format_command(mega_login, email, password)
-        print(f"▶ Logging in: {login_cmd}")
-        subprocess.run(login_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True, check=True)
+        # Login command (safe list form)
+        print(f"▶ Logging in: {email}")
+        subprocess.run([cmd("mega-login"), email, password], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
         print(f"✅ Logged in: {email}")
 
-        df_cmd = format_command(mega_df)
-        df_output = subprocess.run(df_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True, check=True)
+        # Fetch quota
+        df_output = subprocess.run([cmd("mega-df")], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
         used_quota, total_quota = parse_mega_df(df_output.stdout.strip())
         print(f"💾 Used: {used_quota} / Total: {total_quota}")
 
-        whoami_cmd = format_command(mega_whoami, "-l")
-        whoami_output = subprocess.run(whoami_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True, check=True)
+        # Get pro level
+        whoami_output = subprocess.run([cmd("mega-whoami"), "-l"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
         pro_level = parse_pro_level(whoami_output.stdout.strip())
         is_pro = pro_level > 0
         print(f"👤 Pro level: {pro_level} → {'✅ Pro' if is_pro else '❌ Free'}")
-        pro_account = 1 if is_pro else 0
 
+        # Update DB
         now = datetime.utcnow().isoformat()
         cursor.execute(
             "UPDATE mega_accounts SET is_pro_account = ?, used_quota = ?, total_quota = ?, storage_quota_updated = ?, last_login = ? WHERE id = ?",
-            (pro_account, used_quota, total_quota, now, now, account_id)
+            (1 if is_pro else 0, used_quota, total_quota, now, now, account_id)
         )
         conn.commit()
 
-        subprocess.run(format_command(mega_logout), stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True, check=True)
-        print("👋 Logged out")
+        # Logout
+        subprocess.run([cmd("mega-logout")], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
-        return {
-            "status": 200,
-            "message": f"Login successful for account {email}"
-        }, 200
+        return {"status": 200, "message": f"Login successful for account {email}"}
 
     except subprocess.CalledProcessError as e:
-        error_output = e.stderr.strip()
-        print(f"❌ Error for {email}: {error_output} | status: 500")
-        return {"status": 500, "message": f"{email} - Error: {error_output}"}, 500
+        stdout = e.stdout.strip() if e.stdout else ""
+        stderr = e.stderr.strip() if e.stderr else ""
+
+        # Look for known error patterns
+        if "unconfirmed account" in stdout.lower():
+            error_msg = "Login failed: unconfirmed account. Please confirm your account"
+        elif "already logged in" in stdout.lower():
+            error_msg = "Already logged in"
+        else:
+            # Try to extract a cleaner message from stdout
+            match = re.search(r'cmd ERR\s+(.*?)(]|\Z)', stdout)
+            if match:
+                error_msg = match.group(1).strip()
+            else:
+                error_msg = stderr or stdout or f"Unknown error (code {e.returncode})"
+
+        print(f"❌ Error for {email}: {error_msg} | code: {e.returncode}")
+
+        return {
+            "status": 500,
+            "message": error_msg,
+            "stdout": stdout,
+            "stderr": stderr,
+            "exit_code": e.returncode
+        }
 
     finally:
         conn.close()
+
 
 
 def parse_mega_df(output):
