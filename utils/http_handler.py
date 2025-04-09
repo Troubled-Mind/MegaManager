@@ -113,6 +113,14 @@ class CustomHandler(SimpleHTTPRequestHandler):
         else:
             command_name = command
 
+        # Handle special case for mega-register-account with email in the command
+        if command.startswith("mega-register-account:") and (not args or args == [""]):
+            arg_str = command[len("mega-register-account:"):]
+            args = [arg_str]
+        elif ":" in command and (not args or args == [""]):
+            _, _, arg_str = command.partition(":")
+            args = [arg_str]
+
         command_path = f"utils/commands/{command_name}.py"
         if not os.path.exists(command_path):
             return {"status": 400, "message": f"Unknown command: {command_name}"}, 400
@@ -128,6 +136,7 @@ class CustomHandler(SimpleHTTPRequestHandler):
                 return {"status": 500, "message": f"{command_name} does not define a run() function."}
         except Exception as e:
             return {"status": 500, "message": str(e)}
+
 
     def send_error_response(self, status, message):
         self.send_response(status)
