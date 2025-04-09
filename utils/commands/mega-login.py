@@ -1,6 +1,8 @@
+import os
 import re
 import sqlite3
 import subprocess
+import shlex
 from datetime import datetime
 from utils.config import settings
 
@@ -58,38 +60,37 @@ def process_account(account_id):
     email, password = row
 
     try:
-        # Get megacmd path from settings
-        path = settings.get_megacmd_path()
+        base_cmd_path = settings.get("megacmd_path")
+        if base_cmd_path:
+            base_cmd_path = os.path.normpath(base_cmd_path)
+            mega_logout = os.path.join(base_cmd_path, "mega-logout")
+            mega_login = os.path.join(base_cmd_path, "mega-login")
+            mega_df = os.path.join(base_cmd_path, "mega-df")
+            mega_whoami = os.path.join(base_cmd_path, "mega-whoami")
+        else:
+            mega_logout = "mega-logout"
+            mega_login = "mega-login"
+            mega_df = "mega-df"
+            mega_whoami = "mega-whoami"
 
-        # Ensure clean session
-        subprocess.run([rf"{path}mega-logout"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True, check=False)
+        subprocess.run(f'"{mega_logout}"', stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True)
 
-        # Log in
-        result = subprocess.run([rf"{path}mega-login", email, password], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True, check=True)
-        login_output = result.stdout.strip()
+        login_cmd = f'"{mega_login}" "{email}" "{password}"'
+        print(f"▶ Logging in: {login_cmd}")
+        subprocess.run(login_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True, check=True)
         print(f"✅ Logged in: {email}")
 
-        # Get quota info
-        quota_result = subprocess.run([rf"{path}mega-df"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True, check=True)
-        used_quota, total_quota = parse_mega_df(quota_result.stdout.strip())
+        df_cmd = f'"{mega_df}"'
+        df_output = subprocess.run(df_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True, check=True)
+        used_quota, total_quota = parse_mega_df(df_output.stdout.strip())
         print(f"💾 Used: {used_quota} / Total: {total_quota}")
 
-        whoami_result = subprocess.run(
-            [rf"{path}mega-whoami", "-l"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-            shell=True,
-            check=True
-        )
-        pro_level = parse_pro_level(whoami_result.stdout.strip())
+        whoami_cmd = f'"{mega_whoami}" -l'
+        whoami_output = subprocess.run(whoami_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True, check=True)
+        pro_level = parse_pro_level(whoami_output.stdout.strip())
         is_pro = pro_level > 0
         print(f"👤 Pro level: {pro_level} → {'✅ Pro' if is_pro else '❌ Free'}")
-        if is_pro:
-            pro_account = 1
-        else:
-            pro_account = 0
-
+        pro_account = 1 if is_pro else 0
 
         now = datetime.utcnow().isoformat()
         cursor.execute(
@@ -98,9 +99,7 @@ def process_account(account_id):
         )
         conn.commit()
 
-        # Log out
-        logout_result = subprocess.run([rf"{path}mega-logout"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True, check=True)
-        logout_output = logout_result.stdout.strip()
+        subprocess.run(f'"{mega_logout}"', stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True, check=True)
         print("👋 Logged out")
 
         return {
@@ -117,10 +116,6 @@ def process_account(account_id):
         conn.close()
 
 def parse_mega_df(output):
-    """
-    Parse the 'USED STORAGE' line from mega-cmd's df output:
-    USED STORAGE:  16593337485          77.27% of 21474836480
-    """
     for line in output.splitlines():
         if "USED STORAGE:" in line:
             match = re.search(r'USED STORAGE:\s+(\d+).*?of\s+(\d+)', line)
@@ -131,11 +126,6 @@ def parse_mega_df(output):
     return "0", "0"
 
 def parse_pro_level(output):
-    """
-    Extracts the Pro level from the output of `mega-whoami -l`
-    Example line:
-    Pro level: 1
-    """
     for line in output.splitlines():
         if "Pro level:" in line:
             match = re.search(r"Pro level:\s+(\d+)", line)

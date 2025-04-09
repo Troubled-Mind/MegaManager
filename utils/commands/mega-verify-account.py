@@ -1,5 +1,6 @@
 import sqlite3
 import subprocess
+import os
 from urllib.parse import unquote
 from utils.config import settings
 
@@ -31,14 +32,24 @@ def run(args=None):
             return {"status": 400, "message": "Missing email or password for account"}, 400
 
         # Get megacmd path from settings
-        path = settings.get_megacmd_path()
+        base_path = settings.get("megacmd_path")
+        if base_path:
+            base_path = os.path.normpath(base_path)
+            executable = f'"{os.path.join(base_path, "mega-confirm")}"'
+        else:
+            executable = "mega-confirm"
+
+        cmd = f'{executable} "{verification_link}" "{email}" "{password}"'
 
         print(f"🔗 Verifying account {account_id} using link: {verification_link}")
+        print(f"▶ Running: {cmd}")
+
         result = subprocess.run(
-            [rf"{path}mega-confirm", verification_link, email, password],
+            cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
+            shell=True,
             check=True
         )
 

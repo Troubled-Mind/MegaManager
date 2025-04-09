@@ -71,22 +71,29 @@
 
         <div class="btn-group" style="gap: 4px">
           <button
-            class="btn btn-primary"
-            data-bs-toggle="modal"
-            data-bs-target="#fileUploadModal"
+            class="btn btn-warning btn-sm px-2 py-1"
             id="addNewAccountsBtn"
+            title="Import accounts from CSV"
           >
-            <i class="fas fa-upload me-2" id="fileUploadIcon"></i>
+            <i class="fas fa-file-csv me-1" id="fileUploadIcon"></i>
             Import CSV
           </button>
           <button
+            class="btn btn-success btn-sm px-2 py-1"
+            id="newAccountBtn"
+            title="Register a new Mega Account"
+          >
+            <i class="fas fa-plus-circle me-1" id="newAccountButton"></i>
+            New Mega Account
+          </button>
+          <button
             id="refreshAllBtn"
-            class="btn btn-primary"
+            class="btn btn-primary btn-sm px-2 py-1"
             onclick="refreshAllAccounts()"
             title="Log in to all accounts"
           >
-            <i class="fas fa-sync-alt me-2" id="refreshAllIcon"></i>
-            Refresh all accounts
+            <i class="fas fa-sync-alt me-1" id="refreshAllIcon"></i>
+            Refresh all
           </button>
         </div>
       </div>
@@ -104,7 +111,7 @@
                 <th>Usage</th>
                 <th>Remaining</th>
                 <th>Last Login</th>
-                <th>Action</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody id="accountTableBody">
@@ -205,7 +212,6 @@
       </div>
     </div>
     <!-- File upload modal -->
-    <!-- Modal for File Upload -->
     <div
       class="modal fade"
       id="fileUploadModal"
@@ -237,6 +243,84 @@
               </div>
               <button type="submit" class="btn btn-primary">Upload</button>
             </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- New account modal -->
+    <!-- New Account Modal -->
+    <div
+      class="modal fade"
+      id="newAccountModal"
+      tabindex="-1"
+      aria-labelledby="newAccountModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content text-white bg-dark">
+          <div class="modal-header">
+            <h5 class="modal-title" id="newAccountModalLabel">
+              Register New Mega Account
+            </h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-mdb-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <form id="newMegaAccountForm">
+              <div class="mb-3 d-flex align-items-center gap-2 flex-wrap">
+                <p>
+                  Here you can define the format of the email used for a new
+                  mega account.<br />
+                  If you want to pre-fill some of this data in future, set an
+                  email in <a href="/settings.html" target="_blank">Settings</a
+                  ><br />
+                  The password used will be randomly generated, unless defined
+                  in Settings.
+                </p>
+                <input
+                  type="text"
+                  id="emailPrefix"
+                  class="form-control"
+                  placeholder="prefix"
+                  required
+                  style="max-width: 120px"
+                />
+                <span> + </span>
+                <input
+                  type="text"
+                  id="emailSuffix"
+                  class="form-control"
+                  placeholder="custom"
+                  required
+                  style="max-width: 120px"
+                />
+                <span>@</span>
+                <input
+                  type="text"
+                  id="emailDomain"
+                  class="form-control"
+                  placeholder="custom"
+                  required
+                  style="max-width: 150px"
+                />
+              </div>
+              <div class="text-muted small">
+                Final email:
+                <span id="finalEmailPreview" class="text-info"></span>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-outline-light" data-mdb-dismiss="modal">
+              Cancel
+            </button>
+            <button class="btn btn-primary" id="submitNewAccountBtn">
+              Register
+            </button>
           </div>
         </div>
       </div>

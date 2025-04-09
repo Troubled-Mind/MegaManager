@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", () => {
     loadAccountTable();
   }
 
-  // Initialize the verify modal event
+  // Reset verification modal input on close
   const verifyModalEl = document.getElementById("verifyAccountModal");
   if (verifyModalEl) {
     verifyModalEl.addEventListener("hidden.mdb.modal", () => {
@@ -12,42 +12,75 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Initialize the file upload modal
+  // Reset new account modal fields on close (optional)
+  const newAccountModalEl = document.getElementById("newAccountModal");
+  if (newAccountModalEl) {
+    newAccountModalEl.addEventListener("hidden.mdb.modal", () => {
+      document.getElementById("emailPrefix").value = "";
+      document.getElementById("emailSuffix").value = "";
+      document.getElementById("emailDomain").value = "";
+      document.getElementById("finalEmailPreview").textContent = "";
+    });
+  }
+
+  // Init and show new account modal manually
+  const newAccountModal = new mdb.Modal(
+    document.getElementById("newAccountModal")
+  );
+  newAccountBtn.addEventListener("click", async () => {
+    const modal = new mdb.Modal(document.getElementById("newAccountModal"));
+    modal.show();
+
+    try {
+      const res = await fetch("/api/settings");
+      const settings = await res.json();
+
+      if (settings.mega_email) {
+        const [prefix, domain] = settings.mega_email.split("@");
+        document.getElementById("emailPrefix").value = prefix || "";
+        document.getElementById("emailDomain").value = domain || "";
+        document.getElementById("finalEmailPreview").textContent =
+          settings.mega_email;
+      }
+    } catch (err) {
+      console.error("Failed to load mega_email setting:", err);
+    }
+  });
+
+  // Init and show file upload modal manually
   const fileUploadModal = new mdb.Modal(
     document.getElementById("fileUploadModal")
   );
+  const fileUploadBtn = document.getElementById("addNewAccountsBtn");
+  if (fileUploadBtn) {
+    fileUploadBtn.addEventListener("click", () => {
+      fileUploadModal.show();
+    });
+  }
 
-  // Add event listener to the "Import CSV" button to trigger modal open
-  const importCsvButton = document.querySelector('[data-bs-toggle="modal"]');
-  importCsvButton.addEventListener("click", function () {
-    fileUploadModal.show(); // Show the modal programmatically
-  });
-
-  // Handle the form submission for file upload
+  // File upload form handling
   const fileUploadForm = document.getElementById("fileUploadForm");
+  if (fileUploadForm) {
+    fileUploadForm.addEventListener("submit", (event) => {
+      event.preventDefault();
 
-  fileUploadForm.addEventListener("submit", (event) => {
-    event.preventDefault();
+      const fileInput = document.getElementById("csvFile");
+      const file = fileInput.files[0];
+      if (!file) {
+        alert("Please choose a file to upload");
+        return;
+      }
 
-    const fileInput = document.getElementById("csvFile");
-    const file = fileInput.files[0];
-
-    if (!file) {
-      alert("Please choose a file to upload");
-      return;
-    }
-
-    const reader = new FileReader();
-
-    reader.onload = function (event) {
-      const csvData = event.target.result;
-      const parsedData = parseCSV(csvData);
-      addNewAccounts(parsedData); // Process the parsed data
-      fileUploadModal.hide(); // Close the modal after uploading
-    };
-
-    reader.readAsText(file);
-  });
+      const reader = new FileReader();
+      reader.onload = function (event) {
+        const csvData = event.target.result;
+        const parsedData = parseCSV(csvData);
+        addNewAccounts(parsedData);
+        fileUploadModal.hide();
+      };
+      reader.readAsText(file);
+    });
+  }
 });
 
 function formatDate(isoString) {
@@ -424,7 +457,7 @@ function refreshAllAccounts() {
     .finally(() => {
       icon.classList.remove("fa-spin");
       setTimeout(() => {
-        btn.innerHTML = `<i class="fas fa-sync-alt me-2" id="refreshAllIcon"></i> Refresh login for all accounts`;
+        btn.innerHTML = `<i class="fas fa-sync-alt me-2" id="refreshAllIcon"></i> Refresh all`;
         btn.classList.remove("btn-success", "btn-danger");
         btn.classList.add("btn-primary");
         btn.disabled = false;
@@ -659,3 +692,63 @@ function parseCSV(csvData) {
 
   return result;
 }
+
+function updateFinalEmailPreview() {
+  const prefix = document.getElementById("emailPrefix").value.trim();
+  const suffix = document.getElementById("emailSuffix").value.trim();
+  const domain = document.getElementById("emailDomain").value.trim();
+
+  const final =
+    prefix && suffix && domain ? `${prefix}+${suffix}@${domain}` : "";
+  document.getElementById("finalEmailPreview").textContent = final;
+}
+
+["emailPrefix", "emailSuffix", "emailDomain"].forEach((id) => {
+  const input = document.getElementById(id);
+  if (input) input.addEventListener("input", updateFinalEmailPreview);
+});
+
+document
+  .getElementById("submitNewAccountBtn")
+  .addEventListener("click", async () => {
+    const prefix = document.getElementById("emailPrefix").value.trim();
+    const suffix = document.getElementById("emailSuffix").value.trim();
+    const domain = document.getElementById("emailDomain").value.trim();
+
+    if (!prefix || !suffix || !domain) {
+      showToast("Please fill out all parts of the email", "bg-warning");
+      return;
+    }
+
+    const finalEmail = `${prefix}+${suffix}@${domain}`;
+
+    try {
+      const res = await fetch("/run-command", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          command: "mega-register-account",
+          args: [finalEmail],
+        }),
+      });
+
+      const result = await res.json();
+
+      if (result.status === 200) {
+        showToast(`✅ Registered: ${finalEmail}`, "bg-success");
+        const newAccountModal = mdb.Modal.getInstance(
+          document.getElementById("newAccountModal")
+        );
+        if (newAccountModal) newAccountModal.hide();
+        loadAccountTable();
+        refreshAccount(result.id);
+      } else {
+        showToast(`❌ Registration failed: ${result.message}`, "bg-danger");
+      }
+    } catch (err) {
+      console.error("Registration error:", err);
+      showToast("❌ An error occurred during registration", "bg-danger");
+    }
+  });
