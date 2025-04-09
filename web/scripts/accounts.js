@@ -399,6 +399,7 @@ function loadAccountTable() {
 
       $("#accountTable").DataTable({
         responsive: true,
+        lengthMenu: [50, 100, 250, 500, "All"],
         order: [[0, "desc"]],
         columnDefs: [
           {

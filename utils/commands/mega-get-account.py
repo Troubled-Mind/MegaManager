@@ -8,6 +8,8 @@ def run(args=None):
     except (TypeError, ValueError):
         return {"status": 400, "message": "Invalid account ID"}
 
+    print(f"📥 Command: mega-get-account:{account_id}")
+
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
@@ -17,7 +19,7 @@ def run(args=None):
         WHERE id = ?
     """, (account_id,))
     row = cursor.fetchone()
-    cursor.execute("SELECT COUNT(*) FROM mega_files WHERE account_id = ?", (account_id,))
+    cursor.execute("SELECT COUNT(*) FROM mega_files WHERE mega_account_id = ?", (account_id,))
     file_count = cursor.fetchone()[0]
     conn.close()
 
