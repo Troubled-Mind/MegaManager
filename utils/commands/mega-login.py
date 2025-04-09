@@ -2,7 +2,6 @@ import os
 import re
 import sqlite3
 import subprocess
-import shlex
 from datetime import datetime
 from utils.config import settings
 
@@ -46,6 +45,13 @@ def run(args=None):
         "message": "\n\n".join(results)
     }, overall_status
 
+
+def format_command(exe, *args):
+    if os.sep in exe:
+        exe = f'"{exe}"'
+    return f"{exe} {' '.join(args)}"
+
+
 def process_account(account_id):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
@@ -58,6 +64,7 @@ def process_account(account_id):
         return {"status": 404, "message": f"No account found with ID {account_id}"}, 404
 
     email, password = row
+    print(f"🔑 Email: {email} | Password: {password}")
 
     try:
         base_cmd_path = settings.get("megacmd_path")
@@ -73,19 +80,19 @@ def process_account(account_id):
             mega_df = "mega-df"
             mega_whoami = "mega-whoami"
 
-        subprocess.run(f'"{mega_logout}"', stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True)
+        subprocess.run(format_command(mega_logout), stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True)
 
-        login_cmd = f'"{mega_login}" "{email}" "{password}"'
+        login_cmd = format_command(mega_login, email, password)
         print(f"▶ Logging in: {login_cmd}")
         subprocess.run(login_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True, check=True)
         print(f"✅ Logged in: {email}")
 
-        df_cmd = f'"{mega_df}"'
+        df_cmd = format_command(mega_df)
         df_output = subprocess.run(df_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True, check=True)
         used_quota, total_quota = parse_mega_df(df_output.stdout.strip())
         print(f"💾 Used: {used_quota} / Total: {total_quota}")
 
-        whoami_cmd = f'"{mega_whoami}" -l'
+        whoami_cmd = format_command(mega_whoami, "-l")
         whoami_output = subprocess.run(whoami_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True, check=True)
         pro_level = parse_pro_level(whoami_output.stdout.strip())
         is_pro = pro_level > 0
@@ -99,7 +106,7 @@ def process_account(account_id):
         )
         conn.commit()
 
-        subprocess.run(f'"{mega_logout}"', stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True, check=True)
+        subprocess.run(format_command(mega_logout), stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True, check=True)
         print("👋 Logged out")
 
         return {
@@ -115,6 +122,7 @@ def process_account(account_id):
     finally:
         conn.close()
 
+
 def parse_mega_df(output):
     for line in output.splitlines():
         if "USED STORAGE:" in line:
@@ -124,6 +132,7 @@ def parse_mega_df(output):
                 total = match.group(2)
                 return used, total
     return "0", "0"
+
 
 def parse_pro_level(output):
     for line in output.splitlines():

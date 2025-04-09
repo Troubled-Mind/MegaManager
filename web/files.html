@@ -59,7 +59,35 @@
     <!-- Navbar -->
 
     <!-- Content Section -->
-    <section class="container my-5"></section>
+    <!-- Content Section -->
+    <section class="container my-5">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Files</h2>
+      </div>
+
+      <div id="filesTableWrapper">
+        <div class="table-responsive">
+          <table id="filesTable" class="table table-dark table-hover">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Local Path</th>
+                <th>Cloud Path</th>
+                <th>Folder Name</th>
+                <th>Is Local</th>
+                <!-- Is Local icon grey/green to show status -->
+                <th>Is Cloud</th>
+                <!-- Is Cloud tooltip to be added to rows identifying the email, icon which is grey/green depending on status -->
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="filesTableBody">
+              <!-- JS will insert rows here -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
 
     <!-- Universal Toast -->
     <div class="position-fixed top-0 end-0 p-3" style="z-index: 1055">
@@ -77,6 +105,10 @@
     </div>
     <!-- MDB scripts -->
     <script src="https://cdn.jsdelivr.net/npm/mdb-ui-kit@9.0.0/js/mdb.umd.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
     <script src="scripts/include.js"></script>
+    <script src="scripts/files.js"></script>
   </body>
 </html>
