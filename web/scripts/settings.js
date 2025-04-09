@@ -4,7 +4,7 @@ function initMDBInputs() {
   });
 }
 
-async function loadSettings() {
+async function loadSettings(repeater) {
   const res = await fetch("/api/settings");
   const data = await res.json();
 
@@ -29,15 +29,14 @@ async function loadSettings() {
     }
   }
 
-  $(".repeater").repeater(
-    "setList",
-    localPaths.map((p) => ({ local_paths: p }))
-  );
-  initMDBInputs();
+  arr = Array.from({ length: localPaths.length }, (_, i) => ({
+    local_paths: localPaths[i],
+  }));
+  repeater.setList(arr);
 }
 
 $(document).ready(function () {
-  $(".repeater").repeater({
+  let repeater = $(".repeater").repeater({
     initEmpty: true,
     defaultValues: {},
     show: function () {
@@ -50,7 +49,7 @@ $(document).ready(function () {
   });
 
   initMDBInputs();
-  loadSettings();
+  loadSettings(repeater);
 });
 
 document
