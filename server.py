@@ -1,12 +1,13 @@
 import os
 from http.server import HTTPServer
 from database import create_database
-from utils.config import settings
+from utils.config import settings, check_for_update
 from utils.http_handler import CustomHandler 
 
 def run_server():
     os.chdir(os.getcwd())  
     create_database()  # Ensure the database and schema are created
+    check_for_update()  
     server_address = ("localhost", 6342)
     httpd = HTTPServer(server_address, CustomHandler)
     settings.load()  # Load settings from the database
