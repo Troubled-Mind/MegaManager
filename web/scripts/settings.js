@@ -1,3 +1,13 @@
+fetch("/api/version")
+  .then((res) => res.json())
+  .then((data) => {
+    document.getElementById("appVersion").textContent =
+      data.version || "Unknown";
+  })
+  .catch(() => {
+    document.getElementById("appVersion").textContent = "Error";
+  });
+
 function initMDBInputs() {
   document.querySelectorAll(".form-outline").forEach((formOutline) => {
     mdb.Input.getOrCreateInstance(formOutline).init();
