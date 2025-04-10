@@ -5,9 +5,38 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function generateSharingLink(fileId) {
-  console.log(`🔗 Generate sharing link for file ID: ${fileId}`);
+  console.log(`🔗 Generating sharing link for file ID: ${fileId}`);
   showToast(`Generating link for file #${fileId}...`, "bg-info");
-  // TODO: implement backend command
+
+  fetch("/run-command", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      command: `mega-generate-sharing-link:${fileId}`,
+    }),
+  })
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`Server responded with status ${response.status}`);
+      }
+      return response.json();
+    })
+    .then((data) => {
+      if (data.status === 200) {
+        fetchFileDetails(fileId);
+      } else {
+        showToast(`❌ ${data.message}`, "bg-danger");
+      }
+    })
+    .catch((error) => {
+      console.error("Error generating sharing link:", error);
+      showToast(
+        "❌ Failed to generate link due to network error.",
+        "bg-danger"
+      );
+    });
 }
 
 function uploadToCloud(fileId) {
