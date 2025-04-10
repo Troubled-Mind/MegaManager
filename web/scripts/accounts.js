@@ -634,6 +634,7 @@ function togglePasswordVisibility(accountId) {
 
 // format the bytes to human-readable format
 function formatBytes(bytes) {
+  if (bytes == null || isNaN(bytes)) return "-";
   const units = ["B", "KB", "MB", "GB", "TB"];
   let i = 0;
   while (bytes >= 1024 && i < units.length - 1) {
