@@ -94,7 +94,8 @@ def run(args=None):
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
-            check=True
+            check=True,
+            encoding="utf-8"
         )
 
         raw_paths = result.stdout.strip().splitlines()
