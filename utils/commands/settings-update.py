@@ -10,7 +10,7 @@ def run(args=None):
     if not isinstance(args, dict):
         return {"status": 400, "message": "Invalid data format"}, 400
 
-    valid_keys = {"app_password", "megacmd_path", "mega_email", "mega_passwords", "local_paths"}
+    valid_keys = {"app_password", "megacmd_path", "mega_email", "mega_passwords", "local_paths", "date_format_full", "date_format_month", "date_format_year"}
     updates = []
 
     session = next(get_db())

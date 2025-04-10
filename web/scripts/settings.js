@@ -80,6 +80,9 @@ document
       mega_email: document.getElementById("mega_email").value,
       mega_passwords: document.getElementById("mega_passwords").value,
       app_password: document.getElementById("app_password").value,
+      date_format_full: document.getElementById("date_format_full").value,
+      date_format_month: document.getElementById("date_format_month").value,
+      date_format_year: document.getElementById("date_format_year").value,
       local_paths: Array.from(
         document.querySelectorAll(
           'input[name^="folder_paths"][name$="[local_paths]"]'
