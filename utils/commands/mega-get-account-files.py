@@ -2,7 +2,7 @@ import os
 import re
 import sqlite3
 import subprocess
-from utils.config import settings
+from utils.config import settings, cmd
 
 DB_PATH = "database.db"
 OUTPUT_PATH = "files.txt"
@@ -79,11 +79,6 @@ def run(args=None):
 
     email, password = row
     print(f"🔑 Logging into MEGA as {email}")
-
-    def cmd(name):
-        suffix = ".bat" if os.name == "nt" else ""
-        base_path = settings.get("megacmd_path")
-        return os.path.join(base_path, name + suffix) if base_path else name
 
     try:
         subprocess.run([cmd("mega-logout")], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
