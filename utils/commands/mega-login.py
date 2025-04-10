@@ -1,9 +1,9 @@
-import os
 import re
 import sqlite3
 import subprocess
 from datetime import datetime
-from utils.config import settings, cmd
+from utils.commands.shared import get_account_files
+from utils.config import cmd
 
 DB_PATH = "database.db"
 
@@ -92,6 +92,12 @@ def process_account(account_id):
             (1 if is_pro else 0, used_quota, total_quota, now, now, account_id)
         )
         conn.commit()
+
+        # Index account files
+        print("📁 Indexing account files...")
+        result = get_account_files(account_id)
+        if result.get("status") != 200:
+            return result
 
         # Logout
         subprocess.run([cmd("mega-logout")], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
