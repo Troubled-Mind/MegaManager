@@ -18,6 +18,9 @@ def run(args=None):
     full_path = mega_file.path + "/" + mega_file.folder_name
     account_id = mega_file.mega_account_id
 
+    status_code = 0
+    message = ""
+
     try:
         # Get mega account
         account = session.query(MegaAccount).filter(MegaAccount.id == account_id).first()
@@ -43,9 +46,6 @@ def run(args=None):
             mega_file.mega_sharing_link = link
             print(f"🔗 Link: {link}")
 
-        # Logout
-        subprocess.run([cmd("mega-logout")], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-
         # Save changes to the database
         session.commit()
         return {
@@ -56,17 +56,32 @@ def run(args=None):
         }
     
     except subprocess.CalledProcessError as e:
-        session.rollback()
-
         stdout = e.stdout.strip() if e.stdout else ""
         stderr = e.stderr.strip() if e.stderr else ""
-        error_msg = stderr or stdout or f"Unknown error (code {e.returncode})"
-        return {"status": 500, 
-                "message": f"Error fetching file details: {error_msg}"}
+        
+        if "not exported" in stdout.lower():
+            # When file isn't exported, save the rest of the details and return success
+            mega_file.mega_sharing_link = None
+            session.commit()
+            return {
+                "status": 200,
+                "message": f"File details updated successfully for {mega_file.folder_name}",
+                "folder_size": storage,
+                "link": None
+            }
+        else:
+            # Return error
+            error_msg = stderr or stdout or f"Unknown error (code {e.returncode})"
+            return {"status": 500, 
+                    "message": f"Error fetching file details: {error_msg}"}
     
     except Exception as e:
         session.rollback()
         return {"status": 500, "message": f"Error fetching file details: {str(e)}"}
+
+    finally:
+        # Logout
+        subprocess.run([cmd("mega-logout")], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
 def parse_mega_du(output):
     for line in output.splitlines():
