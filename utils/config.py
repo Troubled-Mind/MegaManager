@@ -26,9 +26,6 @@ class Settings:
 
     def get(self, key, default=None):
         return self._values.get(key, default)
-    
-    def get_megacmd_path(self):
-        return self.get("megacmd_path") or ""
 
     def __getitem__(self, key):
         return self._values.get(key)
@@ -39,7 +36,11 @@ class Settings:
 
 settings = Settings()
 
-
+# Resolve executable paths
+def cmd(name):
+    suffix = ".bat" if os.name == "nt" else ""
+    base_path = settings.get("megacmd_path")
+    return os.path.join(base_path, name + suffix) if base_path else name
     
 def check_for_update():
     local_version_path = "version"
