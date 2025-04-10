@@ -3,6 +3,8 @@ import re
 import sqlite3
 import subprocess
 from utils.config import settings, cmd
+from database import get_db
+from models import MegaFile
 
 DB_PATH = "database.db"
 OUTPUT_PATH = "files.txt"
@@ -62,6 +64,41 @@ def extract_root_dated_folders(paths):
 
     return sorted(root_folders)
 
+def get_account_files(account_id):
+    """Call mega-find to get all paths, extract root dated folders and build mega_file objects."""
+    result = subprocess.run(
+        [cmd("mega-find"), "/"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        check=True,
+        encoding="utf-8"
+    )
+
+    raw_paths = result.stdout.strip().splitlines()
+    root_dated_folders = extract_root_dated_folders(raw_paths)
+
+    # Create mega_files objects
+    mega_files = []
+    for folder in root_dated_folders:
+        path, folder_name = os.path.split(folder)
+        mega_files.append(MegaFile(
+            path=path,
+            folder_name=folder_name,
+            mega_account_id=account_id
+        ))
+    
+    # Save to database
+    session = next(get_db())
+    try:
+        session.add_all(mega_files)
+        session.commit()
+        return {"status": 200, "message": f"{len(mega_files)} folders saved to database"}
+    except Exception as e:
+        session.rollback()
+        print(f"❌ Failed to save folders to database: {e}")
+        return {"status": 500, "message": "Failed to save folders to database"}
+
 def run(args=None):
     try:
         account_id = int(args)
@@ -84,24 +121,7 @@ def run(args=None):
         subprocess.run([cmd("mega-logout")], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         subprocess.run([cmd("mega-login"), email, password], check=True, text=True)
 
-        result = subprocess.run(
-            [cmd("mega-find"), "/"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-            check=True,
-            encoding="utf-8"
-        )
-
-        raw_paths = result.stdout.strip().splitlines()
-        root_dated_folders = extract_root_dated_folders(raw_paths)
-
-        with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
-            for folder in root_dated_folders:
-                f.write(folder + "\n")
-
-        print(f"✅ Folder paths saved to {OUTPUT_PATH}")
-        return {"status": 200, "message": f"{len(root_dated_folders)} dated folders written to {OUTPUT_PATH}"}
+        return get_account_files(account_id)
 
     except subprocess.CalledProcessError as e:
         print(f"❌ Failed to fetch folders: {e}")
