@@ -33,7 +33,7 @@ function fetchFileDetails(fileId) {
   }).then((res) => res.json()).then((data) => {
     if (data.status === 200) {
       showToast(`File details fetched successfully`, "bg-success");
-      // TODO: refresh file details
+      loadFilesTable();
     } else {
       showToast(`Failed to fetch file details: ${data.message}`, "bg-danger");
     }
