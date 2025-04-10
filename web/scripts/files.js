@@ -83,9 +83,16 @@ function loadFilesTable() {
 
         row.innerHTML = `
             <td style="display:none">${file.id}</td>
-            <td>${file.local_path || "-"}</td>
-            <td>${file.cloud_path || "-"}</td>
+            <td class="small text-muted">
+              <div><i class="fas fa-hdd me-1 text-info"></i> ${
+                file.local_path || "-"
+              }</div>
+              <div><i class="fas fa-cloud me-1 text-warning"></i> ${
+                file.cloud_path || "-"
+              }</div>
+            </td>
             <td>${file.folder_name || "-"}</td>
+            <td>${file.folder_size || "-"}</td>
             <td>${file.is_local ? "✅" : "❌"}</td>
             <td>
               <span
