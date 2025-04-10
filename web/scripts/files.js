@@ -43,10 +43,10 @@ function copySharingLink(link, fileId) {
       showToast("Failed to copy link", "bg-danger");
     });
 }
-function handleCloudStatusClick(fileId, email) {
+function handleCloudStatusClick(fileId, folderName, email) {
   if (email && email.trim()) {
     showToast(
-      `📂 File #${fileId} is uploaded to account ${email}`,
+      `📂 File #${fileId} - ${folderName} is uploaded to account ${email}`,
       "bg-success"
     );
   } else {
@@ -76,7 +76,6 @@ function loadFilesTable() {
 
       data.files.forEach((file) => {
         const row = document.createElement("tr");
-        console.log(file);
         const hasLink = file.sharing_link && file.sharing_link.trim() !== "";
         const copyBtnColor = hasLink ? "btn-success" : "btn-outline-light";
         const sharingLink = file.sharing_link || "";
@@ -103,8 +102,8 @@ function loadFilesTable() {
                     : ""
                 }
                 onclick="handleCloudStatusClick(${file.id}, '${
-          file.cloud_email || ""
-        }')"
+          file.folder_name
+        }', '${file.cloud_email || ""}')"
                 style="cursor: pointer;"
               >
                 ${file.is_cloud ? "✅" : "❌"}
@@ -177,9 +176,4 @@ function loadFilesTable() {
       });
     })
     .catch((err) => console.error("Failed to load files:", err));
-}
-
-function handleFileAction(fileId) {
-  console.log(`Action triggered for file ID: ${fileId}`);
-  // Add file-specific actions here
 }

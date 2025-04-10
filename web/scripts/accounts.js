@@ -433,7 +433,6 @@ function refreshAllAccounts() {
   })
     .then((res) => res.json())
     .then(async (data) => {
-      console.log(data);
       const accountIds = data.account_ids || [];
       const total = accountIds.length;
 
