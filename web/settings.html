@@ -97,6 +97,18 @@
           <div class="col-md-6">
             <div class="form-outline mb-4" data-mdb-input-init>
               <input type="password" id="mega_passwords" class="form-control" />
+
+              <div
+                id="passwordWarning"
+                class="text-danger mt-1"
+                style="display: none"
+              >
+                Avoid using special characters:
+                <code
+                  >| & ; < > ( ) $ ` " ' ! * ? ~ # = % @ ^ , : { } [ ] +</code
+                ><br />
+                These will break the script :D
+              </div>
               <label class="form-label" for="mega_passwords"
                 >Mega Password</label
               >

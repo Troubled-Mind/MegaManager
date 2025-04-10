@@ -1,3 +1,5 @@
+const unsafeChars = /[|&;<>()$`"\' !*?~#=%@^,:{}\[\]+]/g;
+
 fetch("/api/version")
   .then((res) => res.json())
   .then((data) => {
@@ -67,6 +69,12 @@ document
   .addEventListener("submit", async (e) => {
     e.preventDefault();
 
+    const password = document.getElementById("mega_passwords").value;
+    if (unsafeChars.test(password)) {
+      showToast("❌ Password contains unsupported characters.", "bg-danger");
+      return;
+    }
+
     const data = {
       megacmd_path: document.getElementById("megacmd_path").value,
       mega_email: document.getElementById("mega_email").value,
@@ -98,4 +106,19 @@ document
     const body = document.getElementById("universalToastBody");
     body.textContent = result.message || "Settings updated.";
     new mdb.Toast(toast).show();
+  });
+
+document
+  .getElementById("mega_passwords")
+  .addEventListener("input", function () {
+    const value = this.value;
+    const warningEl = document.getElementById("passwordWarning");
+
+    if (unsafeChars.test(value)) {
+      warningEl.style.display = "block";
+      this.classList.add("is-invalid");
+    } else {
+      warningEl.style.display = "none";
+      this.classList.remove("is-invalid");
+    }
   });
