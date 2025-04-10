@@ -25,8 +25,21 @@ function deleteFromCloud(fileId) {
 function fetchFileDetails(fileId) {
   console.log(`🔍 Fetching details for file ID: ${fileId}`);
   showToast(`Fetching details for file #${fileId}...`, "bg-secondary");
-  // TODO: implement backend command
+  
+  fetch("/run-command", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: `command=mega-get-file-details:${fileId}`,
+  }).then((res) => res.json()).then((data) => {
+    if (data.status === 200) {
+      showToast(`File details fetched successfully`, "bg-success");
+      // TODO: refresh file details
+    } else {
+      showToast(`Failed to fetch file details: ${data.message}`, "bg-danger");
+    }
+  })
 }
+
 function copySharingLink(link, fileId) {
   if (!link || link.trim() === "") {
     showToast(`⚠️ No sharing link available for file #${fileId}`, "bg-warning");
