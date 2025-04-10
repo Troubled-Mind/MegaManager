@@ -8,7 +8,7 @@ function loadFilesTable() {
   fetch("/run-command", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: `command=mega-get-files`, //THIS DOES NOT EXIST YET
+    body: `command=db-fetch-files`,
   })
     .then((res) => res.json())
     .then((data) => {
@@ -25,7 +25,7 @@ function loadFilesTable() {
         const row = document.createElement("tr");
 
         row.innerHTML = `
-            <td>${file.id}</td>
+            <td style="display:none">${file.id}</td>
             <td>${file.local_path || "-"}</td>
             <td>${file.cloud_path || "-"}</td>
             <td>${file.folder_name || "-"}</td>
