@@ -4,6 +4,59 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
+function generateSharingLink(fileId) {
+  console.log(`🔗 Generate sharing link for file ID: ${fileId}`);
+  showToast(`Generating link for file #${fileId}...`, "bg-info");
+  // TODO: implement backend command
+}
+
+function uploadToCloud(fileId) {
+  console.log(`☁️ Upload to cloud for file ID: ${fileId}`);
+  showToast(`Uploading file #${fileId}...`, "bg-success");
+  // TODO: implement backend command
+}
+
+function deleteFromCloud(fileId) {
+  console.log(`🗑️ Delete from cloud for file ID: ${fileId}`);
+  showToast(`Deleting cloud copy of file #${fileId}...`, "bg-danger");
+  // TODO: implement backend command
+}
+
+function fetchFileDetails(fileId) {
+  console.log(`🔍 Fetching details for file ID: ${fileId}`);
+  showToast(`Fetching details for file #${fileId}...`, "bg-secondary");
+  // TODO: implement backend command
+}
+function copySharingLink(link, fileId) {
+  if (!link || link.trim() === "") {
+    showToast(`⚠️ No sharing link available for file #${fileId}`, "bg-warning");
+    return;
+  }
+
+  navigator.clipboard
+    .writeText(link)
+    .then(() => {
+      showToast(`🔗 Sharing link copied for file #${fileId}`, "bg-success");
+    })
+    .catch((err) => {
+      console.error("❌ Clipboard copy failed:", err);
+      showToast("Failed to copy link", "bg-danger");
+    });
+}
+function handleCloudStatusClick(fileId, email) {
+  if (email && email.trim()) {
+    showToast(
+      `📂 File #${fileId} is uploaded to account ${email}`,
+      "bg-success"
+    );
+  } else {
+    showToast(
+      `📂 File #${fileId} is not uploaded to any cloud account`,
+      "bg-warning"
+    );
+  }
+}
+
 function loadFilesTable() {
   fetch("/run-command", {
     method: "POST",
@@ -23,6 +76,10 @@ function loadFilesTable() {
 
       data.files.forEach((file) => {
         const row = document.createElement("tr");
+        console.log(file);
+        const hasLink = file.sharing_link && file.sharing_link.trim() !== "";
+        const copyBtnColor = hasLink ? "btn-success" : "btn-outline-light";
+        const sharingLink = file.sharing_link || "";
 
         row.innerHTML = `
             <td style="display:none">${file.id}</td>
@@ -30,17 +87,74 @@ function loadFilesTable() {
             <td>${file.cloud_path || "-"}</td>
             <td>${file.folder_name || "-"}</td>
             <td>${file.is_local ? "✅" : "❌"}</td>
-            <td>${file.is_cloud ? "✅" : "❌"}</td>
             <td>
-              <button class="btn btn-sm btn-outline-light" onclick="handleFileAction(${
-                file.id
-              })">
-                <i class="fas fa-cog"></i>
+              <span
+                class="d-inline-block"
+                ${
+                  file.cloud_email
+                    ? `data-mdb-toggle="tooltip" title="${file.cloud_email}"`
+                    : ""
+                }
+                onclick="handleCloudStatusClick(${file.id}, '${
+          file.cloud_email || ""
+        }')"
+                style="cursor: pointer;"
+              >
+                ${file.is_cloud ? "✅" : "❌"}
+              </span>
+            </td>
+            <td>
+            
+              <button class="btn btn-sm ${copyBtnColor} me-1" ${
+          !hasLink ? "disabled" : ""
+        } title="Copy Sharing Link" onclick="copySharingLink('${sharingLink}', ${
+          file.id
+        })">
+                <i class="fas fa-link"></i>
               </button>
+              <div class="btn-group dropdown">
+                <button type="button" class="btn btn-sm btn-tertiary dropdown-toggle dropdown-toggle-split" data-mdb-toggle="dropdown" aria-expanded="false">
+                  <i class="fas fa-ellipsis-v"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-dark">
+                  <li>
+                    <a class="dropdown-item" href="#" onclick="generateSharingLink(${
+                      file.id
+                    })">
+                      <i class="fas fa-link me-2"></i> Generate Sharing Link
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item text-success" href="#" onclick="uploadToCloud(${
+                      file.id
+                    })">
+                      <i class="fas fa-cloud-upload-alt me-2"></i> Upload to Cloud
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item text-danger" href="#" onclick="deleteFromCloud(${
+                      file.id
+                    })">
+                      <i class="fas fa-cloud-meatball me-2"></i> Delete from Cloud
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item text-info" href="#" onclick="fetchFileDetails(${
+                      file.id
+                    })">
+                      <i class="fas fa-info-circle me-2"></i> Fetch File Details
+                    </a>
+                  </li>
+                </ul>
+              </div>
             </td>
           `;
 
         tbody.appendChild(row);
+        const dropdownToggle = row.querySelector(".dropdown-toggle");
+        if (dropdownToggle) {
+          new mdb.Dropdown(dropdownToggle);
+        }
       });
 
       $("#filesTable").DataTable({

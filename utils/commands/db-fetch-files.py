@@ -12,10 +12,15 @@ def run(args=None):
             f.path AS local_path,
             mf.path AS cloud_path,
             mf.folder_name,
+            mf.mega_sharing_link,
+            mf.mega_sharing_link_expiry,
+            mf.mega_account_id,
+            ma.email AS cloud_email,
             CASE WHEN f.id IS NOT NULL THEN 1 ELSE 0 END AS is_local,
             CASE WHEN mf.mega_account_id IS NOT NULL THEN 1 ELSE 0 END AS is_cloud
         FROM mega_files mf
         LEFT JOIN files f ON mf.local_id = f.id
+        LEFT JOIN mega_accounts ma ON mf.mega_account_id = ma.id
         """
 
         cursor.execute(query)
@@ -30,6 +35,10 @@ def run(args=None):
                 "folder_name": row["folder_name"],
                 "is_local": bool(row["is_local"]),
                 "is_cloud": bool(row["is_cloud"]),
+                "sharing_link": row["mega_sharing_link"],
+                "sharing_link_expiry": row["mega_sharing_link_expiry"],
+                "mega_account_id": row["mega_account_id"],
+                "cloud_email": row["cloud_email"]
             })
 
         return {
