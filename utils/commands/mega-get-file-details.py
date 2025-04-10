@@ -51,9 +51,17 @@ def run(args=None):
         return {
             "status": 200,
             "message": f"File details updated successfully for {mega_file.folder_name}",
-            "folder_size": storage,
-            "link": link
+            "file": {
+                "id": mega_file.id,
+                "cloud_path": mega_file.path,
+                "folder_name": mega_file.folder_name,
+                "folder_size": storage,
+                "is_cloud": True,
+                "cloud_email": account.email,
+                "sharing_link": link,
+            },
         }
+
     
     except subprocess.CalledProcessError as e:
         stdout = e.stdout.strip() if e.stdout else ""
