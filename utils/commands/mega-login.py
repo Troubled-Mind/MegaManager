@@ -68,13 +68,15 @@ def process_account(account_id):
         # Resolve executable paths
         base_cmd_path = settings.get("megacmd_path")
         def cmd(name):
-            return os.path.join(base_cmd_path, name) if base_cmd_path else name
+            suffix = ".bat" if os.name == "nt" else ""
+            return os.path.join(base_cmd_path, name + suffix) if base_cmd_path else name
 
         # Logout to reset session
         subprocess.run([cmd("mega-logout")], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
         # Login command (safe list form)
         print(f"▶ Logging in: {email}")
+        #print login command in full
         subprocess.run([cmd("mega-login"), email, password], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
         print(f"✅ Logged in: {email}")
 

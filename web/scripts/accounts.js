@@ -104,7 +104,7 @@ function refreshAccount(id, options = {}) {
   const silent = options.silent || false;
   const icon = btn?.querySelector("i");
 
-  if (!silent && btn) {
+  if (btn) {
     icon?.classList.add("fa-spin");
     btn.disabled = true;
     btn.classList.remove("btn-outline-light", "btn-success", "btn-danger");
@@ -122,7 +122,7 @@ function refreshAccount(id, options = {}) {
         throw new Error(result.message || "Unknown login error");
       }
 
-      if (!silent && btn) {
+      if (btn) {
         btn.classList.remove("btn-outline-warning");
         btn.classList.add("btn-success");
         icon?.classList.remove("fa-spin");
@@ -248,7 +248,7 @@ function refreshAccount(id, options = {}) {
         );
       }
 
-      if (!silent && btn) {
+      if (btn) {
         btn.classList.remove("btn-outline-warning");
         btn.classList.add("btn-danger");
         icon?.classList.remove("fa-spin");
@@ -261,7 +261,7 @@ function refreshAccount(id, options = {}) {
       }
     })
     .finally(() => {
-      if (!silent && btn) {
+      if (btn) {
         setTimeout(() => {
           btn.classList.remove("btn-success", "btn-danger");
           btn.classList.add("btn-outline-light");
@@ -416,6 +416,10 @@ function loadAccountTable() {
 function refreshAllAccounts() {
   const btn = document.getElementById("refreshAllBtn");
   const icon = document.getElementById("refreshAllIcon");
+  // Disable all individual refresh buttons temporarily
+  document.querySelectorAll('[id^="refresh-btn-"]').forEach((el) => {
+    el.disabled = true;
+  });
 
   btn.classList.remove("btn-primary", "btn-success", "btn-danger");
   btn.classList.add("btn-warning");
@@ -425,17 +429,18 @@ function refreshAllAccounts() {
   fetch("/run-command", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: `command=mega-login:all`,
+    body: `command=fetch-account-ids`,
   })
     .then((res) => res.json())
     .then(async (data) => {
-      const ids = data.account_ids || [];
-      const total = ids.length;
+      console.log(data);
+      const accountIds = data.account_ids || [];
+      const total = accountIds.length;
 
       let failedCount = 0;
 
       for (let i = 0; i < total; i++) {
-        const id = ids[i];
+        const id = accountIds[i];
         btn.innerHTML = `<i class="fas fa-sync-alt me-2 fa-spin" id="refreshAllIcon"></i> Refreshing account ${
           i + 1
         } / ${total}...`;

@@ -17,6 +17,7 @@ def run(args=None):
         WHERE id = ?
     """, (account_id,))
     row = cursor.fetchone()
+
     cursor.execute("SELECT COUNT(*) FROM mega_files WHERE mega_account_id = ?", (account_id,))
     file_count = cursor.fetchone()[0]
     conn.close()
