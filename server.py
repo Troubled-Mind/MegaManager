@@ -8,7 +8,7 @@ def run_server():
     os.chdir(os.getcwd())  
     create_database()  # Ensure the database and schema are created
     check_for_update()  
-    server_address = ("localhost", 6342)
+    server_address = ("0.0.0.0", 6342)
     httpd = HTTPServer(server_address, CustomHandler)
     settings.load()  # Load settings from the database
     print("Server running at http://localhost:6342/")

@@ -288,7 +288,7 @@ function loadFilesTable() {
         order: [[0, "desc"]],
         columnDefs: [
           {
-            targets: [6], // "Actions" column
+            targets: [6],
             orderable: false,
           },
         ],

@@ -30,3 +30,6 @@ body {
 main {
   flex: 1;
 }
+.container {
+  max-width: 95% !important;
+}
