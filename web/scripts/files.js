@@ -106,7 +106,6 @@ function confirmFileUpload() {
     return;
   }
 
-  // 👇 Hide modal immediately
   const modal = mdb.Modal.getInstance(
     document.getElementById("uploadToCloudModal")
   );
@@ -126,7 +125,24 @@ function confirmFileUpload() {
     .then((data) => {
       if (data.status === 200) {
         showToast("✅ Upload completed", "bg-success");
-        fetchFileDetails(fileId); // refresh row
+
+        return fetch("/run-command", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: `command=mega-login:${selectedAccountId}`,
+        })
+          .then((res) => res.json())
+          .then((loginData) => {
+            if (loginData.status === 200) {
+              showToast("🔄 Account refreshed after upload", "bg-info");
+            } else {
+              showToast(
+                `⚠️ Upload done but refresh failed: ${loginData.message}`,
+                "bg-warning"
+              );
+            }
+            fetchFileDetails(fileId);
+          });
       } else {
         showToast(`❌ Upload failed: ${data.message}`, "bg-danger");
       }
@@ -165,16 +181,34 @@ function generateMissingLinks() {
 }
 
 function updateAllDetails() {
+  // First, run 'local-fetch-files'
   fetch("/run-command", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ command: "mega-grouped-file-details" }),
+    body: JSON.stringify({ command: "local-fetch-files" }), // Run local-fetch-files first
   })
     .then((res) => res.json())
     .then((data) => {
+      console.log("📡 Local files fetch response:", data);
+      if (data.status === 200 && data.message) {
+        showToast(`✅ All local file details updated`, "bg-success");
+
+        // Now run 'mega-grouped-file-details'
+        return fetch("/run-command", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ command: "mega-grouped-file-details" }), // Run mega-grouped-file-details after local-fetch-files
+        });
+      } else {
+        throw new Error(data.message || "Failed to fetch local file details");
+      }
+    })
+    .then((res) => res.json())
+    .then((data) => {
+      console.log("📡 MEGA file details fetch response:", data);
       if (data.status === 200 && Array.isArray(data.results)) {
-        showToast(`✅ All file details updated`, "bg-success");
-        loadFilesTable();
+        showToast(`✅ All MEGA file details updated`, "bg-success");
+        loadFilesTable(); // Refresh table after updating
       } else {
         showToast(
           `❌ Update failed: ${data.message || "Unknown error"}`,
@@ -183,7 +217,7 @@ function updateAllDetails() {
       }
     })
     .catch((err) => {
-      console.error("❌ Update all details error:", err);
+      console.error("❌ Error during update process:", err);
       showToast("❌ Failed to update all file details", "bg-danger");
     });
 }
