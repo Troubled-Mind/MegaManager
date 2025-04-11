@@ -49,7 +49,7 @@ function generateExpiringLink(fileId) {
   console.log(`🔗 Generating expiring link for file ID: ${fileId}`);
   showToast(`Generating expiring link for file #${fileId}...`, "bg-info");
   // TODO: implement backend command - also a modal for setting the expiry duration
-  alert("Implement a modal to set the expiry duration.");
+  alert("Not yet implemented. This will be done in future");
 }
 
 function generateMissingLinks() {
