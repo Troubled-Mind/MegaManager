@@ -3,7 +3,7 @@ import re
 import subprocess
 from utils.config import settings, cmd
 from database import get_db
-from models import MegaFile
+from models import File
 
 def strftime_to_regex(fmt):
     """Convert a strftime-style format string into a regex pattern."""
@@ -18,16 +18,17 @@ def strftime_to_regex(fmt):
         "%-d": r"\d{1,2}",
         "%e": r"\d{1,2}",
         "%j": r"\d{3}",
-        " ": r"\s",
-        ",": r",",
-        "\.": r"\.",
-        "-": r"-",
-        "/": r"[/-]",
+        r" ": r"\s",
+        r",": r",",
+        r"\.": r"\.",
+        r"-": r"-",
+        r"/": r"[/-]",
     }
     pattern = re.escape(fmt)
     for k, v in replacements.items():
-        pattern = pattern.replace(re.escape(k), v)
+        pattern = pattern.replace(k, v)
     return pattern
+
 
 def extract_root_dated_folders(paths):
     """Extract highest-level folders that match any date pattern."""
@@ -38,10 +39,13 @@ def extract_root_dated_folders(paths):
     regex_patterns = []
     if full_fmt:
         regex_patterns.append(strftime_to_regex(full_fmt))
+        print(f"📅 Using full date format: {full_fmt}")
     if month_fmt:
         regex_patterns.append(strftime_to_regex(month_fmt))
+        print(f"🗓️ Using month format: {month_fmt}")
     if year_fmt:
         regex_patterns.append(strftime_to_regex(year_fmt))
+        print(f"📆 Using year format: {year_fmt}")
 
     if not regex_patterns:
         print("⚠️ No date formats configured in settings.")
@@ -58,10 +62,14 @@ def extract_root_dated_folders(paths):
                 root_folders.add(root_folder)
                 break
 
-    return sorted(root_folders)
+    result = sorted(root_folders)
+    print(f"📦 Extracted {len(result)} root folders.")
+    return result
+
 
 def get_account_files(account_id):
-    """Call mega-find to get all paths, extract root dated folders and build mega_file objects."""
+    """Call mega-find to get all paths, extract root dated folders and add to the files table."""
+    print(f"🔍 Scanning MEGA account ID {account_id}...")
     result = subprocess.run(
         [cmd("mega-find"), "/"],
         stdout=subprocess.PIPE,
@@ -74,24 +82,32 @@ def get_account_files(account_id):
     raw_paths = result.stdout.strip().splitlines()
     root_dated_folders = extract_root_dated_folders(raw_paths)
 
-    # Create mega_files objects
-    mega_files = []
-    for folder in root_dated_folders:
-        path, folder_name = os.path.split(folder)
-        mega_files.append(MegaFile(
-            path=path,
-            folder_name=folder_name,
-            mega_account_id=account_id
-        ))
-    
-    # Save to database
     session = next(get_db())
+    added = 0
+    updated = 0
+
+    for folder in root_dated_folders:
+        path, folder_name = os.path.split(folder.rstrip("/"))
+
+        # Check if it already exists in the DB
+        existing = session.query(File).filter_by(m_path=path, m_folder_name=folder_name).first()
+        if existing:
+            print(f"🔁 Already exists: {folder}")
+            continue
+
+        print(f"➕ Adding: {folder}")
+        session.add(File(
+            m_path=path,
+            m_folder_name=folder_name,
+            m_account_id=account_id
+        ))
+        added += 1
+
     try:
-        session.add_all(mega_files)
         session.commit()
-        print(f"✅ {len(mega_files)} folders saved to database")
-        return {"status": 200, "message": f"{len(mega_files)} folders saved to database"}
+        print(f"✅ {added} new MEGA folders saved to database")
+        return {"status": 200, "message": f"{added} MEGA folders saved"}
     except Exception as e:
         session.rollback()
-        print(f"❌ Failed to save folders to database: {e}")
-        return {"status": 500, "message": "Failed to save folders to database"}
+        print(f"❌ Failed to save: {e}")
+        return {"status": 500, "message": "Failed to save MEGA folders"}

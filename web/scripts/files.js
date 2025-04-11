@@ -17,12 +17,7 @@ function generateSharingLink(fileId) {
       command: `mega-generate-sharing-link:${fileId}`,
     }),
   })
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error(`Server responded with status ${response.status}`);
-      }
-      return response.json();
-    })
+    .then((response) => response.json())
     .then((data) => {
       if (data.status === 200) {
         fetchFileDetails(fileId);
@@ -40,15 +35,111 @@ function generateSharingLink(fileId) {
 }
 
 function uploadToCloud(fileId) {
-  console.log(`☁️ Upload to cloud for file ID: ${fileId}`);
-  showToast(`Uploading file #${fileId}...`, "bg-success");
-  // TODO: implement backend command
+  const modalEl = document.getElementById("uploadToCloudModal");
+  const modal = new mdb.Modal(modalEl);
+  modal.show();
+
+  modalEl.addEventListener(
+    "shown.mdb.modal",
+    function handler() {
+      // Cleanup the event so it doesn't stack up
+      modalEl.removeEventListener("shown.mdb.modal", handler);
+
+      // Set file ID in hidden input
+      document.getElementById("uploadFileId").value = fileId;
+
+      const dropdown = document.getElementById("megaAccountDropdown");
+      const startUploadBtn = document.getElementById("startUploadBtn");
+
+      // Disable while loading
+      dropdown.innerHTML = "<option disabled selected>Loading...</option>";
+      startUploadBtn.disabled = true;
+
+      // Fetch eligible accounts
+      fetch("/run-command", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: `command=get-eligible-accounts:${fileId}`,
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.status === 200 && Array.isArray(data.accounts)) {
+            dropdown.innerHTML = "";
+
+            data.accounts
+              .sort((a, b) => a.available - b.available) // ascending: least free first
+              .forEach((acc) => {
+                const option = document.createElement("option");
+                option.value = acc.id;
+                option.textContent = `${acc.email} (${formatBytes(
+                  acc.available
+                )} free)`;
+                dropdown.appendChild(option);
+              });
+            startUploadBtn.disabled = false;
+          } else {
+            dropdown.innerHTML =
+              "<option disabled>No eligible accounts found</option>";
+            showToast("❌ No eligible MEGA accounts found.", "bg-warning");
+          }
+        })
+        .catch((err) => {
+          console.error("❌ Failed to fetch eligible accounts:", err);
+          dropdown.innerHTML =
+            "<option disabled>Error loading accounts</option>";
+          showToast("❌ Error loading accounts", "bg-danger");
+        });
+    },
+    { once: true } // Only run this handler once
+  );
+}
+
+function confirmFileUpload() {
+  const fileId = $("#uploadFileId").val();
+  const selectedAccountId = $("#megaAccountDropdown").val();
+  console.log(
+    `📤 Confirming upload for file ID: ${fileId} to account ID: ${selectedAccountId}`
+  );
+
+  if (!selectedAccountId) {
+    showToast("⚠️ Please select a MEGA account", "bg-warning");
+    return;
+  }
+
+  // 👇 Hide modal immediately
+  const modal = mdb.Modal.getInstance(
+    document.getElementById("uploadToCloudModal")
+  );
+  if (modal) modal.hide();
+
+  showToast(
+    `📤 Uploading file #${fileId} to account #${selectedAccountId}`,
+    "bg-info"
+  );
+
+  fetch("/run-command", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: `command=upload-local-file:${fileId}:${selectedAccountId}`,
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      if (data.status === 200) {
+        showToast("✅ Upload completed", "bg-success");
+        fetchFileDetails(fileId); // refresh row
+      } else {
+        showToast(`❌ Upload failed: ${data.message}`, "bg-danger");
+      }
+    })
+    .catch((err) => {
+      console.error("❌ Upload error:", err);
+      showToast("❌ Upload failed due to network error", "bg-danger");
+    });
 }
 
 function generateExpiringLink(fileId) {
   console.log(`🔗 Generating expiring link for file ID: ${fileId}`);
   showToast(`Generating expiring link for file #${fileId}...`, "bg-info");
-  // TODO: implement backend command - also a modal for setting the expiry duration
   alert("Not yet implemented. This will be done in future");
 }
 
@@ -98,141 +189,169 @@ function updateAllDetails() {
 }
 
 function fetchFileDetails(fileId) {
-  console.log(`🔍 Fetching details for file ID: ${fileId}`);
+  console.log(`🔍 Checking which source to refresh for file ID: ${fileId}`);
+
+  // Step 1: Get the full file object first
   fetch("/run-command", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: `command=mega-get-file-details:${fileId}`,
+    body: `command=db-get-single-file:${fileId}`,
   })
     .then((res) => res.json())
     .then((data) => {
-      if (data.status === 200 && data.file) {
-        showToast(`File details updated for #${fileId}`, "bg-success");
+      if (data.status !== 200 || !data.file) {
+        throw new Error(data.message || "File not found");
+      }
 
-        const file = data.file;
-        const row = [...document.querySelectorAll("#filesTableBody tr")].find(
-          (r) => r.children[0]?.textContent.trim() == fileId
+      const file = data.file;
+      const promises = [];
+
+      if (file.m_path) {
+        promises.push(
+          fetch("/run-command", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: `command=mega-get-file-details:${fileId}`,
+          }).then((res) => res.json())
         );
-        if (!row) return;
+      }
 
-        const hasLink = file.sharing_link && file.sharing_link.trim() !== "";
-        const copyBtnColor = hasLink ? "btn-success" : "btn-outline-light";
-        const sharingLink = file.sharing_link || "";
-        const jsonFile = encodeURIComponent(
-          JSON.stringify(file).replace(/'/g, "\\'")
+      if (file.l_path) {
+        promises.push(
+          fetch("/run-command", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: `command=local-get-file-details:${fileId}`,
+          }).then((res) => res.json())
         );
+      }
 
-        row.innerHTML = `
-          <td style="display:none">${file.id}</td>
-          <td class="small text-muted">
-            <div><i class="fas fa-hdd me-1 text-info"></i> ${
-              file.local_path || "-"
-            }</div>
-            <div><i class="fas fa-cloud me-1 text-warning"></i> ${
-              file.cloud_path || "-"
-            }</div>
-          </td>
-          <td>${file.folder_name || "-"}</td>
-          <td>${formatBytes(file.folder_size) || "-"}</td>
-          <td>${file.is_local ? "✅" : "❌"}</td>
-          <td>
-            <span
-              class="d-inline-block"
-              ${
-                file.cloud_email
-                  ? `data-mdb-toggle="tooltip" title="${file.cloud_email}"`
-                  : ""
-              }
-              onclick="handleCloudStatusClick(${file.id}, '${
-          file.folder_name
-        }', '${file.cloud_email || ""}')"
-              style="cursor: pointer;"
-            >
-              ${file.is_cloud ? "✅" : "❌"}
-            </span>
-          </td>
-          <td>
-            <button class="btn btn-sm ${copyBtnColor} me-1" ${
-          !hasLink ? "disabled" : ""
-        } title="Copy Sharing Link" onclick="copySharingLink('${sharingLink}', ${
-          file.id
-        })">
-              <i class="fas fa-link"></i>
-            </button>
-            <div class="btn-group dropdown">
-              <button type="button" class="btn btn-sm btn-tertiary dropdown-toggle dropdown-toggle-split" data-mdb-toggle="dropdown" aria-expanded="false">
-                <i class="fas fa-ellipsis-v"></i>
-              </button>
-              <ul class="dropdown-menu dropdown-menu-dark">
-                  ${
-                    file.sharingLink
-                      ? `
-                    <li>
-                      <a class="dropdown-item" href="#" onclick="generateSharingLink(${file.id})">
-                        <i class="fas fa-link me-2"></i> Generate Sharing Link
-                      </a>
-                    </li>`
-                      : ""
-                  }
-                  ${
-                    file.pro_account
-                      ? `
-                    <li>
-                      <a class="dropdown-item" href="#" onclick="generateExpiringLink(${file.id})">
-                        <i class="fas fa-link me-2"></i> Generate Expiring Link
-                      </a>
-                    </li>`
-                      : ""
-                  }
-                  ${
-                    !file.is_cloud
-                      ? `<li>
-                          <a class="dropdown-item text-success" href="#" onclick="uploadToCloud(${file.id})">
-                            <i class="fas fa-cloud-upload-alt me-2"></i> Upload to Cloud
-                          </a>
-                        </li>`
-                      : ""
-                  }
-                  <li>
-                    <a class="dropdown-item text-info" href="#" onclick="fetchFileDetails(${
-                      file.id
-                    })">
-                      <i class="fas fa-info-circle me-2"></i> Fetch File Details
-                    </a>
-                  </li>
-                </ul>
-            </div>
-          </td>
-        `;
+      if (promises.length === 0) {
+        showToast(
+          `⚠️ No cloud or local path for file #${fileId}`,
+          "bg-warning"
+        );
+        return Promise.resolve([]); // Prevents undefined `.then()` below
+      }
 
-        const dropdownToggle = row.querySelector(".dropdown-toggle");
-        if (dropdownToggle) new mdb.Dropdown(dropdownToggle);
+      return Promise.all(promises);
+    })
+    .then((results) => {
+      if (!results || !Array.isArray(results)) return;
+
+      let finalFile = {};
+
+      for (const result of results) {
+        if (result.status === 200 && result.file) {
+          for (const [key, value] of Object.entries(result.file)) {
+            if (value !== undefined && value !== null) {
+              finalFile[key] = value;
+            }
+          }
+        }
+      }
+
+      if (Object.keys(finalFile).length) {
+        updateRowWithFileData(finalFile);
+        showToast(`✅ File details refreshed`, "bg-success");
       } else {
-        showToast(`Failed: ${data.message}`, "bg-danger");
+        showToast(`⚠️ Failed to update details`, "bg-warning");
       }
     })
     .catch((err) => {
-      console.error("❌ Failed to fetch file details:", err);
-      showToast("Failed to fetch file details", "bg-danger");
+      console.error("❌ Error fetching file details:", err);
+      showToast("❌ Failed to fetch file details", "bg-danger");
     });
 }
 
-function copySharingLink(link, fileId) {
-  if (!link || link.trim() === "") {
-    showToast(`⚠️ No sharing link available for file #${fileId}`, "bg-warning");
-    return;
+function updateRowWithFileData(file) {
+  let row = [...document.querySelectorAll("#filesTableBody tr")].find(
+    (r) => r.children[0]?.textContent.trim() == file.id
+  );
+
+  const hasLink = file.m_sharing_link && file.m_sharing_link.trim() !== "";
+  const copyBtnColor = hasLink ? "btn-success" : "btn-outline-light";
+
+  const html = `
+    <td style="display:none">${file.id}</td>
+    <td class="small text-muted">
+      <div><i class="fas fa-hdd me-1 text-info"></i> ${file.l_path || "-"}</div>
+      <div><i class="fas fa-cloud me-1 text-warning"></i> ${
+        file.m_path || "-"
+      }</div>
+    </td>
+    <td>${file.l_folder_name || file.m_folder_name || "-"}</td>
+    <td>${
+      formatBytes(file.l_folder_size) === "0.00 B"
+        ? "-"
+        : formatBytes(file.l_folder_size)
+    }</td>
+    <td>${
+      formatBytes(file.m_folder_size) === "0.00 B"
+        ? "-"
+        : formatBytes(file.m_folder_size)
+    }</td>
+    <td>${file.is_local ? "✅" : "❌"}</td>
+    <td>
+      <span class="d-inline-block"
+        ${
+          file.cloud_email
+            ? `data-mdb-toggle="tooltip" title="${file.cloud_email}"`
+            : ""
+        }
+        onclick="handleCloudStatusClick(${file.id}, '${
+    file.l_folder_name || file.m_folder_name
+  }', '${file.cloud_email || ""}')"
+        style="cursor: pointer;">
+        ${file.is_cloud ? "✅" : "❌"}
+      </span>
+    </td>
+    <td>
+      <button class="btn btn-sm ${copyBtnColor} me-1" ${
+    !hasLink ? "disabled" : ""
+  } title="Copy Sharing Link" onclick="copySharingLink('${
+    file.m_sharing_link
+  }', ${file.id})">
+        <i class="fas fa-link"></i>
+      </button>
+      <div class="btn-group dropdown">
+        <button type="button" class="btn btn-sm btn-tertiary dropdown-toggle dropdown-toggle-split" data-mdb-toggle="dropdown" aria-expanded="false">
+          <i class="fas fa-ellipsis-v"></i>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-dark">
+          <li><a class="dropdown-item" href="#" onclick="generateSharingLink(${
+            file.id
+          })"><i class="fas fa-link me-2"></i> Generate Sharing Link</a></li>
+          ${
+            file.pro_account
+              ? `<li><a class="dropdown-item" href="#" onclick="generateExpiringLink(${file.id})"><i class="fas fa-clock me-2"></i> Generate Expiring Link</a></li>`
+              : ""
+          }
+          ${
+            !file.is_cloud
+              ? `<li><a class="dropdown-item text-success" href="#" onclick="uploadToCloud(${file.id})"><i class="fas fa-cloud-upload-alt me-2"></i> Upload to Cloud</a></li>`
+              : ""
+          }
+          <li><a class="dropdown-item text-info" href="#" onclick="fetchFileDetails(${
+            file.id
+          })"><i class="fas fa-info-circle me-2"></i> Fetch File Details</a></li>
+        </ul>
+      </div>
+    </td>
+  `;
+
+  if (row) {
+    row.innerHTML = html;
+  } else {
+    row = document.createElement("tr");
+    row.innerHTML = html;
+    document.getElementById("filesTableBody").appendChild(row);
   }
 
-  navigator.clipboard
-    .writeText(link)
-    .then(() => {
-      showToast(`🔗 Sharing link copied for file #${fileId}`, "bg-success");
-    })
-    .catch((err) => {
-      console.error("❌ Clipboard copy failed:", err);
-      showToast("Failed to copy link", "bg-danger");
-    });
+  const dropdownToggle = row.querySelector(".dropdown-toggle");
+  if (dropdownToggle) new mdb.Dropdown(dropdownToggle);
 }
+
 function handleCloudStatusClick(fileId, folderName, email) {
   if (email && email.trim()) {
     showToast(
@@ -255,6 +374,7 @@ function loadFilesTable() {
   })
     .then((res) => res.json())
     .then((data) => {
+      console.log(data);
       const table = $("#filesTable");
 
       if ($.fn.DataTable.isDataTable("#filesTable")) {
@@ -264,105 +384,7 @@ function loadFilesTable() {
       const tbody = document.getElementById("filesTableBody");
       tbody.innerHTML = "";
 
-      data.files.forEach((file) => {
-        const row = document.createElement("tr");
-        const hasLink = file.sharing_link && file.sharing_link.trim() !== "";
-        const copyBtnColor = hasLink ? "btn-success" : "btn-outline-light";
-        const sharingLink = file.sharing_link || "";
-        const jsonFile = encodeURIComponent(
-          JSON.stringify(file).replace(/'/g, "\\'")
-        );
-
-        row.innerHTML = `
-            <td style="display:none">${file.id}</td>
-            <td class="small text-muted">
-              <div><i class="fas fa-hdd me-1 text-info"></i> ${
-                file.local_path || "-"
-              }</div>
-              <div><i class="fas fa-cloud me-1 text-warning"></i> ${
-                file.cloud_path || "-"
-              }</div>
-            </td>
-            <td>${file.folder_name || "-"}</td>
-            <td>${formatBytes(file.folder_size) || "-"}</td>
-            <td>${file.is_local ? "✅" : "❌"}</td>
-            <td>
-              <span
-                class="d-inline-block"
-                ${
-                  file.cloud_email
-                    ? `data-mdb-toggle="tooltip" title="${file.cloud_email}"`
-                    : ""
-                }
-                onclick="handleCloudStatusClick(${file.id}, '${
-          file.folder_name
-        }', '${file.cloud_email || ""}')"
-                style="cursor: pointer;"
-              >
-                ${file.is_cloud ? "✅" : "❌"}
-              </span>
-            </td>
-            <td>
-            
-              <button class="btn btn-sm ${copyBtnColor} me-1" ${
-          !hasLink ? "disabled" : ""
-        } title="Copy Sharing Link" onclick="copySharingLink('${sharingLink}', ${
-          file.id
-        })">
-                <i class="fas fa-link"></i>
-              </button>
-              <div class="btn-group dropdown">
-                <button type="button" class="btn btn-sm btn-tertiary dropdown-toggle dropdown-toggle-split" data-mdb-toggle="dropdown" aria-expanded="false">
-                  <i class="fas fa-ellipsis-v"></i>
-                </button>
-                <ul class="dropdown-menu dropdown-menu-dark">
-                  ${
-                    file.sharingLink
-                      ? `
-                    <li>
-                      <a class="dropdown-item" href="#" onclick="generateSharingLink(${file.id})">
-                        <i class="fas fa-link me-2"></i> Generate Sharing Link
-                      </a>
-                    </li>`
-                      : ""
-                  }
-                  ${
-                    file.pro_account
-                      ? `
-                    <li>
-                      <a class="dropdown-item" href="#" onclick="generateExpiringLink(${file.id})">
-                        <i class="fas fa-link me-2"></i> Generate Expiring Link
-                      </a>
-                    </li>`
-                      : ""
-                  }
-                  ${
-                    !file.is_cloud
-                      ? `<li>
-                          <a class="dropdown-item text-success" href="#" onclick="uploadToCloud(${file.id})">
-                            <i class="fas fa-cloud-upload-alt me-2"></i> Upload to Cloud
-                          </a>
-                        </li>`
-                      : ""
-                  }
-                  <li>
-                    <a class="dropdown-item text-info" href="#" onclick="fetchFileDetails(${
-                      file.id
-                    })">
-                      <i class="fas fa-info-circle me-2"></i> Fetch File Details
-                    </a>
-                  </li>
-                </ul>
-              </div>
-            </td>
-          `;
-
-        tbody.appendChild(row);
-        const dropdownToggle = row.querySelector(".dropdown-toggle");
-        if (dropdownToggle) {
-          new mdb.Dropdown(dropdownToggle);
-        }
-      });
+      data.files.forEach(updateRowWithFileData);
 
       $("#filesTable").DataTable({
         responsive: true,
@@ -370,7 +392,7 @@ function loadFilesTable() {
         order: [[0, "desc"]],
         columnDefs: [
           {
-            targets: [6],
+            targets: [7],
             orderable: false,
           },
         ],
@@ -379,7 +401,6 @@ function loadFilesTable() {
     .catch((err) => console.error("Failed to load files:", err));
 }
 
-// format the bytes to human-readable format
 function formatBytes(bytes) {
   bytes = Number(bytes);
   if (!isFinite(bytes)) return "-";
@@ -391,4 +412,21 @@ function formatBytes(bytes) {
     i++;
   }
   return `${bytes.toFixed(2)} ${units[i]}`;
+}
+
+function copySharingLink(link, fileId) {
+  if (!link || link.trim() === "") {
+    showToast(`⚠️ No sharing link available for file #${fileId}`, "bg-warning");
+    return;
+  }
+
+  navigator.clipboard
+    .writeText(link)
+    .then(() => {
+      showToast(`🔗 Sharing link copied for file #${fileId}`, "bg-success");
+    })
+    .catch((err) => {
+      console.error("❌ Clipboard copy failed:", err);
+      showToast("Failed to copy link", "bg-danger");
+    });
 }
