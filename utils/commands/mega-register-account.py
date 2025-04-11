@@ -3,7 +3,7 @@ import os
 import string
 import urllib.parse
 import subprocess
-from utils.config import settings
+from utils.config import settings, cmd
 from database import get_db
 from models import MegaAccount
 
@@ -22,13 +22,11 @@ def run(command_args=None):
         password = ''.join(random.SystemRandom().choice(chars) for _ in range(22))
 
     try:
-        path = settings.get_megacmd_path()
-        cmd = f'"{os.path.join(path, "mega-signup")}" "{email}" "{password}" --name="Mega Manager"'
-
-        print("▶ Running:", cmd)  # optional: debug log
+        command = f'"{cmd("mega-signup")}" "{email}" "{password}" --name="Mega Manager"'
+        print("▶ Running:", command)  # optional: debug log
 
         result = subprocess.run(
-            cmd,
+            command,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,

@@ -21,8 +21,13 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/mdb-ui-kit@9.0.0/css/mdb.min.css"
     />
+    <!-- DataTables CSS with Bootstrap 5 -->
+    <link
+      href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css"
+      rel="stylesheet"
+    />
     <!-- Custom CSS styling -->
-    <link rel="stylesheet" href="custom.css" />
+    <link rel="stylesheet" href="css/custom.css?v=0.0.1" />
   </head>
 
   <body>
@@ -59,10 +64,25 @@
     <!-- Navbar -->
 
     <!-- Content Section -->
-    <!-- Content Section -->
     <section class="container my-5">
       <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0">Files</h2>
+        <div class="d-flex gap-2">
+          <button
+            id="generateLinksBtn"
+            onclick="generateMissingLinks()"
+            class="btn btn-outline-info btn-sm"
+          >
+            Generate Missing Links
+          </button>
+          <button
+            id="updateDetailsBtn"
+            onclick="updateAllDetails()"
+            class="btn btn-outline-warning btn-sm"
+          >
+            Update All Details
+          </button>
+        </div>
       </div>
 
       <div id="filesTableWrapper">
@@ -70,10 +90,10 @@
           <table id="filesTable" class="table table-dark table-hover">
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Local Path</th>
-                <th>Cloud Path</th>
+                <th style="display: none">ID</th>
+                <th>Paths</th>
                 <th>Folder Name</th>
+                <th>Size on Disk</th>
                 <th>Is Local</th>
                 <!-- Is Local icon grey/green to show status -->
                 <th>Is Cloud</th>
@@ -109,6 +129,6 @@
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
     <script src="scripts/include.js?v=0.0.1"></script>
-    <script src="scripts/files.js?v=0.0.1"></script>
+    <script src="scripts/files.js?v=0.0.8"></script>
   </body>
 </html>

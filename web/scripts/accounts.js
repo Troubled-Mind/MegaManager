@@ -399,7 +399,7 @@ function loadAccountTable() {
 
       $("#accountTable").DataTable({
         responsive: true,
-        lengthMenu: [50, 100, 250, 500, "All"],
+        lengthMenu: [50, 100, 250, 500, 1000],
         order: [[0, "desc"]],
         columnDefs: [
           {
@@ -433,7 +433,6 @@ function refreshAllAccounts() {
   })
     .then((res) => res.json())
     .then(async (data) => {
-      console.log(data);
       const accountIds = data.account_ids || [];
       const total = accountIds.length;
 
@@ -635,6 +634,7 @@ function togglePasswordVisibility(accountId) {
 
 // format the bytes to human-readable format
 function formatBytes(bytes) {
+  if (bytes == null || isNaN(bytes)) return "-";
   const units = ["B", "KB", "MB", "GB", "TB"];
   let i = 0;
   while (bytes >= 1024 && i < units.length - 1) {

@@ -1,9 +1,9 @@
-import os
 import re
 import sqlite3
 import subprocess
 from datetime import datetime
-from utils.config import settings
+from utils.commands.shared import get_account_files
+from utils.config import cmd
 
 DB_PATH = "database.db"
 
@@ -65,12 +65,6 @@ def process_account(account_id):
     print(f"🔑 Email: {email} | Password: {password}")
 
     try:
-        # Resolve executable paths
-        base_cmd_path = settings.get("megacmd_path")
-        def cmd(name):
-            suffix = ".bat" if os.name == "nt" else ""
-            return os.path.join(base_cmd_path, name + suffix) if base_cmd_path else name
-
         # Logout to reset session
         subprocess.run([cmd("mega-logout")], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
@@ -98,6 +92,12 @@ def process_account(account_id):
             (1 if is_pro else 0, used_quota, total_quota, now, now, account_id)
         )
         conn.commit()
+
+        # Index account files
+        print("📁 Indexing account files...")
+        result = get_account_files(account_id)
+        if result.get("status") != 200:
+            return result
 
         # Logout
         subprocess.run([cmd("mega-logout")], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)

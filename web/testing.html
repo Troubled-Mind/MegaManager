@@ -22,7 +22,7 @@
       href="https://cdn.jsdelivr.net/npm/mdb-ui-kit@9.0.0/css/mdb.min.css"
     />
     <!-- Custom CSS styling -->
-    <link rel="stylesheet" href="custom.css" />
+    <link rel="stylesheet" href="css/custom.css?v=0.0.1" />
   </head>
 
   <body>
@@ -87,6 +87,15 @@
           onclick="sendCommand('mega-login:all')"
         >
           Log into all mega accounts in the database
+        </button>
+
+        <button
+          type="button"
+          class="btn btn-primary mb-4"
+          data-mdb-ripple-init
+          onclick="sendCommand('mega-get-account-files:8')"
+        >
+          Create files.txt for mega account id 8
         </button>
       </div>
     </section>
