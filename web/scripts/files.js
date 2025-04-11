@@ -58,14 +58,27 @@ function generateExpiringLink(fileId) {
 }
 
 function generateMissingLinks() {
-  console.log(`🔗 Generating missing links...`);
-  showToast(`Generating missing links...`, "bg-info");
-  // TODO: implement logic to find all files without links, and generate them
+  fetch("/run-command", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ command: "mega-generate-missing-links" }),
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      if (data.status === 200) {
+        showToast(`✅ Missing sharing links generated`, "bg-success");
+        loadFilesTable();
+      } else {
+        showToast(`❌ Failed: ${data.message || "Unknown error"}`, "bg-danger");
+      }
+    })
+    .catch((err) => {
+      console.error("❌ Generate missing links error:", err);
+      showToast("❌ Failed to generate missing sharing links", "bg-danger");
+    });
 }
 
 function updateAllDetails() {
-  showToast(`Updating all file details...`, "bg-info");
-
   fetch("/run-command", {
     method: "POST",
     headers: { "Content-Type": "application/json" },

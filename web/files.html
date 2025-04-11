@@ -68,7 +68,11 @@
       <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0">Files</h2>
         <div class="d-flex gap-2">
-          <button id="generateLinksBtn" class="btn btn-outline-info btn-sm">
+          <button
+            id="generateLinksBtn"
+            onclick="generateMissingLinks()"
+            class="btn btn-outline-info btn-sm"
+          >
             Generate Missing Links
           </button>
           <button
@@ -125,6 +129,6 @@
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
     <script src="scripts/include.js?v=0.0.1"></script>
-    <script src="scripts/files.js?v=0.0.6"></script>
+    <script src="scripts/files.js?v=0.0.7"></script>
   </body>
 </html>
