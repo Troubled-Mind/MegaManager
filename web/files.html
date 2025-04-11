@@ -109,6 +109,55 @@
       </div>
     </section>
 
+    <!-- Delete from cloud modal -->
+    <div
+      class="modal fade"
+      id="deleteFromCloudModal"
+      tabindex="-1"
+      aria-labelledby="deleteFromCloudModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content text-white bg-dark">
+          <div class="modal-header">
+            <h5 class="modal-title" id="deleteFromCloudModalLabel">
+              Confirm Cloud Deletion
+            </h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-mdb-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <p id="deleteFromCloudModalBody"></p>
+            <small class="text-warning d-block mt-3">
+              This action will permanently delete the file from your MEGA cloud
+              drive.<br />
+              The file will be unrecoverable unless previously backed up.
+            </small>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-outline-light"
+              data-mdb-dismiss="modal"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              id="confirmCloudDeleteBtn"
+              class="btn btn-danger"
+            >
+              Delete from Cloud
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Universal Toast -->
     <div class="position-fixed top-0 end-0 p-3" style="z-index: 1055">
       <div
@@ -129,6 +178,6 @@
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
     <script src="scripts/include.js?v=0.0.1"></script>
-    <script src="scripts/files.js?v=0.0.7"></script>
+    <script src="scripts/files.js?v=0.0.8"></script>
   </body>
 </html>

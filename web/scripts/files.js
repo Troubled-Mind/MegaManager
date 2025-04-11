@@ -45,16 +45,38 @@ function uploadToCloud(fileId) {
   // TODO: implement backend command
 }
 
-function deleteFromCloud(fileId) {
-  console.log(`🗑️ Delete from cloud for file ID: ${fileId}`);
-  showToast(`Deleting cloud copy of file #${fileId}...`, "bg-danger");
-  // TODO: implement backend command
+function deleteFromCloud(jsonFile) {
+  const file = JSON.parse(decodeURIComponent(jsonFile));
+  const fileId = file.id;
+  const cloudPath = file.cloud_path || "-";
+  const folderName = file.folder_name || "-";
+  const email = file.cloud_email || "-";
+
+  $("#deleteFromCloudModalBody").text(
+    `Are you sure you want to permanently delete "${cloudPath} / ${folderName}" from MEGA account ${email}?`
+  );
+  $("#confirmCloudDeleteBtn")
+    .off("click")
+    .on("click", () => {
+      deleteFileFromCloud(fileId); // Implement this function as needed
+      const modal = mdb.Modal.getInstance(
+        document.getElementById("deleteFromCloudModal")
+      );
+      modal.hide();
+    });
+  const modal = new mdb.Modal(document.getElementById("deleteFromCloudModal"));
+  modal.show();
+}
+
+function deleteFileFromCloud(fileId) {
+  alert("Not implemented");
 }
 
 function generateExpiringLink(fileId) {
   console.log(`🔗 Generating expiring link for file ID: ${fileId}`);
   showToast(`Generating expiring link for file #${fileId}...`, "bg-info");
   // TODO: implement backend command - also a modal for setting the expiry duration
+  alert("Implement a modal to set the expiry duration.");
 }
 
 function generateMissingLinks() {
@@ -123,6 +145,9 @@ function fetchFileDetails(fileId) {
         const hasLink = file.sharing_link && file.sharing_link.trim() !== "";
         const copyBtnColor = hasLink ? "btn-success" : "btn-outline-light";
         const sharingLink = file.sharing_link || "";
+        const jsonFile = encodeURIComponent(
+          JSON.stringify(file).replace(/'/g, "\\'")
+        );
 
         row.innerHTML = `
           <td style="display:none">${file.id}</td>
@@ -198,7 +223,7 @@ function fetchFileDetails(fileId) {
                   ${
                     file.is_cloud
                       ? `<li>
-                          <a class="dropdown-item text-danger" href="#" onclick="deleteFromCloud(${file.id})">
+                          <a class="dropdown-item text-danger" href="#" onclick="deleteFromCloud('${jsonFile}')">
                             <i class="fas fa-cloud-meatball me-2"></i> Delete from Cloud
                           </a>
                         </li>`
@@ -280,6 +305,9 @@ function loadFilesTable() {
         const hasLink = file.sharing_link && file.sharing_link.trim() !== "";
         const copyBtnColor = hasLink ? "btn-success" : "btn-outline-light";
         const sharingLink = file.sharing_link || "";
+        const jsonFile = encodeURIComponent(
+          JSON.stringify(file).replace(/'/g, "\\'")
+        );
 
         row.innerHTML = `
             <td style="display:none">${file.id}</td>
@@ -356,10 +384,11 @@ function loadFilesTable() {
                   ${
                     file.is_cloud
                       ? `<li>
-                          <a class="dropdown-item text-danger" href="#" onclick="deleteFromCloud(${file.id})">
+                         <a class="dropdown-item text-danger" href="#"
+                            onclick="deleteFromCloud('${jsonFile}')">
                             <i class="fas fa-cloud-meatball me-2"></i> Delete from Cloud
-                          </a>
-                        </li>`
+                         </a>
+                       </li>`
                       : ""
                   }
                   <li>
@@ -383,7 +412,7 @@ function loadFilesTable() {
 
       $("#filesTable").DataTable({
         responsive: true,
-        lengthMenu: [50, 100, 250, 500, "All"],
+        lengthMenu: [50, 100, 250, 500, 1000],
         order: [[0, "desc"]],
         columnDefs: [
           {
