@@ -51,10 +51,46 @@ function deleteFromCloud(fileId) {
   // TODO: implement backend command
 }
 
+function generateExpiringLink(fileId) {
+  console.log(`🔗 Generating expiring link for file ID: ${fileId}`);
+  showToast(`Generating expiring link for file #${fileId}...`, "bg-info");
+  // TODO: implement backend command - also a modal for setting the expiry duration
+}
+
+function generateMissingLinks() {
+  console.log(`🔗 Generating missing links...`);
+  showToast(`Generating missing links...`, "bg-info");
+  // TODO: implement logic to find all files without links, and generate them
+}
+
+function updateAllDetails() {
+  showToast(`Updating all file details...`, "bg-info");
+
+  fetch("/run-command", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ command: "mega-grouped-file-details" }),
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      if (data.status === 200 && Array.isArray(data.results)) {
+        showToast(`✅ All file details updated`, "bg-success");
+        loadFilesTable();
+      } else {
+        showToast(
+          `❌ Update failed: ${data.message || "Unknown error"}`,
+          "bg-danger"
+        );
+      }
+    })
+    .catch((err) => {
+      console.error("❌ Update all details error:", err);
+      showToast("❌ Failed to update all file details", "bg-danger");
+    });
+}
+
 function fetchFileDetails(fileId) {
   console.log(`🔍 Fetching details for file ID: ${fileId}`);
-  showToast(`Fetching details for file #${fileId}...`, "bg-secondary");
-
   fetch("/run-command", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -117,19 +153,52 @@ function fetchFileDetails(fileId) {
                 <i class="fas fa-ellipsis-v"></i>
               </button>
               <ul class="dropdown-menu dropdown-menu-dark">
-                <li><a class="dropdown-item" href="#" onclick="generateSharingLink(${
-                  file.id
-                })"><i class="fas fa-link me-2"></i> Generate Sharing Link</a></li>
-                <li><a class="dropdown-item text-success" href="#" onclick="uploadToCloud(${
-                  file.id
-                })"><i class="fas fa-cloud-upload-alt me-2"></i> Upload to Cloud</a></li>
-                <li><a class="dropdown-item text-danger" href="#" onclick="deleteFromCloud(${
-                  file.id
-                })"><i class="fas fa-cloud-meatball me-2"></i> Delete from Cloud</a></li>
-                <li><a class="dropdown-item text-info" href="#" onclick="fetchFileDetails(${
-                  file.id
-                })"><i class="fas fa-info-circle me-2"></i> Fetch File Details</a></li>
-              </ul>
+                  ${
+                    file.sharingLink
+                      ? `
+                    <li>
+                      <a class="dropdown-item" href="#" onclick="generateSharingLink(${file.id})">
+                        <i class="fas fa-link me-2"></i> Generate Sharing Link
+                      </a>
+                    </li>`
+                      : ""
+                  }
+                  ${
+                    file.pro_account
+                      ? `
+                    <li>
+                      <a class="dropdown-item" href="#" onclick="generateExpiringLink(${file.id})">
+                        <i class="fas fa-link me-2"></i> Generate Expiring Link
+                      </a>
+                    </li>`
+                      : ""
+                  }
+                  ${
+                    !file.is_cloud
+                      ? `<li>
+                          <a class="dropdown-item text-success" href="#" onclick="uploadToCloud(${file.id})">
+                            <i class="fas fa-cloud-upload-alt me-2"></i> Upload to Cloud
+                          </a>
+                        </li>`
+                      : ""
+                  }
+                  ${
+                    file.is_cloud
+                      ? `<li>
+                          <a class="dropdown-item text-danger" href="#" onclick="deleteFromCloud(${file.id})">
+                            <i class="fas fa-cloud-meatball me-2"></i> Delete from Cloud
+                          </a>
+                        </li>`
+                      : ""
+                  }
+                  <li>
+                    <a class="dropdown-item text-info" href="#" onclick="fetchFileDetails(${
+                      file.id
+                    })">
+                      <i class="fas fa-info-circle me-2"></i> Fetch File Details
+                    </a>
+                  </li>
+                </ul>
             </div>
           </td>
         `;
@@ -242,27 +311,44 @@ function loadFilesTable() {
                   <i class="fas fa-ellipsis-v"></i>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-dark">
-                  <li>
-                    <a class="dropdown-item" href="#" onclick="generateSharingLink(${
-                      file.id
-                    })">
-                      <i class="fas fa-link me-2"></i> Generate Sharing Link
-                    </a>
-                  </li>
-                  <li>
-                    <a class="dropdown-item text-success" href="#" onclick="uploadToCloud(${
-                      file.id
-                    })">
-                      <i class="fas fa-cloud-upload-alt me-2"></i> Upload to Cloud
-                    </a>
-                  </li>
-                  <li>
-                    <a class="dropdown-item text-danger" href="#" onclick="deleteFromCloud(${
-                      file.id
-                    })">
-                      <i class="fas fa-cloud-meatball me-2"></i> Delete from Cloud
-                    </a>
-                  </li>
+                  ${
+                    file.sharingLink
+                      ? `
+                    <li>
+                      <a class="dropdown-item" href="#" onclick="generateSharingLink(${file.id})">
+                        <i class="fas fa-link me-2"></i> Generate Sharing Link
+                      </a>
+                    </li>`
+                      : ""
+                  }
+                  ${
+                    file.pro_account
+                      ? `
+                    <li>
+                      <a class="dropdown-item" href="#" onclick="generateExpiringLink(${file.id})">
+                        <i class="fas fa-link me-2"></i> Generate Expiring Link
+                      </a>
+                    </li>`
+                      : ""
+                  }
+                  ${
+                    !file.is_cloud
+                      ? `<li>
+                          <a class="dropdown-item text-success" href="#" onclick="uploadToCloud(${file.id})">
+                            <i class="fas fa-cloud-upload-alt me-2"></i> Upload to Cloud
+                          </a>
+                        </li>`
+                      : ""
+                  }
+                  ${
+                    file.is_cloud
+                      ? `<li>
+                          <a class="dropdown-item text-danger" href="#" onclick="deleteFromCloud(${file.id})">
+                            <i class="fas fa-cloud-meatball me-2"></i> Delete from Cloud
+                          </a>
+                        </li>`
+                      : ""
+                  }
                   <li>
                     <a class="dropdown-item text-info" href="#" onclick="fetchFileDetails(${
                       file.id

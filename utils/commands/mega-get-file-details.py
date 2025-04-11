@@ -69,12 +69,20 @@ def run(args=None):
         
         if "not exported" in stdout.lower():
             # When file isn't exported, save the rest of the details and return success
+            mega_file.folder_size = storage # still update the storage size!
             mega_file.mega_sharing_link = None
             session.commit()
             return {
                 "status": 200,
                 "message": f"File details updated successfully for {mega_file.folder_name}",
-                "folder_size": storage,
+                "file": {
+                    "id": mega_file.id,
+                    "cloud_path": mega_file.path,
+                    "folder_name": mega_file.folder_name,
+                    "folder_size": storage,
+                    "is_cloud": True,
+                    "cloud_email": account.email,
+                },
                 "link": None
             }
         else:

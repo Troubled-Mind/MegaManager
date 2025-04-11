@@ -17,6 +17,7 @@ def run(args=None):
             mf.mega_sharing_link_expiry,
             mf.mega_account_id,
             ma.email AS cloud_email,
+            ma.is_pro_account AS pro_account,
             CASE WHEN f.id IS NOT NULL THEN 1 ELSE 0 END AS is_local,
             CASE WHEN mf.mega_account_id IS NOT NULL THEN 1 ELSE 0 END AS is_cloud
         FROM mega_files mf
@@ -40,6 +41,7 @@ def run(args=None):
                 "sharing_link": row["mega_sharing_link"],
                 "sharing_link_expiry": row["mega_sharing_link_expiry"],
                 "mega_account_id": row["mega_account_id"],
+                "pro_account": bool(row["pro_account"]),
                 "cloud_email": row["cloud_email"]
             })
 
