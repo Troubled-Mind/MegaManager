@@ -45,33 +45,6 @@ function uploadToCloud(fileId) {
   // TODO: implement backend command
 }
 
-function deleteFromCloud(jsonFile) {
-  const file = JSON.parse(decodeURIComponent(jsonFile));
-  const fileId = file.id;
-  const cloudPath = file.cloud_path || "-";
-  const folderName = file.folder_name || "-";
-  const email = file.cloud_email || "-";
-
-  $("#deleteFromCloudModalBody").text(
-    `Are you sure you want to permanently delete "${cloudPath} / ${folderName}" from MEGA account ${email}?`
-  );
-  $("#confirmCloudDeleteBtn")
-    .off("click")
-    .on("click", () => {
-      deleteFileFromCloud(fileId); // Implement this function as needed
-      const modal = mdb.Modal.getInstance(
-        document.getElementById("deleteFromCloudModal")
-      );
-      modal.hide();
-    });
-  const modal = new mdb.Modal(document.getElementById("deleteFromCloudModal"));
-  modal.show();
-}
-
-function deleteFileFromCloud(fileId) {
-  alert("Not implemented");
-}
-
 function generateExpiringLink(fileId) {
   console.log(`🔗 Generating expiring link for file ID: ${fileId}`);
   showToast(`Generating expiring link for file #${fileId}...`, "bg-info");
@@ -216,15 +189,6 @@ function fetchFileDetails(fileId) {
                       ? `<li>
                           <a class="dropdown-item text-success" href="#" onclick="uploadToCloud(${file.id})">
                             <i class="fas fa-cloud-upload-alt me-2"></i> Upload to Cloud
-                          </a>
-                        </li>`
-                      : ""
-                  }
-                  ${
-                    file.is_cloud
-                      ? `<li>
-                          <a class="dropdown-item text-danger" href="#" onclick="deleteFromCloud('${jsonFile}')">
-                            <i class="fas fa-cloud-meatball me-2"></i> Delete from Cloud
                           </a>
                         </li>`
                       : ""
@@ -381,16 +345,6 @@ function loadFilesTable() {
                         </li>`
                       : ""
                   }
-                  ${
-                    file.is_cloud
-                      ? `<li>
-                         <a class="dropdown-item text-danger" href="#"
-                            onclick="deleteFromCloud('${jsonFile}')">
-                            <i class="fas fa-cloud-meatball me-2"></i> Delete from Cloud
-                         </a>
-                       </li>`
-                      : ""
-                  }
                   <li>
                     <a class="dropdown-item text-info" href="#" onclick="fetchFileDetails(${
                       file.id
@@ -427,7 +381,9 @@ function loadFilesTable() {
 
 // format the bytes to human-readable format
 function formatBytes(bytes) {
-  if (bytes == null || isNaN(bytes)) return "-";
+  bytes = Number(bytes);
+  if (!isFinite(bytes)) return "-";
+
   const units = ["B", "KB", "MB", "GB", "TB"];
   let i = 0;
   while (bytes >= 1024 && i < units.length - 1) {
