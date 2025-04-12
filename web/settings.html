@@ -234,6 +234,25 @@
       </form>
     </section>
 
+    <section class="container my-5">
+      <h2>Export Data</h2>
+      <div class="repeater mb-4">
+        <button onclick="exportData('accounts', 'mega_accounts.csv')" class="btn btn-primary">
+          Export all MEGA accounts to a CSV file.
+        </button>
+        <hr />
+
+        <button onclick="exportData('local_files', 'local_files.csv')" class="btn btn-primary">
+          Export all local file details to a CSV file.
+        </button>
+        <hr />
+
+        <button onclick="exportData('cloud_files', 'cloud_files.csv')" class="btn btn-primary">
+          Export all cloud (MEGA) file details to a CSV file.
+        </button>
+      </div>
+    </section>
+
     <!-- Universal Toast -->
     <div class="position-fixed top-0 end-0 p-3" style="z-index: 1055">
       <div

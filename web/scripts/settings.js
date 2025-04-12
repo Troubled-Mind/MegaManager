@@ -16,6 +16,31 @@ function initMDBInputs() {
   });
 }
 
+function exportData(exportType, filename) {
+  fetch("/run-command", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: `command=csv-export-data:${exportType}`,
+  }).then(res => res.json()).then(data => {
+    if (data.status === 200) {
+      const blob = new Blob([data.body], { type: "text/csv;charset=utf-8;" });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      showToast("✅ CSV file downloaded successfully.", "bg-success");
+    } else {
+      showToast("❌ Failed to download CSV file.", "bg-danger");
+    }
+  }).catch(err => {
+    showToast("❌ Failed to download CSV file.", "bg-danger");
+  })
+}
+
 async function loadSettings(repeater) {
   const res = await fetch("/api/settings");
   const data = await res.json();
