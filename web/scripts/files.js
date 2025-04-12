@@ -160,6 +160,7 @@ function generateExpiringLink(fileId) {
 }
 
 function generateMissingLinks() {
+  showToast(`Starting to generate missing sharing links...`, "bg-success");
   fetch("/run-command", {
     method: "POST",
     headers: { "Content-Type": "application/json" },

@@ -52,7 +52,7 @@ def run(args=None):
 
         for file in files:
             full_path = f"{file['path'].rstrip('/')}/{file['folder_name']}"
-            export_cmd = [cmd("mega-export"), "-a", full_path]
+            export_cmd = [cmd("mega-export"), "-af", full_path]
             export = subprocess.run(export_cmd, capture_output=True, text=True)
 
             if export.returncode == 0:

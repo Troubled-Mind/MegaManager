@@ -49,7 +49,7 @@ def run(file_id, expiry=None):
         return {"status": "error", "message": f"Login failed: {login_result.stderr.strip()}"}
 
     # Generate sharing link
-    export_cmd = [cmd("mega-export"), "-a", full_path.strip()]
+    export_cmd = [cmd("mega-export"), "-af", full_path.strip()]
     if expiry:
         export_cmd += ["--expire", expiry]
 
