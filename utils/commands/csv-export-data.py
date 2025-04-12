@@ -14,6 +14,8 @@ def run(args=None):
         return export_mega_accounts()
     elif args == "local_files":
         return export_local_files()
+    elif args == "cloud_files":
+        return export_cloud_files()
     else:
         return {"status": 400, "message": "Invalid argument provided."}
 
@@ -50,6 +52,32 @@ def export_local_files():
     for file in files:
         writer.writerow([getattr(file, header) for header in headers])
 
+    # Return file to be downloaded
+    output.seek(0)
+    return {
+        "status": 200,
+        "body": output.read()
+    }
+
+def export_cloud_files():
+    """Export all cloud files to a CSV file."""
+    session = next(get_db())
+    files = session.query(File).filter(File.m_folder_name != None).all()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    headers = ["MEGA Path", "Folder Name", "Folder Size", "Sharing Link", "Account Email"]
+    writer.writerow(headers)
+
+    for file in files:
+        writer.writerow([
+            file.m_path,
+            file.m_folder_name,
+            file.m_folder_size,
+            file.m_sharing_link,
+            file.account.email if file.account else None
+        ])
+    
     # Return file to be downloaded
     output.seek(0)
     return {
