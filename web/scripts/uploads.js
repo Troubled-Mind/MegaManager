@@ -59,5 +59,5 @@ function displayOngoingUploads(uploads) {
 document.addEventListener("DOMContentLoaded", function () {
   fetchOngoingUploads();
 
-  setInterval(fetchOngoingUploads, 2500); // Poll for updates every 2.5s
+  setInterval(fetchOngoingUploads, 2000); // Poll for updates every 2s
 });
