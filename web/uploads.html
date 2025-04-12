@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/png" href="resources/img/logo.png" />
-    <title>Mega Manager - Testing</title>
+    <title>Mega Manager - Uploads</title>
 
     <!-- Font Awesome -->
     <link
@@ -26,6 +26,12 @@
   </head>
 
   <body>
+    <style>
+      .progress {
+        height: 20px;
+        border-radius: 15px;
+      }
+    </style>
     <!-- Navbar -->
     <nav class="navbar navbar-expand bg-body-tertiary">
       <div class="container-fluid">
@@ -60,53 +66,9 @@
 
     <!-- Content Section -->
     <section class="container my-5">
-      <div class="alert alert-primary" role="alert" data-mdb-alert-init>
-        This page is for testing functions and will be removed before
-        production.
-      </div>
-      <div class="row">
-        <div
-          id="serverMessage"
-          class="alert alert-warning d-none"
-          role="alert"
-          data-mdb-alert-init
-        ></div>
-        <button
-          type="button"
-          class="btn btn-primary mb-4"
-          data-mdb-ripple-init
-          onclick="sendCommand('mega-login:0')"
-        >
-          Log into mega account with id=0
-        </button>
-
-        <button
-          type="button"
-          class="btn btn-primary mb-4"
-          data-mdb-ripple-init
-          onclick="sendCommand('mega-login:all')"
-        >
-          Log into all mega accounts in the database
-        </button>
-
-        <button
-          type="button"
-          class="btn btn-primary mb-4"
-          data-mdb-ripple-init
-          onclick="sendCommand('mega-get-account-files:8')"
-        >
-          Get files for mega account id 8
-        </button>
-
-        <button
-          type="button"
-          class="btn btn-primary mb-4"
-          data-mdb-ripple-init
-          onclick="sendCommand('local-fetch-files')"
-        >
-          Get local files
-        </button>
-      </div>
+      <h2>Ongoing Uploads</h2>
+      <div id="uploads-list"></div>
+      <!-- Container for the uploads -->
     </section>
 
     <!-- Universal Toast -->
@@ -126,32 +88,6 @@
     <!-- MDB scripts -->
     <script src="https://cdn.jsdelivr.net/npm/mdb-ui-kit@9.0.0/js/mdb.umd.min.js"></script>
     <script src="scripts/include.js?v=0.0.1"></script>
-    <script>
-      // Function to send a command to the backend
-      function sendCommand(cmd) {
-        fetch("/run-command", {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: `command=${encodeURIComponent(cmd)}`,
-        })
-          .then((res) => res.json())
-          .then((data) => {
-            const alertBox = document.getElementById("serverMessage");
-            alertBox.textContent = data.message;
-            alertBox.classList.remove("d-none", "fade");
-            alertBox.classList.add("show");
-
-            // Automatically hide after 10 seconds
-            setTimeout(() => {
-              alertBox.classList.add("fade");
-              setTimeout(() => {
-                alertBox.classList.remove("show");
-                alertBox.classList.add("d-none");
-              }, 150); // matches MDB fade transition
-            }, 5000);
-          })
-          .catch((err) => console.error(err));
-      }
-    </script>
+    <script src="scripts/uploads.js?v=0.0.1"></script>
   </body>
 </html>

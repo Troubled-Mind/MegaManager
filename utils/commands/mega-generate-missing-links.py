@@ -11,12 +11,13 @@ def run(args=None):
     except sqlite3.Error as e:
         return {"status": 500, "message": f"Database connection failed: {e}"}
 
-    # Get all files with no sharing link
+    # Get all files with no sharing link, but that have MEGA data
     cursor.execute("""
-        SELECT mf.id, mf.path, mf.folder_name, mf.mega_account_id, ma.email, ma.password
-        FROM mega_files mf
-        JOIN mega_accounts ma ON mf.mega_account_id = ma.id
-        WHERE mf.mega_sharing_link IS NULL OR TRIM(mf.mega_sharing_link) = ''
+        SELECT f.id, f.m_path, f.m_folder_name, f.m_account_id, ma.email, ma.password
+        FROM files f
+        JOIN mega_accounts ma ON f.m_account_id = ma.id
+        WHERE f.m_path IS NOT NULL
+          AND (f.m_sharing_link IS NULL OR TRIM(f.m_sharing_link) = '')
     """)
     rows = cursor.fetchall()
 
@@ -37,6 +38,7 @@ def run(args=None):
         account = files[0]
         subprocess.run([cmd("mega-logout")], capture_output=True, text=True)
         login = subprocess.run([cmd("mega-login"), account["email"], account["password"]], capture_output=True, text=True)
+
         if login.returncode != 0:
             results.append({
                 "account_id": acc_id,
@@ -57,7 +59,7 @@ def run(args=None):
                 match = re.search(r'https://mega\.nz/\S+', export.stdout)
                 if match:
                     sharing_link = match.group(0)
-                    cursor.execute("UPDATE mega_files SET mega_sharing_link = ? WHERE id = ?", (sharing_link, file["id"]))
+                    cursor.execute("UPDATE files SET m_sharing_link = ? WHERE id = ?", (sharing_link, file["id"]))
                     account_results.append({"id": file["id"], "link": sharing_link})
                 else:
                     account_results.append({"id": file["id"], "error": "No link found in output"})

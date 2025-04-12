@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, UniqueConstraint
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
@@ -16,36 +16,37 @@ class MegaAccount(Base):
     storage_quota_updated = Column(DateTime, nullable=True)
     last_login = Column(DateTime, nullable=True)
 
-    mega_files = relationship("MegaFile", back_populates="account")
-
+    files = relationship("File", back_populates="account")
 
 class File(Base):
     __tablename__ = "files"
 
     id = Column(Integer, primary_key=True)
-    path = Column(String, nullable=False)
-    folder_name = Column(String, nullable=True)
-    folder_size = Column(String, nullable=True)
 
-    mega_files = relationship("MegaFile", back_populates="local_file")
+    # Local info
+    l_path = Column(String, nullable=True)
+    l_folder_name = Column(String, nullable=True)
+    l_folder_size = Column(String, nullable=True)
 
+    # Cloud (MEGA) info
+    m_path = Column(String, nullable=True)
+    m_folder_name = Column(String, nullable=True)
+    m_folder_size = Column(String, nullable=True)
 
-class MegaFile(Base):
-    __tablename__ = "mega_files"
+    m_account_id = Column(Integer, ForeignKey("mega_accounts.id"), nullable=True)
+    m_sharing_link = Column(String, nullable=True)
+    m_sharing_link_expiry = Column(DateTime, nullable=True)
 
-    id = Column(Integer, primary_key=True)
-    path = Column(String, nullable=True)
-    folder_name = Column(String, nullable=True)
-    folder_size = Column(String, nullable=True)
+    # Upload info
+    upload_progress = Column(Integer, default=0)  
+    upload_status = Column(String, nullable=True)  
 
-    mega_account_id = Column(Integer, ForeignKey("mega_accounts.id"), nullable=False)
-    local_id = Column(Integer, ForeignKey("files.id"), nullable=True)
+    # Relationships
+    account = relationship("MegaAccount", back_populates="files")
 
-    mega_sharing_link = Column(String, nullable=True)
-    mega_sharing_link_expiry = Column(DateTime, nullable=True)
-
-    account = relationship("MegaAccount", back_populates="mega_files")
-    local_file = relationship("File", back_populates="mega_files")
+    __table_args__ = (
+        UniqueConstraint('l_path', 'l_folder_name', name='unique_local_folder'),
+    )
 
 
 class Setting(Base):

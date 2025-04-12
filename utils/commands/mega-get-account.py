@@ -11,6 +11,7 @@ def run(args=None):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
+    # Fetch account info
     cursor.execute("""
         SELECT id, email, password, is_pro_account, used_quota, total_quota, last_login
         FROM mega_accounts
@@ -18,7 +19,8 @@ def run(args=None):
     """, (account_id,))
     row = cursor.fetchone()
 
-    cursor.execute("SELECT COUNT(*) FROM mega_files WHERE mega_account_id = ?", (account_id,))
+    # Count linked files in unified `files` table
+    cursor.execute("SELECT COUNT(*) FROM files WHERE m_account_id = ?", (account_id,))
     file_count = cursor.fetchone()[0]
     conn.close()
 

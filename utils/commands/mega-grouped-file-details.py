@@ -2,7 +2,7 @@ import re
 import subprocess
 from collections import defaultdict
 from database import get_db
-from models import MegaFile, MegaAccount
+from models import File, MegaAccount
 from utils.config import cmd
 
 def run(args=None):
@@ -13,9 +13,9 @@ def run(args=None):
     files_by_account = defaultdict(list)
 
     # Group files by account
-    all_files = session.query(MegaFile).all()
+    all_files = session.query(File).filter(File.m_path != None).all()
     for f in all_files:
-        files_by_account[f.mega_account_id].append(f)
+        files_by_account[f.m_account_id].append(f)
 
     for account_id, files in files_by_account.items():
         account = session.query(MegaAccount).filter(MegaAccount.id == account_id).first()
@@ -31,24 +31,24 @@ def run(args=None):
             account_results = []
 
             for file in files:
-                full_path = f"{file.path}/{file.folder_name}"
+                full_path = f"{file.m_path}/{file.m_folder_name}"
                 try:
                     du_result = subprocess.run([cmd("mega-du"), full_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
                     storage = parse_mega_du(du_result.stdout.strip())
-                    file.folder_size = storage
+                    file.m_folder_size = storage
 
                     export_result = subprocess.run([cmd("mega-export"), full_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
                     link = parse_mega_export(export_result.stdout.strip())
-                    file.mega_sharing_link = link
+                    file.m_sharing_link = link
 
                     account_results.append({
                         "id": file.id,
-                        "cloud_path": file.path,
-                        "folder_name": file.folder_name,
-                        "folder_size": storage,
+                        "cloud_path": file.m_path,
+                        "folder_name": file.m_folder_name,
+                        "m_folder_size": storage,
                         "is_cloud": True,
                         "cloud_email": account.email,
-                        "sharing_link": link,
+                        "m_sharing_link": link,
                     })
 
                 except subprocess.CalledProcessError as e:
@@ -56,17 +56,17 @@ def run(args=None):
                     stderr = e.stderr.strip() if e.stderr else ""
 
                     if "not exported" in stdout.lower():
-                        file.folder_size = storage
-                        file.mega_sharing_link = None
+                        file.m_folder_size = storage
+                        file.m_sharing_link = None
 
                         account_results.append({
                             "id": file.id,
-                            "cloud_path": file.path,
-                            "folder_name": file.folder_name,
-                            "folder_size": storage,
+                            "cloud_path": file.m_path,
+                            "folder_name": file.m_folder_name,
+                            "m_folder_size": storage,
                             "is_cloud": True,
                             "cloud_email": account.email,
-                            "sharing_link": None,
+                            "m_sharing_link": None,
                         })
                     else:
                         account_results.append({

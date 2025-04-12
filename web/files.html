@@ -93,7 +93,8 @@
                 <th style="display: none">ID</th>
                 <th>Paths</th>
                 <th>Folder Name</th>
-                <th>Size on Disk</th>
+                <th>Local Size</th>
+                <th>Cloud Size</th>
                 <th>Is Local</th>
                 <!-- Is Local icon grey/green to show status -->
                 <th>Is Cloud</th>
@@ -108,6 +109,71 @@
         </div>
       </div>
     </section>
+
+    <!-- file upload modal! -->
+    <div
+      class="modal fade"
+      id="uploadToCloudModal"
+      tabindex="-1"
+      aria-labelledby="uploadToCloudModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="uploadToCloudModalLabel">
+              Upload to Cloud
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-mdb-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" id="uploadFileId" />
+
+            <div class="alert alert-warning" role="alert" data-mdb-alert-init>
+              This is <strong>not</strong> the most efficient way to upload
+              files.
+              <br />
+              I would recommend you use MegaSync or the Mega app to upload
+              files.
+              <br />
+              This <em>can</em> upload files, but some may end up being missing.
+              Compare file sizes in the files tab to check.
+              <br />
+              This is also useful to see which mega account will fit your file
+              (the default selected is the one with the smallest matching size)
+            </div>
+            <label for="megaAccountDropdown" class="form-label"
+              >Select MEGA Account</label
+            >
+            <select id="megaAccountDropdown" class="form-select">
+              <option selected disabled>Loading accounts...</option>
+            </select>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-mdb-dismiss="modal"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary"
+              id="startUploadBtn"
+              onclick="confirmFileUpload()"
+            >
+              Upload
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- Universal Toast -->
     <div class="position-fixed top-0 end-0 p-3" style="z-index: 1055">

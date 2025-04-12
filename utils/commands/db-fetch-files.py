@@ -7,22 +7,23 @@ def run(args=None):
         cursor = conn.cursor()
 
         query = """
-        SELECT
-            mf.id,
-            f.path AS local_path,
-            mf.path AS cloud_path,
-            mf.folder_name,
-            mf.folder_size,
-            mf.mega_sharing_link,
-            mf.mega_sharing_link_expiry,
-            mf.mega_account_id,
-            ma.email AS cloud_email,
-            ma.is_pro_account AS pro_account,
-            CASE WHEN f.id IS NOT NULL THEN 1 ELSE 0 END AS is_local,
-            CASE WHEN mf.mega_account_id IS NOT NULL THEN 1 ELSE 0 END AS is_cloud
-        FROM mega_files mf
-        LEFT JOIN files f ON mf.local_id = f.id
-        LEFT JOIN mega_accounts ma ON mf.mega_account_id = ma.id
+            SELECT
+                f.id,
+                f.l_path,
+                f.l_folder_name,
+                f.l_folder_size,
+                f.m_path,
+                f.m_folder_name,
+                f.m_folder_size,
+                f.m_sharing_link,
+                f.m_sharing_link_expiry,
+                f.m_account_id,
+                ma.email AS cloud_email,
+                ma.is_pro_account AS pro_account,
+                CASE WHEN f.l_path IS NOT NULL THEN 1 ELSE 0 END AS is_local,
+                CASE WHEN f.m_path IS NOT NULL THEN 1 ELSE 0 END AS is_cloud
+            FROM files f
+            LEFT JOIN mega_accounts ma ON f.m_account_id = ma.id
         """
 
         cursor.execute(query)
@@ -32,17 +33,19 @@ def run(args=None):
         for row in rows:
             files.append({
                 "id": row["id"],
-                "local_path": row["local_path"],
-                "cloud_path": row["cloud_path"],
-                "folder_name": row["folder_name"],
-                "folder_size": row["folder_size"],
+                "l_path": row["l_path"],
+                "l_folder_name": row["l_folder_name"],
+                "l_folder_size": row["l_folder_size"],
+                "m_path": row["m_path"],
+                "m_folder_name": row["m_folder_name"],
+                "m_folder_size": row["m_folder_size"],
+                "m_sharing_link": row["m_sharing_link"],
+                "m_sharing_link_expiry": row["m_sharing_link_expiry"],
+                "m_account_id": row["m_account_id"],
+                "cloud_email": row["cloud_email"],
+                "pro_account": bool(row["pro_account"]),
                 "is_local": bool(row["is_local"]),
                 "is_cloud": bool(row["is_cloud"]),
-                "sharing_link": row["mega_sharing_link"],
-                "sharing_link_expiry": row["mega_sharing_link_expiry"],
-                "mega_account_id": row["mega_account_id"],
-                "pro_account": bool(row["pro_account"]),
-                "cloud_email": row["cloud_email"]
             })
 
         return {
