@@ -18,7 +18,8 @@ class CustomHandler(SimpleHTTPRequestHandler):
             "/files.html",
             "/accounts.html",
             "/settings.html",
-            "/testing.html"
+            "/testing.html",
+            '/uploads.html'
         ]
 
         public_paths = ["/login.html"]
@@ -76,9 +77,6 @@ class CustomHandler(SimpleHTTPRequestHandler):
                     data = parse_qs(post_data)
                     command = data.get("command", [""])[0]
                     args = data.get("args", [])  
-
-                print(f"📥 Command Received = {command!r}")
-                print(f"📥 Arguments = {args!r} (type = {type(args).__name__})")
 
                 # Extract argument from command (e.g. mega-login:1)
                 if ":" in command and (not args or args == [""]):

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en" data-mdb-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="resources/img/logo.png" />
+    <title>Mega Manager - Uploads</title>
+
+    <!-- Font Awesome -->
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <!-- Google Fonts -->
+    <link
+      href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
+      rel="stylesheet"
+    />
+    <!-- MDB stylesheets -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/mdb-ui-kit@9.0.0/css/mdb.min.css"
+    />
+    <!-- Custom CSS styling -->
+    <link rel="stylesheet" href="css/custom.css?v=0.0.1" />
+  </head>
+
+  <body>
+    <style>
+      .progress {
+        height: 20px;
+        border-radius: 15px;
+      }
+    </style>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand bg-body-tertiary">
+      <div class="container-fluid">
+        <button
+          data-mdb-collapse-init
+          class="navbar-toggler"
+          type="button"
+          data-mdb-target="#navbarSupportedContent"
+          aria-controls="navbarSupportedContent"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <i class="fas fa-bars"></i>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <a class="navbar-brand mt-2 mt-lg-0" href="/">
+            <img
+              src="resources/img/logo.png"
+              height="60"
+              alt="Mega Manager Logo"
+              loading="lazy"
+            />
+          </a>
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0" id="navbarLinks">
+            <!-- dynamically loaded from /web/navbar/links.html -->
+          </ul>
+        </div>
+      </div>
+    </nav>
+    <!-- Navbar -->
+
+    <!-- Content Section -->
+    <section class="container my-5">
+      <h2>Ongoing Uploads</h2>
+      <div id="uploads-list"></div>
+      <!-- Container for the uploads -->
+    </section>
+
+    <!-- Universal Toast -->
+    <div class="position-fixed top-0 end-0 p-3" style="z-index: 1055">
+      <div
+        id="universalToast"
+        class="toast fade"
+        role="alert"
+        data-mdb-delay="4000"
+        data-mdb-autohide="true"
+      >
+        <div class="toast-body text-white" id="universalToastBody">
+          <!-- Message will go here -->
+        </div>
+      </div>
+    </div>
+    <!-- MDB scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/mdb-ui-kit@9.0.0/js/mdb.umd.min.js"></script>
+    <script src="scripts/include.js?v=0.0.1"></script>
+    <script src="scripts/uploads.js?v=0.0.1"></script>
+  </body>
+</html>

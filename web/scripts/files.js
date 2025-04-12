@@ -124,7 +124,7 @@ function confirmFileUpload() {
     .then((res) => res.json())
     .then((data) => {
       if (data.status === 200) {
-        showToast("✅ Upload completed", "bg-success");
+        showToast("✅ Upload queued!", "bg-success");
 
         return fetch("/run-command", {
           method: "POST",

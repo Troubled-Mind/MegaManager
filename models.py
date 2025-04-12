@@ -37,6 +37,10 @@ class File(Base):
     m_sharing_link = Column(String, nullable=True)
     m_sharing_link_expiry = Column(DateTime, nullable=True)
 
+    # Upload info
+    upload_progress = Column(Integer, default=0)  
+    upload_status = Column(String, nullable=True)  
+
     # Relationships
     account = relationship("MegaAccount", back_populates="files")
 

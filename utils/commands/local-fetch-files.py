@@ -31,10 +31,6 @@ def run(args=None):
         print("⚠️ No folders matching date format found.")
         return {"status": 204, "message": "No dated folders found in local paths."}
 
-    print(f"✅ Found {len(root_folders)} root dated folders:")
-    for folder in root_folders:
-        print(f"   - {folder}")
-
     session = next(get_db())
     new_entries = 0
     updated_entries = 0
@@ -47,7 +43,6 @@ def run(args=None):
         # Check for existing local entry
         existing_local = session.query(File).filter_by(l_path=base_path, l_folder_name=folder_name).first()
         if existing_local:
-            print(f"🔁 Already indexed locally: '{folder_name}' at '{base_path}'")
             if existing_local.l_folder_size != str(folder_size):
                 print(f"🔧 Updating size: {existing_local.l_folder_size} → {folder_size}")
                 existing_local.l_folder_size = str(folder_size)
