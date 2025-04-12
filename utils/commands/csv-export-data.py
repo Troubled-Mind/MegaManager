@@ -26,11 +26,13 @@ def export_mega_accounts():
 
     output = io.StringIO()
     writer = csv.writer(output)
-    headers = ["email", "password"]
-    writer.writerow(headers)
+    writer.writerow(["Email", "Password"])
 
     for account in accounts:
-        writer.writerow([getattr(account, header) for header in headers])
+        writer.writerow([
+            account.email,
+            account.password
+        ])
 
     # Return file to be downloaded
     output.seek(0)
@@ -46,11 +48,14 @@ def export_local_files():
 
     output = io.StringIO()
     writer = csv.writer(output)
-    headers = ["l_path", "l_folder_name", "l_folder_size",]
-    writer.writerow(headers)
+    writer.writerow(["Local Path", "Folder Name", "Folder Size"])
 
     for file in files:
-        writer.writerow([getattr(file, header) for header in headers])
+        writer.writerow([
+            file.l_path,
+            file.l_folder_name,
+            format_bytes(file.l_folder_size)
+        ])
 
     # Return file to be downloaded
     output.seek(0)
@@ -66,14 +71,13 @@ def export_cloud_files():
 
     output = io.StringIO()
     writer = csv.writer(output)
-    headers = ["MEGA Path", "Folder Name", "Folder Size", "Sharing Link", "Account Email"]
-    writer.writerow(headers)
+    writer.writerow(["MEGA Path", "Folder Name", "Folder Size", "Sharing Link", "Account Email"])
 
     for file in files:
         writer.writerow([
             file.m_path,
             file.m_folder_name,
-            file.m_folder_size,
+            format_bytes(file.m_folder_size),
             file.m_sharing_link,
             file.account.email if file.account else None
         ])
@@ -84,3 +88,22 @@ def export_cloud_files():
         "status": 200,
         "body": output.read()
     }
+
+def format_bytes(bytes):
+    """Format bytes to a human-readable string."""
+    if bytes is None:
+        return None
+
+    # Convert to int
+    try:
+        bytes = int(bytes)
+    except ValueError:
+        return None
+
+    units = ["B", "KB", "MB", "GB", "TB"]
+    i = 0
+    while bytes >= 1024 and i < len(units) - 1:
+        bytes /= 1024.0
+        i += 1
+
+    return f"{bytes:.2f} {units[i]}"
