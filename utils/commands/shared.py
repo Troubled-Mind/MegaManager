@@ -29,7 +29,6 @@ def strftime_to_regex(fmt):
         pattern = pattern.replace(k, v)
     return pattern
 
-
 def extract_root_dated_folders(paths):
     """Extract highest-level folders that match any date pattern."""
     full_fmt = settings.get("date_format_full") or ""
@@ -66,7 +65,6 @@ def extract_root_dated_folders(paths):
     print(f"📦 Extracted {len(result)} root folders.")
     return result
 
-
 def get_account_files(account_id):
     """Call mega-find to get all paths, extract root dated folders and add to the files table."""
     print(f"🔍 Scanning MEGA account ID {account_id}...")
@@ -88,11 +86,26 @@ def get_account_files(account_id):
 
     for folder in root_dated_folders:
         path, folder_name = os.path.split(folder.rstrip("/"))
+        normalized_folder_name = folder_name.strip()
 
-        # Check if it already exists in the DB
+        # Check if MEGA record already exists
         existing = session.query(File).filter_by(m_path=path, m_folder_name=folder_name).first()
         if existing:
             print(f"🔁 Already exists: {folder}")
+            continue
+
+        # Try to match local-only file by folder name
+        fallback = session.query(File).filter(
+            File.m_path == None,
+            File.l_folder_name == normalized_folder_name
+        ).first()
+
+        if fallback:
+            print(f"🔁 Updating local-only entry to MEGA: {folder}")
+            fallback.m_path = path
+            fallback.m_folder_name = folder_name
+            fallback.m_account_id = account_id
+            updated += 1
             continue
 
         print(f"➕ Adding: {folder}")
@@ -105,8 +118,8 @@ def get_account_files(account_id):
 
     try:
         session.commit()
-        print(f"✅ {added} new MEGA folders saved to database")
-        return {"status": 200, "message": f"{added} MEGA folders saved"}
+        print(f"✅ {added} added, {updated} updated MEGA folders saved to database")
+        return {"status": 200, "message": f"{added} added, {updated} updated"}
     except Exception as e:
         session.rollback()
         print(f"❌ Failed to save: {e}")

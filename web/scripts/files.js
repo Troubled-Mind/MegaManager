@@ -354,9 +354,12 @@ function updateRowWithFileData(file) {
           <i class="fas fa-ellipsis-v"></i>
         </button>
         <ul class="dropdown-menu dropdown-menu-dark">
-          <li><a class="dropdown-item" href="#" onclick="generateSharingLink(${
-            file.id
-          })"><i class="fas fa-link me-2"></i> Generate Sharing Link</a></li>
+          ${
+            file.is_cloud
+              ? `<li><a class="dropdown-item" href="#" onclick="generateSharingLink(${file.id})"><i class="fas fa-link me-2"></i> Generate Sharing Link</a></li>`
+              : ""
+          }
+          
           ${
             file.pro_account
               ? `<li><a class="dropdown-item" href="#" onclick="generateExpiringLink(${file.id})"><i class="fas fa-clock me-2"></i> Generate Expiring Link</a></li>`
