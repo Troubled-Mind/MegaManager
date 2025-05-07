@@ -73,7 +73,7 @@ async function loadSettings(repeater) {
 }
 
 $(document).ready(function () {
-  let repeater = $(".repeater").repeater({
+  let repeater = $(".repeater").eq(0).repeater({
     initEmpty: true,
     defaultValues: {},
     show: function () {
