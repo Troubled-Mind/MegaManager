@@ -28,7 +28,10 @@ This is a design choice so that none of your data is uploaded anywhere - you are
 
 ## Set up MegaManager
 - Open a terminal / command prompt and change directory to where you extracted the .zip from the above step:
+    There are a few options for how to do this, the first being the cross-platform option
     - `cd /d D:/Downloads/MegaManager-main`
+    - Shift+Right click in Windows Explorer -> `Open command prompt here`
+    - Click in the address bar of Windows Explorer -> type `cmd` -> command prompt should launch here
 - After this, you should see that your command prompt is in the correct directory
 - Run `pip install -r requirements.txt`
     - This installs any required dependencies for the MegaManager to run correctly on your system
