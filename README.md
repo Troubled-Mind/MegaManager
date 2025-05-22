@@ -16,7 +16,7 @@ This is a design choice so that none of your data is uploaded anywhere - you are
 
 ## Python 
 - Download [Python](https://www.python.org/downloads/) if you do not already have it installed
-- When installing Python, make sure you check the box `Add Python x.x to PATH`
+- When installing Python (as an administrator), make sure you check the box `Add Python x.x to PATH`
     - This ensures that you can run python related commands from the terminal.
 ![Python PATH checkbox](https://i.imgur.com/YBO0Rmm.png)
 - If you forgot to add it to PATH, you can follow a guide like [this](https://realpython.com/add-python-to-path/), or re-install python!
