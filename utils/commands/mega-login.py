@@ -2,7 +2,7 @@ import re
 import sqlite3
 import subprocess
 from datetime import datetime
-from utils.commands.shared import get_account_files
+from utils.commands.shared import get_account_files, size_to_bytes
 from utils.config import cmd
 
 DB_PATH = "database.db"
@@ -74,16 +74,21 @@ def process_account(account_id):
         subprocess.run([cmd("mega-login"), email, password], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
         print(f"✅ Logged in: {email}")
 
-        # Fetch quota
-        df_output = subprocess.run([cmd("mega-df")], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
-        used_quota, total_quota = parse_mega_df(df_output.stdout.strip())
-        print(f"💾 Used: {used_quota} / Total: {total_quota}")
-
         # Get pro level
         whoami_output = subprocess.run([cmd("mega-whoami"), "-l"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
         pro_level = parse_pro_level(whoami_output.stdout.strip())
         is_pro = pro_level > 0
         print(f"👤 Pro level: {pro_level} → {'✅ Pro' if is_pro else '❌ Free'}")
+
+        # Fetch quota
+        if is_pro:
+            # Used storage bytes is truncated for pro accounts, so use -h option (less accurate)
+            df_output = subprocess.run([cmd("mega-df"), "-h"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
+            used_quota, total_quota = parse_mega_df_h(df_output.stdout.strip())
+        else:
+            df_output = subprocess.run([cmd("mega-df")], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
+            used_quota, total_quota = parse_mega_df(df_output.stdout.strip())
+        print(f"💾 Used: {used_quota} / Total: {total_quota}")
 
         # Update DB
         now = datetime.utcnow().isoformat()
@@ -143,6 +148,17 @@ def parse_mega_df(output):
             if match:
                 used = match.group(1)
                 total = match.group(2)
+                return used, total
+    return "0", "0"
+
+
+def parse_mega_df_h(output):
+    for line in output.splitlines():
+        if "USED STORAGE:" in line:
+            match = re.search(r'USED STORAGE:\s+([0-9.]+\s*[KMGT]?B).*?of\s+([0-9.]+\s*[KMGT]?B)', line)
+            if match:
+                used = size_to_bytes(match.group(1))
+                total = size_to_bytes(match.group(2))
                 return used, total
     return "0", "0"
 
