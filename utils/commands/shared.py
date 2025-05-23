@@ -5,6 +5,25 @@ from utils.config import settings, cmd
 from database import get_db
 from models import File
 
+BYTE_MULTIPLIERS = {
+    "B":1,
+    "KB": 1024,
+    "MB": 1024**2,
+    "GB": 1024**3,
+    "TB": 1024**4
+}
+
+def size_to_bytes(size_str):
+    """Convert a human-readable size string (e.g. 6.34 TB) to bytes."""
+    size_str = size_str.strip()
+    number, unit = re.match(r"([0-9.]+)\s*([KMGT]?B)", size_str).groups()
+    number = float(number)
+    unit = unit.upper()
+
+    if unit in BYTE_MULTIPLIERS:
+        return int(number * BYTE_MULTIPLIERS[unit])
+    raise ValueError(f"Unknown size unit: {unit}")
+
 def strftime_to_regex(fmt):
     """Convert a strftime-style format string into a regex pattern."""
     replacements = {
