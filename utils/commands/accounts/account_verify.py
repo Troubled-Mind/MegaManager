@@ -39,6 +39,9 @@ def run(args=None):
         else:
             executable = "mega-confirm"
 
+        # Logout before verification to prevent session conflicts
+        subprocess.run(["mega-logout"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+
         cmd = f'{executable} "{verification_link}" "{email}" "{password}"'
 
         print(f"🔗 Verifying account {account_id} using link: {verification_link}")

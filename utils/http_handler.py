@@ -32,6 +32,13 @@ class CustomHandler(SimpleHTTPRequestHandler):
             self.wfile.write(json.dumps(settings._values).encode())
             return
 
+        if self.path == "/api/status":
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps(state).encode("utf-8"))
+            return
+
         if self.path == "/api/version":
             try:
                 with open("version", "r") as f:
@@ -111,19 +118,32 @@ class CustomHandler(SimpleHTTPRequestHandler):
         else:
             command_name = command
 
-        # Handle special case for mega-register-account with email in the command
-        if command.startswith("mega-register-account:") and (not args or args == [""]):
-            arg_str = command[len("mega-register-account:"):]
-            args = [arg_str]
-        elif ":" in command and (not args or args == [""]):
-            _, _, arg_str = command.partition(":")
-            args = [arg_str]
+        # Prevent account operations while uploads are active to avoid session corruption
+        RESTRICTED_DURING_UPLOAD = [
+            "account_login", 
+            "account_register", 
+            "account_bulk_register", 
+            "account_confirm", 
+            "account_delete"
+        ]
 
-        command_path = f"utils/commands/{command_name}.py"
-        if not os.path.exists(command_path):
+        if state["uploads_active"] and command_name in RESTRICTED_DURING_UPLOAD:
+            return {"status": 403, "message": "Account operations are locked during active uploads to prevent session corruption."}, 403
+
+        # Find the command file recursively in subdirectories
+        command_path = None
+        commands_root = os.path.join(os.getcwd(), "utils", "commands")
+        
+        for root, dirs, files in os.walk(commands_root):
+            if f"{command_name}.py" in files:
+                command_path = os.path.join(root, f"{command_name}.py")
+                break
+
+        if not command_path or not os.path.exists(command_path):
             return {"status": 400, "message": f"Unknown command: {command_name}"}, 400
 
         try:
+            # We use the full path for the spec to avoid any ambiguity
             spec = importlib.util.spec_from_file_location(command_name, command_path)
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
@@ -133,7 +153,7 @@ class CustomHandler(SimpleHTTPRequestHandler):
             else:
                 return {"status": 500, "message": f"{command_name} does not define a run() function."}
         except Exception as e:
-            return {"status": 500, "message": str(e)}
+            return {"status": 500, "message": f"Command execution error: {str(e)}"}
 
 
     def send_error_response(self, status, message):

@@ -1,15 +1,23 @@
 <li class="nav-item">
-  <a class="nav-link" href="files.html" data-page="files">Files</a>
+  <a class="nav-link" href="files.html" data-page="files"><i class="fas fa-folder"></i> Files</a>
 </li>
 <li class="nav-item">
-  <a class="nav-link" href="accounts.html" data-page="accounts">Accounts</a>
+  <a class="nav-link" href="accounts.html" data-page="accounts"><i class="fas fa-users-cog"></i> Accounts</a>
 </li>
 <li class="nav-item">
-  <a class="nav-link" href="settings.html" data-page="settings">Settings</a>
+  <a class="nav-link" href="settings.html" data-page="settings"><i class="fas fa-cog"></i> Settings</a>
 </li>
 <li class="nav-item">
-  <a class="nav-link" href="uploads.html" data-page="uploads">Uploads</a>
+  <a class="nav-link" href="uploads.html" data-page="uploads"><i class="fas fa-cloud-upload-alt"></i> Uploads</a>
 </li>
-<!-- <li class="nav-item">
-  <a class="nav-link" href="testing.html" data-page="testing">Testing</a>
-</li> -->
+<li class="nav-item position-relative" id="verifyNavLink" style="display: none;">
+  <a class="nav-link text-warning fw-bold" href="verify.html" data-page="verify">
+    <i class="fas fa-user-check"></i> Verify
+    <span class="badge rounded-pill badge-notification bg-danger" id="pendingVerifyBadge" style="display: none;">0</span>
+  </a>
+</li>
+<li class="nav-item ms-lg-2">
+  <div class="nav-link theme-toggle" onclick="toggleTheme()" title="Toggle Light/Dark Theme">
+    <i class="fas fa-adjust"></i>
+  </div>
+</li>

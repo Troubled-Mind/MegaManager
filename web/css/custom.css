@@ -1,35 +1,429 @@
-/* Custom CSS for MDBootstrap */
-/* This file is used to override the default MDBootstrap styles */
-/* You can add your custom styles here */
-
-/* Example: Change the primary color */
-/* You can also use CSS variables to customize the theme */
 :root {
-  --mdb-primary: #dd1405;
-  --mdb-secondary: #6c757d;
-  --mdb-success: #198754;
-  --mdb-danger: #dc3545;
-  --mdb-warning: #ffc107;
-  --mdb-info: #0dcaf0;
-  --mdb-light: #f8f9fa;
-  --mdb-dark: #212529;
+  --mega-red: #e11d48;
+  --mega-red-hover: #be123c;
+  --bg-color: #000000;
+  --card-bg: rgba(17, 17, 17, 0.8);
+  --card-border: rgba(255, 255, 255, 0.08);
+  --text-main: #ffffff;
+  --text-muted: #a1a1aa;
+  --nav-bg: rgba(0, 0, 0, 0.7);
+  --table-row-bg: #0a0a0a;
+  --mdb-primary: var(--mega-red);
+  --glass-glow: 0 0 15px rgba(225, 29, 72, 0.1);
+  --transition-speed: 0.3s;
 }
 
-/* Custom header/footer styles */
-html,
-body {
-  height: 100%;
-  margin: 0;
+[data-mdb-theme="light"] {
+  --bg-color: #f8fafc;
+  --card-bg: rgba(255, 255, 255, 0.9);
+  --card-border: rgba(0, 0, 0, 0.05);
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --nav-bg: rgba(255, 255, 255, 0.8);
+  --table-row-bg: #ffffff;
 }
 
 body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
+  transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
+  overflow-x: hidden;
 }
 
-main {
-  flex: 1;
+/* Glassmorphism & Cards */
+.card {
+  background: var(--card-bg) !important;
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid var(--card-border) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
 }
-.container {
-  max-width: 95% !important;
+
+/* No glow on card hover */
+.card:hover {
+  transform: none !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
 }
+
+/* Navbar Enhancements */
+.navbar {
+  background: var(--nav-bg) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--card-border);
+  padding: 0.8rem 2rem;
+  transition: all var(--transition-speed) ease;
+}
+
+.nav-link {
+  font-weight: 500;
+  color: var(--text-muted) !important;
+  transition: opacity 0.2s ease;
+  padding: 0.5rem 1rem !important;
+  border-radius: 6px;
+  margin: 0 4px;
+}
+
+.nav-link:hover, .nav-link.active {
+  color: #fff !important;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Table Styling */
+.table {
+  border-collapse: collapse !important;
+  border-spacing: 0 !important;
+}
+
+.table thead th {
+  border-bottom: 2px solid var(--card-border) !important;
+  color: var(--text-muted);
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.65rem;
+  letter-spacing: 0.05em;
+  padding: 1rem 1.5rem !important;
+}
+
+.table tbody tr {
+  background: #000000 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+  transition: none !important;
+}
+
+.table tbody tr:nth-child(even) {
+  background: #111111 !important; /* High-contrast zebra striping */
+}
+
+/* No glow or transform on row hover */
+.table tbody tr:hover {
+  background: #1a1a1a !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.table td {
+  padding: 0.75rem 1.5rem !important;
+  vertical-align: middle !important;
+}
+
+/* Cleaner Row Buttons */
+.table .btn-sm {
+  border-radius: 10px !important;
+  padding: 0.5rem 0.75rem !important;
+  font-size: 0.8rem !important;
+  background-color: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid transparent !important;
+  color: var(--text-muted) !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.table .btn-sm:hover:not([disabled]) {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  color: #fff !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
+}
+
+.table .btn-sm i {
+  font-size: 0.9rem;
+}
+
+/* Specific button colors in ghost mode */
+.table .btn-sm.btn-success {
+  background-color: rgba(16, 185, 129, 0.08) !important;
+  color: #10b981 !important;
+  border: 1px solid rgba(16, 185, 129, 0.1) !important;
+}
+
+.table .btn-sm.btn-success:hover {
+  background-color: rgba(16, 185, 129, 0.2) !important;
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.2) !important;
+}
+
+.table .btn-sm.btn-tertiary {
+  background-color: transparent !important;
+  border-color: transparent !important;
+}
+
+.table .btn-sm.btn-tertiary:hover {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Progress Bars */
+.progress {
+  height: 8px !important;
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  border-radius: 10px !important;
+  overflow: visible !important;
+}
+
+.progress-bar {
+  border-radius: 10px !important;
+  position: relative;
+  transition: width 0.6s ease !important;
+}
+
+.progress-bar.bg-success {
+  background: linear-gradient(90deg, #10b981 0%, #059669 100%) !important;
+}
+
+/* Path Truncation */
+.path-column {
+  max-width: 400px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 0.85rem;
+}
+
+/* Eye Toggles */
+.btn-pwreveal {
+  padding: 4px 8px !important;
+  margin-left: 8px;
+  color: var(--text-muted) !important;
+  opacity: 0.6;
+}
+
+.btn-pwreveal:hover {
+  opacity: 1;
+  color: var(--mega-red) !important;
+}
+
+/* DataTables Overrides */
+.dataTables_wrapper {
+  padding: 0 !important;
+}
+
+.dataTables_filter {
+  padding: 1.5rem 2rem 0.5rem !important;
+}
+
+.dataTables_length {
+  padding: 1.5rem 2rem 0.5rem !important;
+}
+
+.dataTables_filter input {
+  width: 300px !important;
+  transition: all 0.3s ease;
+}
+
+.dataTables_filter input:focus {
+  width: 350px !important;
+  border-color: var(--mega-red) !important;
+  box-shadow: 0 0 0 4px rgba(225, 29, 72, 0.1);
+}
+
+/* Empty States */
+.empty-state {
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+.empty-state i {
+  font-size: 4rem;
+  color: var(--card-border);
+  margin-bottom: 1.5rem;
+}
+
+/* Tooltip & Dropdown Glow */
+.dropdown-menu {
+  background: rgba(22, 22, 22, 0.98) !important;
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--card-border) !important;
+  border-radius: 12px !important;
+  padding: 0.5rem !important;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.5) !important;
+}
+
+.dropdown-item {
+  border-radius: 6px !important;
+  padding: 0.6rem 1rem !important;
+  font-size: 0.9rem;
+}
+
+.dropdown-item:hover {
+  background: rgba(225, 29, 72, 0.1) !important;
+  color: #fff !important;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-color); }
+::-webkit-scrollbar-thumb { background: #222; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #333; }
+
+/* THEME OVERRIDES - Killing the #332d2d brown */
+[data-mdb-theme="dark"] {
+  --mdb-body-bg: #000000;
+  --mdb-body-color: #ffffff;
+  --mdb-tertiary-bg: #111111;
+  --mdb-card-bg: #111111;
+  --mdb-modal-bg: #111111;
+  --mdb-modal-content-bg: #111111;
+  --mdb-table-bg: #0a0a0a;
+  --mdb-table-striped-bg: #0f0f0f;
+  --mdb-table-hover-bg: #161616;
+  --mdb-table-border-color: #222222;
+  --mdb-dropdown-bg: #111111;
+  --mdb-dropdown-link-hover-bg: #222222;
+  --mdb-navbar-bg: #000000;
+}
+
+/* Force override utility classes that often default to brown */
+.bg-body-tertiary, 
+.bg-dark, 
+.btn-dark, 
+.dropdown-menu-dark, 
+.modal-content,
+.bg-surface {
+  background-color: #111111 !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.bg-body, body {
+  background-color: #000000 !important;
+}
+
+/* Target tables specifically */
+.table-dark, .table-dark > th, .table-dark > td, .table {
+  --mdb-table-bg: #0a0a0a !important;
+  --mdb-table-color: #ffffff !important;
+  background-color: #0a0a0a !important;
+}
+
+[data-mdb-theme="dark"] .modal-header, [data-mdb-theme="dark"] .modal-footer {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Premium Buttons */
+.btn {
+  text-transform: none !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em !important;
+  border-radius: 10px !important;
+  padding: 0.6rem 1.25rem !important;
+  box-shadow: none !important;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.btn:hover:not([disabled]) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px -10px rgba(0,0,0,0.5) !important;
+}
+
+.btn:active:not([disabled]) {
+  transform: translateY(0);
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #e11d48 0%, #be123c 100%) !important;
+  border: none !important;
+}
+
+.btn-danger:hover {
+  background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%) !important;
+  box-shadow: 0 0 20px rgba(225, 29, 72, 0.3) !important;
+}
+
+.btn-outline-warning {
+  border: 1.5px solid #f59e0b !important;
+  color: #f59e0b !important;
+}
+
+.btn-outline-warning:hover {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+  color: #000 !important;
+  border-color: transparent !important;
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.2) !important;
+}
+
+.btn-outline-info {
+  border: 1.5px solid #06b6d4 !important;
+  color: #06b6d4 !important;
+}
+
+.btn-outline-info:hover {
+  background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%) !important;
+  color: #fff !important;
+  border-color: transparent !important;
+  box-shadow: 0 0 20px rgba(6, 182, 212, 0.2) !important;
+}
+
+/* Premium Toasts */
+.toast {
+  background: rgba(15, 15, 15, 0.75) !important;
+  backdrop-filter: blur(20px) saturate(200%);
+  -webkit-backdrop-filter: blur(20px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4) !important;
+}
+
+.toast-body {
+  padding: 1rem 1.5rem !important;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.toast.bg-success { border-left: 4px solid #10b981 !important; }
+.toast.bg-danger { border-left: 4px solid #ef4444 !important; }
+.toast.bg-info { border-left: 4px solid #3b82f6 !important; }
+.toast.bg-warning { border-left: 4px solid #f59e0b !important; }
+
+/* Responsive Overrides */
+@media (max-width: 992px) {
+  .path-column {
+    display: none !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .navbar {
+    padding: 0.5rem 1rem !important;
+  }
+  
+  .container {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+
+  .table thead th:nth-child(2),
+  .table tbody td:nth-child(2),
+  .table thead th:nth-child(4),
+  .table tbody td:nth-child(4),
+  .table thead th:nth-child(5),
+  .table tbody td:nth-child(5) {
+     display: none !important;
+  }
+
+  .dataTables_filter input {
+    width: 100% !important;
+    margin-left: 0 !important;
+  }
+
+  .dataTables_filter, .dataTables_length {
+    padding: 1rem !important;
+    text-align: left !important;
+  }
+  
+  .hero-gradient {
+    padding: 2rem 0 !important;
+  }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-color); }
+::-webkit-scrollbar-thumb { background: #222; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #333; }

@@ -14,7 +14,7 @@ function generateSharingLink(fileId) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      command: `mega-generate-sharing-link:${fileId}`,
+      command: `transfer_sharing:${fileId}`,
     }),
   })
     .then((response) => response.json())
@@ -59,7 +59,7 @@ function uploadToCloud(fileId) {
       fetch("/run-command", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: `command=get-eligible-accounts:${fileId}`,
+        body: `command=account_get_eligible:${fileId}`,
       })
         .then((res) => res.json())
         .then((data) => {
@@ -119,7 +119,7 @@ function confirmFileUpload() {
   fetch("/run-command", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: `command=upload-local-file:${fileId}:${selectedAccountId}`,
+    body: `command=transfer_upload:${fileId}:${selectedAccountId}`,
   })
     .then((res) => res.json())
     .then((data) => {
@@ -129,7 +129,7 @@ function confirmFileUpload() {
         return fetch("/run-command", {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: `command=mega-login:${selectedAccountId}`,
+          body: `command=account_login:${selectedAccountId}`,
         })
           .then((res) => res.json())
           .then((loginData) => {
@@ -164,7 +164,7 @@ function generateMissingLinks() {
   fetch("/run-command", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ command: "mega-generate-missing-links" }),
+    body: JSON.stringify({ command: "transfer_missing_links" }),
   })
     .then((res) => res.json())
     .then((data) => {
@@ -182,44 +182,34 @@ function generateMissingLinks() {
 }
 
 function updateAllDetails() {
-  // First, run 'local-fetch-files'
+  // Trigger local indexing
   fetch("/run-command", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ command: "local-fetch-files" }), // Run local-fetch-files first
+    body: JSON.stringify({ command: "file_local_index" }),
   })
     .then((res) => res.json())
     .then((data) => {
-      console.log("📡 Local files fetch response:", data);
-      if (data.status === 200 && data.message) {
-        showToast(`✅ All local file details updated`, "bg-success");
-
-        // Now run 'mega-grouped-file-details'
-        return fetch("/run-command", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ command: "mega-grouped-file-details" }), // Run mega-grouped-file-details after local-fetch-files
-        });
-      } else {
-        throw new Error(data.message || "Failed to fetch local file details");
+      if (data.status === 200) {
+        showToast(`📂 Local scan started in background`, "bg-info");
       }
-    })
+    });
+
+  // Trigger MEGA details update
+  fetch("/run-command", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ command: "file_group_details" }),
+  })
     .then((res) => res.json())
     .then((data) => {
-      console.log("📡 MEGA file details fetch response:", data);
-      if (data.status === 200 && Array.isArray(data.results)) {
-        showToast(`✅ All MEGA file details updated`, "bg-success");
-        loadFilesTable(); // Refresh table after updating
-      } else {
-        showToast(
-          `❌ Update failed: ${data.message || "Unknown error"}`,
-          "bg-danger"
-        );
+      if (data.status === 200) {
+        showToast(`☁️ MEGA scan started in background`, "bg-info");
       }
     })
     .catch((err) => {
       console.error("❌ Error during update process:", err);
-      showToast("❌ Failed to update all file details", "bg-danger");
+      showToast("❌ Failed to trigger updates", "bg-danger");
     });
 }
 
@@ -230,7 +220,7 @@ function fetchFileDetails(fileId) {
   fetch("/run-command", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: `command=db-get-single-file:${fileId}`,
+    body: `command=file_get_one:${fileId}`,
   })
     .then((res) => res.json())
     .then((data) => {
@@ -246,7 +236,7 @@ function fetchFileDetails(fileId) {
           fetch("/run-command", {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: `command=mega-get-file-details:${fileId}`,
+            body: `command=file_details:${fileId}`,
           }).then((res) => res.json())
         );
       }
@@ -256,7 +246,7 @@ function fetchFileDetails(fileId) {
           fetch("/run-command", {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: `command=local-get-file-details:${fileId}`,
+            body: `command=file_local_details:${fileId}`,
           }).then((res) => res.json())
         );
       }
@@ -305,75 +295,73 @@ function updateRowWithFileData(file) {
   );
 
   const hasLink = file.m_sharing_link && file.m_sharing_link.trim() !== "";
-  const copyBtnColor = hasLink ? "btn-success" : "btn-outline-light";
+  const copyBtnColor = hasLink ? "btn-success" : "btn-tertiary";
 
   const html = `
     <td style="display:none">${file.id}</td>
-    <td class="small text-muted">
-      <div><i class="fas fa-hdd me-1 text-info"></i> ${file.l_path || "-"}</div>
-      <div><i class="fas fa-cloud me-1 text-warning"></i> ${
-        file.m_path || "-"
-      }</div>
+    <td class="path-column">
+      <div class="mb-1"><i class="fas fa-folder me-2 text-info opacity-75"></i> ${file.l_path || "-"}</div>
+      <div class="small text-muted"><i class="fas fa-cloud me-2 text-warning opacity-75"></i> ${file.m_path || "-"}</div>
     </td>
-    <td>${file.l_folder_name || file.m_folder_name || "-"}</td>
-    <td>${
-      formatBytes(file.l_folder_size) === "0.00 B"
+    <td class="fw-bold">${file.l_folder_name || file.m_folder_name || "-"}</td>
+    <td class="text-end" data-order="${file.l_folder_size || 0}">${
+      formatBytes(file.l_folder_size || 0) === "0.00 B"
         ? "-"
         : formatBytes(file.l_folder_size)
     }</td>
-    <td>${
-      formatBytes(file.m_folder_size) === "0.00 B"
+    <td class="text-end ${Math.abs((file.l_folder_size || 0) - (file.m_folder_size || 0)) > 1024 * 1024 ? 'text-warning fw-bold' : ''}" data-order="${file.m_folder_size || 0}">${
+      formatBytes(file.m_folder_size || 0) === "0.00 B"
         ? "-"
         : formatBytes(file.m_folder_size)
     }</td>
-    <td>${file.is_local ? "✅" : "❌"}</td>
-    <td>
+    <td class="text-center">${file.is_local ? '<i class="fas fa-check-circle text-success"></i>' : '<i class="fas fa-times-circle text-muted" style="opacity:0.3"></i>'}</td>
+    <td class="text-center">
       <span class="d-inline-block"
         ${
           file.cloud_email
-            ? `data-mdb-toggle="tooltip" title="${file.cloud_email}"`
+            ? `data-mdb-toggle="tooltip" title="Account: ${file.cloud_email}"`
             : ""
         }
         onclick="handleCloudStatusClick(${file.id}, '${
     file.l_folder_name || file.m_folder_name
   }', '${file.cloud_email || ""}')"
         style="cursor: pointer;">
-        ${file.is_cloud ? "✅" : "❌"}
+        ${file.is_cloud 
+           ? (Number(file.m_folder_size) > 0 
+              ? '<i class="fas fa-check-circle text-success"></i>' 
+              : '<i class="fas fa-cloud text-warning" title="Partial/Empty Sync"></i>')
+           : '<i class="fas fa-times-circle text-muted" style="opacity:0.3"></i>'}
       </span>
     </td>
-    <td>
-      <button class="btn btn-sm ${copyBtnColor} me-1" ${
+    <td class="text-end">
+      <div class="d-flex justify-content-end gap-1">
+        <button class="btn btn-sm ${copyBtnColor} shadow-0" ${
     !hasLink ? "disabled" : ""
   } title="Copy Sharing Link" onclick="copySharingLink('${
     file.m_sharing_link
   }', ${file.id})">
-        <i class="fas fa-link"></i>
-      </button>
-      <div class="btn-group dropdown">
-        <button type="button" class="btn btn-sm btn-tertiary dropdown-toggle dropdown-toggle-split" data-mdb-toggle="dropdown" aria-expanded="false">
-          <i class="fas fa-ellipsis-v"></i>
+          <i class="fas fa-link"></i>
         </button>
-        <ul class="dropdown-menu dropdown-menu-dark">
-          ${
-            file.is_cloud
-              ? `<li><a class="dropdown-item" href="#" onclick="generateSharingLink(${file.id})"><i class="fas fa-link me-2"></i> Generate Sharing Link</a></li>`
-              : ""
-          }
-          
-          ${
-            file.pro_account
-              ? `<li><a class="dropdown-item" href="#" onclick="generateExpiringLink(${file.id})"><i class="fas fa-clock me-2"></i> Generate Expiring Link</a></li>`
-              : ""
-          }
-          ${
-            !file.is_cloud
-              ? `<li><a class="dropdown-item text-success" href="#" onclick="uploadToCloud(${file.id})"><i class="fas fa-cloud-upload-alt me-2"></i> Upload to Cloud</a></li>`
-              : ""
-          }
-          <li><a class="dropdown-item text-info" href="#" onclick="fetchFileDetails(${
-            file.id
-          })"><i class="fas fa-info-circle me-2"></i> Fetch File Details</a></li>
-        </ul>
+        <div class="btn-group dropdown">
+          <button type="button" class="btn btn-sm btn-tertiary dropdown-toggle dropdown-toggle-split shadow-0" data-mdb-toggle="dropdown" aria-expanded="false">
+            <i class="fas fa-ellipsis-v"></i>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end">
+            ${
+              file.is_cloud
+                ? `<li><a class="dropdown-item" href="#" onclick="generateSharingLink(${file.id})"><i class="fas fa-link me-2"></i> Generate Sharing Link</a></li>`
+                : ""
+            }
+            ${
+              file.pro_account
+                ? `<li><a class="dropdown-item" href="#" onclick="generateExpiringLink(${file.id})"><i class="fas fa-clock me-2"></i> Generate Expiring Link</a></li>`
+                : ""
+            }
+            <li><a class="dropdown-item ${file.is_cloud ? 'text-warning' : 'text-success'}" href="#" onclick="uploadToCloud(${file.id})"><i class="fas fa-cloud-upload-alt me-2"></i> ${file.is_cloud ? 'Re-upload to Cloud' : 'Upload to Cloud'}</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item text-secondary small" href="#" onclick="fetchFileDetails(${file.id})"><i class="fas fa-info-circle me-2"></i> Fetch File Details</a></li>
+          </ul>
+        </div>
       </div>
     </td>
   `;
@@ -408,7 +396,7 @@ function loadFilesTable() {
   fetch("/run-command", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: `command=db-fetch-files`,
+    body: `command=file_db_fetch`,
   })
     .then((res) => res.json())
     .then((data) => {
@@ -467,4 +455,40 @@ function copySharingLink(link, fileId) {
       console.error("❌ Clipboard copy failed:", err);
       showToast("Failed to copy link", "bg-danger");
     });
+}
+
+async function startBatchUpload() {
+  const modalEl = document.getElementById("batchUploadModal");
+  const modal = new mdb.Modal(modalEl);
+  modal.show();
+
+  document.getElementById("confirmBatchUploadBtn").onclick = async () => {
+    modal.hide();
+    const btn = document.getElementById("batchUploadBtn");
+    const originalHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> Initializing...`;
+
+    try {
+      const res = await fetch("/run-command", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: `command=file_batch_sync`,
+      });
+      
+      const result = await res.json();
+      if (result.status === 200) {
+        showToast("🚀 Auto-Batch upload started in background!", "bg-info");
+        setTimeout(loadFilesTable, 3000);
+      } else {
+        showToast(`❌ Failed: ${result.message}`, "bg-danger");
+      }
+    } catch (err) {
+      console.error("Batch upload error:", err);
+      showToast("❌ Connection error during batch upload start.", "bg-danger");
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = originalHtml;
+    }
+  };
 }

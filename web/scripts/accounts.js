@@ -19,6 +19,10 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("emailPrefix").value = "";
       document.getElementById("emailSuffix").value = "";
       document.getElementById("emailDomain").value = "";
+      document.getElementById("bulkPrefix").value = "";
+      document.getElementById("bulkStart").value = "";
+      document.getElementById("bulkEnd").value = "";
+      document.getElementById("bulkDomain").value = "";
       document.getElementById("finalEmailPreview").textContent = "";
     });
   }
@@ -28,7 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("newAccountModal")
   );
   newAccountBtn.addEventListener("click", async () => {
-    const modal = new mdb.Modal(document.getElementById("newAccountModal"));
+    const modal = mdb.Modal.getInstance(document.getElementById("newAccountModal")) || new mdb.Modal(document.getElementById("newAccountModal"));
     modal.show();
 
     try {
@@ -36,11 +40,21 @@ document.addEventListener("DOMContentLoaded", () => {
       const settings = await res.json();
 
       if (settings.mega_email) {
-        const [prefix, domain] = settings.mega_email.split("@");
-        document.getElementById("emailPrefix").value = prefix || "";
-        document.getElementById("emailDomain").value = domain || "";
-        document.getElementById("finalEmailPreview").textContent =
-          settings.mega_email;
+        const emailParts = settings.mega_email.split("@");
+        const prefix = emailParts[0] || "";
+        const domain = emailParts[1] || "";
+        
+        // Single Mode
+        document.getElementById("emailPrefix").value = prefix;
+        document.getElementById("emailDomain").value = domain;
+        
+        // Bulk Mode
+        document.getElementById("bulkPrefix").value = prefix;
+        document.getElementById("bulkDomain").value = domain;
+        document.getElementById("bulkStart").value = "1";
+        document.getElementById("bulkEnd").value = "20";
+        
+        document.getElementById("finalEmailPreview").textContent = settings.mega_email;
       }
     } catch (err) {
       console.error("Failed to load mega_email setting:", err);
@@ -114,7 +128,7 @@ function refreshAccount(id, options = {}) {
   return fetch("/run-command", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: `command=mega-login:${id}`,
+    body: `command=account_login:${id}`,
   })
     .then((res) => res.json())
     .then((result) => {
@@ -135,97 +149,23 @@ function refreshAccount(id, options = {}) {
       return fetch("/run-command", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: `command=mega-get-account:${id}`,
+        body: `command=account_get_one:${id}`,
       });
     })
     .then((res) => res.json())
     .then((data) => {
       const acc = data.account;
-      const usedQuota = acc.used_quota;
-      const totalQuota = acc.total_quota;
-      const remainingQuota = totalQuota - usedQuota;
-      let usagePercentage = (usedQuota / totalQuota) * 100;
-      if (isNaN(usagePercentage)) {
-        usagePercentage = 0;
-      }
-      let progressColor = "success";
-      if (usagePercentage > 50 && usagePercentage <= 80) {
-        progressColor = "warning";
-      } else if (usagePercentage > 80) {
-        progressColor = "danger";
-      }
       const newRow = document.createElement("tr");
 
-      const maskedPassword = acc.password.replace(/./g, "•");
-
       newRow.id = `account-row-${acc.id}`;
-      newRow.innerHTML = `
-        <td>${acc.id}</td>
-        <td>${acc.email}</td>
-        <td>
-        <span id="password-${acc.id}" class="masked-password" data-password="${
-        acc.password
-      }">
-        ${"•".repeat(acc.password.length)}
-        </span>
-        <button id="toggle-password-${
-          acc.id
-        }" class="btn btn-sm btn-pwreveal btn-link" onclick="togglePasswordVisibility(${
-        acc.id
-      })">
-          <i class="fas fa-eye"></i>
-        </button>
-        </td>
-        <td>${acc.is_pro ? "✅" : "❌"}</td>
-        <td>
-            <div class="progress" style="height: 20px;">
-              <div class="progress-bar bg-${progressColor}" role="progressbar" style="width: ${usagePercentage}%" aria-valuenow="${usagePercentage}" aria-valuemin="0" aria-valuemax="100">
-                ${Math.round(usagePercentage)}%
-              </div>
-            </div>
-        </td>
-        <td>${formatBytes(remainingQuota)}</td>
-        <td>${formatDate(acc.last_login)}</td>
-        <td>
-          <button id="refresh-btn-${
-            acc.id
-          }" class="btn btn-sm btn-outline-light" title="Log in and refresh quota" onclick="refreshAccount(${
-        acc.id
-      })">
-            <i class="fas fa-sync-alt"></i>
-          </button>
-          <div class="btn-group dropdown">
-            <button type="button" class="btn btn-sm btn-tertiary dropdown-toggle dropdown-toggle-split" data-mdb-toggle="dropdown" aria-expanded="false">
-              <i class="fas fa-ellipsis-v"></i>
-            </button>
-            <ul class="dropdown-menu dropdown-menu-dark">
-              <li id="verify-${
-                acc.id
-              }" class="verify-button" style="display: none;">
-                <a class="dropdown-item text-warning" href="#" onclick="openVerifyModal(${
-                  acc.id
-                }, '${acc.email}')">
-                  <i class="fas fa-user-check me-2"></i> Verify Account
-                </a>
-              </li>
-              <li>
-                <a class="dropdown-item text-danger" href="#" onclick="confirmDeleteAccount(${
-                  acc.id
-                }, '${acc.email}')">
-                  <i class="fas fa-trash-alt me-2"></i> Delete Account
-                </a>
-              </li>
-            </ul>
-          </div>
-        </td>
-      `;
-
+      newRow.innerHTML = createAccountRowHTML(acc);
+      
       const oldRow = document.getElementById(`account-row-${acc.id}`);
       if (oldRow) oldRow.replaceWith(newRow);
 
-      new mdb.Dropdown(
-        document.querySelector(`#account-row-${acc.id} .dropdown-toggle`)
-      );
+      const dropdownToggle = newRow.querySelector(".dropdown-toggle");
+      if (dropdownToggle) new mdb.Dropdown(dropdownToggle);
+      
       newRow.classList.add("flash-row");
     })
     .catch((err) => {
@@ -272,12 +212,92 @@ function refreshAccount(id, options = {}) {
     });
 }
 
+function createAccountRowHTML(acc, isStale = false) {
+  const usedQuota = acc.used_quota;
+  const totalQuota = acc.total_quota;
+  const remainingQuota = totalQuota - usedQuota;
+  let usagePercentage = (usedQuota / totalQuota) * 100;
+  if (isNaN(usagePercentage)) usagePercentage = 0;
+
+  let progressColor = "success";
+  if (usagePercentage > 50 && usagePercentage <= 80) progressColor = "warning";
+  else if (usagePercentage > 80) progressColor = "danger";
+
+  const staleFlag = isStale ? 1 : 0;
+  
+  return `
+    <td style="display: none !important;">${staleFlag}</td>
+    <td class="text-muted small">${acc.id}</td>
+    <td class="fw-bold">
+      ${acc.email}
+      ${acc.status === "Pending Verification" ? '<br><span class="badge badge-warning x-small">PENDING VERIFICATION</span>' : ''}
+    </td>
+    <td>
+      <div class="d-flex align-items-center">
+        <span id="password-${acc.id}" class="masked-password text-muted" data-password="${acc.password}" style="letter-spacing: 0.1em; font-family: monospace;">
+          ${"•".repeat(Math.min(acc.password.length, 12))}
+        </span>
+        <button id="toggle-password-${acc.id}" class="btn btn-sm btn-pwreveal shadow-0" onclick="togglePasswordVisibility(${acc.id})" title="Toggle Password">
+          <i class="fas fa-eye"></i>
+        </button>
+      </div>
+    </td>
+    <td class="text-center">
+      ${acc.is_pro 
+        ? '<i class="fas fa-gem text-warning" data-mdb-toggle="tooltip" title="Pro Account"></i>' 
+        : '<i class="fas fa-user text-muted opacity-25" data-mdb-toggle="tooltip" title="Free Account"></i>'}
+    </td>
+    <td>
+      ${acc.status === "Pending Verification" ? `
+        <a href="verify.html" class="btn btn-sm btn-outline-warning py-1 px-2 border-dashed">
+          <i class="fas fa-user-check me-1"></i> Verify Now
+        </a>
+      ` : `
+        <div class="d-flex align-items-center gap-2">
+          <div class="progress flex-grow-1" style="height: 6px !important;">
+            <div class="progress-bar bg-${progressColor}" role="progressbar" style="width: ${usagePercentage}%" aria-valuenow="${usagePercentage}" aria-valuemin="0" aria-valuemax="100"></div>
+          </div>
+          <span class="small text-muted" style="min-width: 35px;">${Math.round(usagePercentage)}%</span>
+        </div>
+      `}
+    </td>
+    <td class="text-end small fw-bold">${acc.status === "Pending Verification" ? '-' : formatBytes(remainingQuota)}</td>
+    <td class="text-muted small">${formatDate(acc.last_login)}</td>
+    <td class="text-end">
+      <div class="d-flex justify-content-end gap-1">
+        <button id="refresh-btn-${acc.id}" class="btn btn-sm btn-tertiary shadow-0" ${acc.status === "Pending Verification" ? 'disabled' : ''} onclick="refreshAccount(${acc.id})" title="Sync Account">
+          <i class="fas fa-sync-alt"></i>
+        </button>
+        <div class="btn-group dropdown">
+          <button type="button" class="btn btn-sm btn-tertiary dropdown-toggle dropdown-toggle-split shadow-0" data-mdb-toggle="dropdown" aria-expanded="false">
+            <i class="fas fa-ellipsis-v"></i>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end">
+            ${acc.status === "Pending Verification" ? `
+              <li>
+                <a class="dropdown-item text-warning" href="verify.html">
+                  <i class="fas fa-user-check me-2"></i> Activation Page
+                </a>
+              </li>
+            ` : ""}
+            <li>
+              <a class="dropdown-item text-danger" href="#" onclick="confirmDeleteAccount(${acc.id}, '${acc.email}')">
+                <i class="fas fa-trash-alt me-2"></i> Delete Account
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </td>
+  `;
+}
+
 // load all accounts from database
 function loadAccountTable() {
   fetch("/run-command", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: `command=mega-get-accounts`,
+    body: `command=account_get_all`,
   })
     .then((res) => res.json())
     .then((data) => {
@@ -306,89 +326,13 @@ function loadAccountTable() {
       });
 
       const sortedAccounts = [...staleAccounts, ...recentAccounts];
-
       sortedAccounts.forEach((acc) => {
+        const isStale = staleAccounts.includes(acc);
         const row = document.createElement("tr");
-        const usedQuota = acc.used_quota;
-        const totalQuota = acc.total_quota;
-        const remainingQuota = totalQuota - usedQuota;
-        let usagePercentage = (usedQuota / totalQuota) * 100;
-        if (isNaN(usagePercentage)) {
-          usagePercentage = 0;
-        }
-        let progressColor = "success";
-        if (usagePercentage > 50 && usagePercentage <= 80) {
-          progressColor = "warning";
-        } else if (usagePercentage > 80) {
-          progressColor = "danger";
-        }
-        const isStale = acc.last_login && acc.last_login < cutoff;
-        const staleFlag = isStale ? 1 : 0;
-        const maskedPassword = acc.password.replace(/./g, "•");
         row.id = `account-row-${acc.id}`;
-        row.innerHTML = `
-          <td style="display: none !important;">${staleFlag}</td>
-          <td>${acc.id}</td>
-          <td>${acc.email}</td>
-          <td>
-          <span id="password-${
-            acc.id
-          }" class="masked-password" data-password="${acc.password}">
-          ${"•".repeat(acc.password.length)}
-        </span>
-        <button id="toggle-password-${
-          acc.id
-        }" class="btn btn-sm btn-pwreveal btn-link" onclick="togglePasswordVisibility(${
-          acc.id
-        })">
-          <i class="fas fa-eye"></i>
-        </button>
-          </td>
-          <td>${acc.is_pro ? "✅" : "❌"}</td>
-          <td>
-            <div class="progress" style="height: 20px;">
-              <div class="progress-bar bg-${progressColor}" role="progressbar" style="width: ${usagePercentage}%" aria-valuenow="${usagePercentage}" aria-valuemin="0" aria-valuemax="100">
-                ${Math.round(usagePercentage)}%
-              </div>
-            </div>
-          </td>
-          <td>${formatBytes(remainingQuota)}</td>
-          <td>${formatDate(acc.last_login)}</td>
-          <td>
-            <button id="refresh-btn-${
-              acc.id
-            }" class="btn btn-sm btn-outline-light" onclick="refreshAccount(${
-          acc.id
-        })">
-              <i class="fas fa-sync-alt"></i>
-            </button>
-            <div class="btn-group dropdown">
-                  <button type="button" class="btn btn-sm btn-tertiary dropdown-toggle dropdown-toggle-split" data-mdb-toggle="dropdown" aria-expanded="false">
-                    <i class="fas fa-ellipsis-v"></i>
-                  </button>
-                  <ul class="dropdown-menu dropdown-menu-dark">
-                    <li id="verify-${
-                      acc.id
-                    }" class="verify-button" style="display: none;">
-                      <a class="dropdown-item text-warning" href="#" onclick="openVerifyModal(${
-                        acc.id
-                      }, '${acc.email}')">
-                        <i class="fas fa-user-check me-2"></i> Verify Account
-                      </a>
-                    </li>
-                    <li>
-                      <a class="dropdown-item text-danger" href="#" onclick="confirmDeleteAccount(${
-                        acc.id
-                      }, '${acc.email}')">
-                        <i class="fas fa-trash-alt me-2"></i> Delete Account
-                      </a>
-                    </li>
-                  </ul>
-                </div>
-          </td>
-        `;
+        row.innerHTML = createAccountRowHTML(acc, isStale);
 
-        if (staleAccounts.includes(acc)) {
+        if (isStale) {
           row.classList.add("table-stale");
         }
 
@@ -421,15 +365,14 @@ function refreshAllAccounts() {
     el.disabled = true;
   });
 
-  btn.classList.remove("btn-primary", "btn-success", "btn-danger");
   btn.classList.add("btn-warning");
-  icon.classList.add("fa-spin");
+  if (icon) icon.classList.add("fa-spin");
   btn.disabled = true;
 
   fetch("/run-command", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: `command=fetch-account-ids`,
+    body: `command=account_fetch_ids`,
   })
     .then((res) => res.json())
     .then(async (data) => {
@@ -478,7 +421,7 @@ function confirmDeleteAccount(id, email) {
   fetch("/run-command", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: `command=mega-get-account:${id}`,
+    body: `command=account_get_one:${id}`,
   })
     .then((res) => res.json())
     .then((data) => {
@@ -517,7 +460,7 @@ function deleteAccount(id) {
   fetch("/run-command", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: `command=mega-delete-account:${id}`,
+    body: `command=account_delete:${id}`,
   })
     .then((res) => res.json())
     .then(() => {
@@ -559,7 +502,7 @@ function verifyAccount(accountId, link) {
   fetch("/run-command", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: `command=mega-verify-account:${accountId}|${encodeURIComponent(
+    body: `command=account_verify:${accountId}|${encodeURIComponent(
       link
     )}`,
   })
@@ -582,26 +525,31 @@ let currentRevealedPasswordId = null;
 
 function togglePasswordVisibility(accountId) {
   const passwordElement = document.getElementById(`password-${accountId}`);
+  if (!passwordElement) return;
+  
   const toggleButton = document.getElementById(`toggle-password-${accountId}`);
   const password = passwordElement.getAttribute("data-password");
+
+  if (!password) {
+    showToast("⚠️ Could not retrieve password for this row.", "bg-warning");
+    return;
+  }
 
   const maskedPassword = "•".repeat(password.length);
 
   // If another password is already revealed, hide it first
   if (currentRevealedPasswordId && currentRevealedPasswordId !== accountId) {
-    const previouslyRevealedPasswordElement = document.getElementById(
-      `password-${currentRevealedPasswordId}`
-    );
-    const previouslyRevealedToggleButton = document.getElementById(
-      `toggle-password-${currentRevealedPasswordId}`
-    );
+    const prevEl = document.getElementById(`password-${currentRevealedPasswordId}`);
+    const prevBtn = document.getElementById(`toggle-password-${currentRevealedPasswordId}`);
 
-    // Hide the previously revealed password
-    previouslyRevealedPasswordElement.textContent = "•".repeat(
-      previouslyRevealedPasswordElement.getAttribute("data-password").length
-    );
-    previouslyRevealedToggleButton.innerHTML = '<i class="fas fa-eye"></i>';
-    previouslyRevealedPasswordElement.classList.add("masked-password");
+    if (prevEl && prevBtn) {
+       const prevPass = prevEl.getAttribute("data-password");
+       if (prevPass) {
+          prevEl.textContent = "•".repeat(prevPass.length);
+          prevBtn.innerHTML = '<i class="fas fa-eye"></i>';
+          prevEl.classList.add("masked-password");
+       }
+    }
   }
 
   // Reveal or hide the current password
@@ -659,7 +607,7 @@ async function addNewAccounts(parsedData) {
         "Content-Type": "application/json", // Use JSON content type
       },
       body: JSON.stringify({
-        command: "csv-load-accounts",
+        command: "account_import_csv",
         args: rows, // Pass only the rows of CSV data
       }),
     });
@@ -700,16 +648,38 @@ function parseCSV(csvData) {
 }
 
 function updateFinalEmailPreview() {
-  const prefix = document.getElementById("emailPrefix").value.trim();
-  const suffix = document.getElementById("emailSuffix").value.trim();
-  const domain = document.getElementById("emailDomain").value.trim();
+  const isBulk = document.getElementById("bulkModeToggle").checked;
+  let final = "";
 
-  const final =
-    prefix && suffix && domain ? `${prefix}+${suffix}@${domain}` : "";
-  document.getElementById("finalEmailPreview").textContent = final;
+  if (isBulk) {
+    const prefix = document.getElementById("bulkPrefix").value.trim();
+    const start = document.getElementById("bulkStart").value;
+    const end = document.getElementById("bulkEnd").value;
+    const domain = document.getElementById("bulkDomain").value.trim();
+    if (prefix && start && end && domain) {
+      const separator = prefix.includes("+") ? "" : "+";
+      final = `${prefix}${separator}[${start} to ${end}]@${domain}`;
+    }
+  } else {
+    const prefix = document.getElementById("emailPrefix").value.trim();
+    const suffix = document.getElementById("emailSuffix").value.trim();
+    const domain = document.getElementById("emailDomain").value.trim();
+    if (prefix && suffix && domain) {
+      final = `${prefix}+${suffix}@${domain}`;
+    }
+  }
+  document.getElementById("finalEmailPreview").textContent = final || "...";
 }
 
-["emailPrefix", "emailSuffix", "emailDomain"].forEach((id) => {
+// Wire up events
+document.getElementById("bulkModeToggle").addEventListener("change", (e) => {
+  const isBulk = e.target.checked;
+  document.getElementById("singleModeInputs").classList.toggle("d-none", isBulk);
+  document.getElementById("bulkModeInputs").classList.toggle("d-none", !isBulk);
+  updateFinalEmailPreview();
+});
+
+["emailPrefix", "emailSuffix", "emailDomain", "bulkPrefix", "bulkStart", "bulkEnd", "bulkDomain"].forEach((id) => {
   const input = document.getElementById(id);
   if (input) input.addEventListener("input", updateFinalEmailPreview);
 });
@@ -717,44 +687,66 @@ function updateFinalEmailPreview() {
 document
   .getElementById("submitNewAccountBtn")
   .addEventListener("click", async () => {
-    const prefix = document.getElementById("emailPrefix").value.trim();
-    const suffix = document.getElementById("emailSuffix").value.trim();
-    const domain = document.getElementById("emailDomain").value.trim();
+    const isBulk = document.getElementById("bulkModeToggle").checked;
+    const btn = document.getElementById("submitNewAccountBtn");
+    const originalText = btn.innerHTML;
 
-    if (!prefix || !suffix || !domain) {
-      showToast("Please fill out all parts of the email", "bg-warning");
-      return;
-    }
-
-    const finalEmail = `${prefix}+${suffix}@${domain}`;
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Processing...`;
 
     try {
+      let command = "account_register";
+      let args = [];
+
+      if (isBulk) {
+        const prefix = document.getElementById("bulkPrefix").value.trim();
+        const start = document.getElementById("bulkStart").value;
+        const end = document.getElementById("bulkEnd").value;
+        const domain = document.getElementById("bulkDomain").value.trim();
+
+        if (!prefix || !start || !end || !domain) {
+          showToast("Please fill out all bulk range fields", "bg-warning");
+          btn.disabled = false;
+          btn.innerHTML = originalText;
+          return;
+        }
+        command = "account_bulk_register";
+        args = [`${prefix}|${start}|${end}|${domain}`];
+      } else {
+        const prefix = document.getElementById("emailPrefix").value.trim();
+        const suffix = document.getElementById("emailSuffix").value.trim();
+        const domain = document.getElementById("emailDomain").value.trim();
+
+        if (!prefix || !suffix || !domain) {
+          showToast("Please fill out all fields", "bg-warning");
+          btn.disabled = false;
+          btn.innerHTML = originalText;
+          return;
+        }
+        args = [`${prefix}+${suffix}@${domain}`];
+      }
+
       const res = await fetch("/run-command", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          command: "mega-register-account",
-          args: [finalEmail],
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ command, args }),
       });
 
       const result = await res.json();
 
       if (result.status === 200) {
-        showToast(`✅ Registered: ${finalEmail}`, "bg-success");
-        const newAccountModal = mdb.Modal.getInstance(
-          document.getElementById("newAccountModal")
-        );
-        if (newAccountModal) newAccountModal.hide();
+        showToast(`✅ ${result.message}`, "bg-success");
+        const modal = mdb.Modal.getInstance(document.getElementById("newAccountModal"));
+        if (modal) modal.hide();
         loadAccountTable();
-        refreshAccount(result.id);
       } else {
-        showToast(`❌ Registration failed: ${result.message}`, "bg-danger");
+        showToast(`❌ Failed: ${result.message}`, "bg-danger");
       }
     } catch (err) {
       console.error("Registration error:", err);
       showToast("❌ An error occurred during registration", "bg-danger");
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = originalText;
     }
   });

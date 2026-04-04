@@ -26,12 +26,6 @@
   </head>
 
   <body>
-    <style>
-      .progress {
-        height: 20px;
-        border-radius: 15px;
-      }
-    </style>
     <!-- Navbar -->
     <nav class="navbar navbar-expand bg-body-tertiary">
       <div class="container-fluid">
@@ -65,10 +59,15 @@
     <!-- Navbar -->
 
     <!-- Content Section -->
-    <section class="container my-5">
-      <h2>Ongoing Uploads</h2>
-      <div id="uploads-list"></div>
-      <!-- Container for the uploads -->
+    <header class="hero-gradient text-white py-4 mb-5 border-bottom border-white border-opacity-10">
+      <div class="container py-4">
+        <h2 class="fw-bold mb-0">Ongoing Uploads</h2>
+        <p class="text-muted mb-0 small">Monitor real-time data transfers to MEGA.</p>
+      </div>
+    </header>
+
+    <section class="container mb-5">
+      <div id="uploads-list" class="row g-4"></div>
     </section>
 
     <!-- Universal Toast -->

@@ -59,86 +59,99 @@
     <!-- Navbar -->
 
     <!-- Hero Section -->
-    <header class="bg-dark text-white text-center py-5">
-      <div class="container">
-        <h1 class="display-4">Welcome to Mega Manager</h1>
-        <p class="lead">
-          This web-ui will help you manage your local and cloud files, and keep your mega accounts active!
+    <header class="hero-gradient text-white text-center py-5 mb-5 overflow-hidden">
+      <div class="container py-4">
+        <h1 class="display-3 fw-bold mb-3" style="letter-spacing: -1px;">Mega <span style="color: var(--mega-red);">Manager</span></h1>
+        <p class="lead opacity-75 mx-auto" style="max-width: 700px;">
+          Seamlessly bridge your local storage and MEGA cloud accounts.
+          Manage, sync, and monitor your data from a single premium dashboard.
         </p>
       </div>
     </header>
 
     <!-- Content Section -->
-    <section class="container my-5">
+    <section class="container mb-5">
       <!-- Intro Row -->
-      <div class="row mb-4">
-        <div class="col">
-          <div class="p-4 card rounded shadow-sm">
-            <h4 class="mb-3">What You Can Do with Mega Manager</h4>
-            <p>
-              Mega Manager is your all-in-one tool for managing both local and Mega cloud-stored files.
-              Use this dashboard to:
-            </p>
-            <ul>
-              <li><strong>View and manage your <a href="/accounts.html" target="_blank">Mega accounts</a></strong> – check login status, storage quota, and more.</li>
-              <li><strong>Browse local and cloud <a href="/files.html" target="_blank">files</a></strong> – see what's available locally and track which are synced to Mega.</li>
-              <li><strong>Upload files to Mega</strong> – easily link files to one or multiple cloud accounts.</li>
-              <li><strong>Customize <a href="/settings.html" target="_blank">settings</a></strong> – tweak email defaults, command paths, and behavior preferences.</li>
-            </ul>
-            <p>
-              Use the sections below to get started.
-            </p>
+      <div class="row mb-5 justify-content-center">
+        <div class="col-lg-10">
+          <div class="p-5 card">
+            <div class="row align-items-center">
+              <div class="col-md-7">
+                <h3 class="mb-4 fw-bold">Elevate Your Data Management</h3>
+                <p class="text-muted mb-4">
+                  Mega Manager provides a unified interface to control your MEGA presence. 
+                  Audit your accounts, track local file changes, and manage cloud exports with precision.
+                </p>
+                <div class="d-flex flex-wrap gap-3">
+                  <div class="d-flex align-items-center">
+                    <i class="fas fa-check-circle text-success me-2"></i>
+                    <span class="small">Real-time Syncing</span>
+                  </div>
+                  <div class="d-flex align-items-center">
+                    <i class="fas fa-check-circle text-success me-2"></i>
+                    <span class="small">Multi-Account Support</span>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-5 d-none d-md-block text-center">
+                <i class="fas fa-server fa-8x opacity-10 text-danger"></i>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     
-      <div class="row">
+      <div class="row g-4">
         <!--Grid column-->
-        <div class="col-lg-4 col-md-12 mb-4">
-          <div class="card mb-4">
-            <div class="card-body">
-              <h5 class="card-title">Files</h5>
-              <p class="card-text">
-                View files you have locally.
+        <div class="col-lg-4 col-md-6">
+          <div class="card h-100 hvr-up">
+            <div class="card-body p-4 text-center">
+              <div class="rounded-circle bg-danger bg-opacity-10 d-inline-flex align-items-center justify-content-center mb-4" style="width: 64px; height: 64px;">
+                <i class="fas fa-folder-open fa-2x text-danger"></i>
+              </div>
+              <h5 class="card-title fw-bold">Local Files</h5>
+              <p class="card-text text-muted mb-4">
+                Explore your local file system and identify dated folders ready for cloud archival.
               </p>
-              <a href="/files.html">
-                <button type="button" class="btn btn-danger" data-mdb-ripple-init>
-                  Files
-                </button>
+              <a href="/files.html" class="btn btn-danger px-4 py-2 w-100">
+                Manage Files
               </a>
             </div>
           </div>
         </div>
-        <div class="col-lg-4 col-md-12 mb-4">
-          <div class="card mb-4">
-            <div class="card-body">
-              <h5 class="card-title">Accounts</h5>
-              <p class="card-text">
-                View information about your Mega Accounts
+        <div class="col-lg-4 col-md-6">
+          <div class="card h-100 hvr-up">
+            <div class="card-body p-4 text-center">
+              <div class="rounded-circle bg-danger bg-opacity-10 d-inline-flex align-items-center justify-content-center mb-4" style="width: 64px; height: 64px;">
+                <i class="fas fa-cloud fa-2x text-danger"></i>
+              </div>
+              <h5 class="card-title fw-bold">Cloud Accounts</h5>
+              <p class="card-text text-muted mb-4">
+                Monitor storage quotas, subscription levels, and account health across all MEGA profiles.
               </p>
-              <a href="/accounts.html">
-                <button type="button" class="btn btn-danger" data-mdb-ripple-init>
-                  Accounts
-                </button>
+              <a href="/accounts.html" class="btn btn-danger px-4 py-2 w-100">
+                View Accounts
               </a>
             </div>
           </div>
         </div>
-        <div class="col-lg-4 col-md-12 mb-4">
-          <div class="card mb-4">
-            <div class="card-body">
-              <h5 class="card-title">Settings</h5>
-              <p class="card-text">
-                Manage the settings of this app
+        <div class="col-lg-4 col-md-12">
+          <div class="card h-100 hvr-up">
+            <div class="card-body p-4 text-center">
+              <div class="rounded-circle bg-danger bg-opacity-10 d-inline-flex align-items-center justify-content-center mb-4" style="width: 64px; height: 64px;">
+                <i class="fas fa-sliders-h fa-2x text-danger"></i>
+              </div>
+              <h5 class="card-title fw-bold">System Settings</h5>
+              <p class="card-text text-muted mb-4">
+                Configure command paths, date patterns, and global email preferences for the manager.
               </p>
-              <a href="/settings.html">
-                <button type="button" class="btn btn-danger" data-mdb-ripple-init>
-                  Settings
-                </button>
+              <a href="/settings.html" class="btn btn-danger px-4 py-2 w-100">
+                Edit Settings
               </a>
             </div>
           </div>
         </div>
+      </div>
     </section>
 
     <!-- Universal Toast -->
