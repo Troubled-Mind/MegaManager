@@ -47,7 +47,7 @@ function displayOngoingUploads(uploads) {
             <h6 class="fw-bold mb-0 text-truncate" style="max-width: 70%;" title="${upload.file_name}">
               <i class="fas ${statusIcon} me-2"></i> ${upload.file_name}
             </h6>
-            <span class="badge rounded-pill bg-dark border border-white border-opacity-10 py-1 px-3 small">
+            <span class="badge rounded-pill bg-body-tertiary border border-secondary border-opacity-25 py-1 px-3 small text-body">
               #${upload.file_id}
             </span>
           </div>
@@ -65,7 +65,7 @@ function displayOngoingUploads(uploads) {
           <!-- Progress bar removed as requested -->
           <div class="mb-3"></div>
           
-            <div class="d-flex align-items-center justify-content-between mt-4 pt-2 border-top border-white border-opacity-10">
+            <div class="d-flex align-items-center justify-content-between mt-4 pt-2 border-top border-secondary border-opacity-10">
             <div class="d-flex align-items-center gap-2">
               <i class="fas fa-info-circle ${isFailed ? 'text-danger' : 'text-info'} opacity-50"></i>
               <small class="text-muted truncate">${isFailed ? 'Process exited with error' : (upload.account_email ? `<span class="text-info">${upload.account_email}</span>` : 'Active background process')}</small>
@@ -93,7 +93,7 @@ function clearUpload(fileId) {
     .then((res) => res.json())
     .then((data) => {
       if (data.status === 200) {
-        showToast(`🗑️ #${fileId} cleared from uploads`, "bg-dark");
+        showToast(`🗑️ #${fileId} cleared from uploads`, "bg-secondary");
         fetchOngoingUploads();
       }
     })

@@ -2,6 +2,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Initialise theme
   const savedTheme = localStorage.getItem('mm-theme') || 'dark';
   document.documentElement.setAttribute('data-mdb-theme', savedTheme);
+  document.documentElement.setAttribute('data-bs-theme', savedTheme);
 
   // Inject Global UI Elements (Spinner/Lock Overlay)
   const uiOverlay = document.createElement("div");
@@ -101,9 +102,11 @@ window.checkPendingAccounts = function () {
 }
 
 window.toggleTheme = function () {
-  const current = document.documentElement.getAttribute('data-mdb-theme');
+  const current = document.documentElement.getAttribute('data-mdb-theme') || 'dark';
   const next = current === 'dark' ? 'light' : 'dark';
+  
   document.documentElement.setAttribute('data-mdb-theme', next);
+  document.documentElement.setAttribute('data-bs-theme', next); // Support newer Bootstrap versions
   localStorage.setItem('mm-theme', next);
 };
 
