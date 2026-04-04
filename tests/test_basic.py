@@ -5,7 +5,7 @@ from database import get_db
 from models import MegaAccount, File, Setting
 
 def test_database_connection():
-    """Verify that the database engine initializes and tables exist."""
+    """Verify that the database engine initialises and tables exist."""
     with get_db() as session:
         # Check if we can query the tables
         accounts = session.query(MegaAccount).all()

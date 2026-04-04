@@ -304,42 +304,36 @@ function updateRowWithFileData(file) {
       <div class="small text-muted"><i class="fas fa-cloud me-2 text-warning opacity-75"></i> ${file.m_path || "-"}</div>
     </td>
     <td class="fw-bold">${file.l_folder_name || file.m_folder_name || "-"}</td>
-    <td class="text-end" data-order="${file.l_folder_size || 0}">${
-      formatBytes(file.l_folder_size || 0) === "0.00 B"
-        ? "-"
-        : formatBytes(file.l_folder_size)
+    <td class="text-end" data-order="${file.l_folder_size || 0}">${formatBytes(file.l_folder_size || 0) === "0.00 B"
+      ? "-"
+      : formatBytes(file.l_folder_size)
     }</td>
-    <td class="text-end ${Math.abs((file.l_folder_size || 0) - (file.m_folder_size || 0)) > 1024 * 1024 ? 'text-warning fw-bold' : ''}" data-order="${file.m_folder_size || 0}">${
-      formatBytes(file.m_folder_size || 0) === "0.00 B"
-        ? "-"
-        : formatBytes(file.m_folder_size)
+    <td class="text-end ${Math.abs((file.l_folder_size || 0) - (file.m_folder_size || 0)) > 1024 * 1024 ? 'text-warning fw-bold' : ''}" data-order="${file.m_folder_size || 0}">${formatBytes(file.m_folder_size || 0) === "0.00 B"
+      ? "-"
+      : formatBytes(file.m_folder_size)
     }</td>
     <td class="text-center">${file.is_local ? '<i class="fas fa-check-circle text-success"></i>' : '<i class="fas fa-times-circle text-muted" style="opacity:0.3"></i>'}</td>
     <td class="text-center">
       <span class="d-inline-block"
-        ${
-          file.cloud_email
-            ? `data-mdb-toggle="tooltip" title="Account: ${file.cloud_email}"`
-            : ""
-        }
-        onclick="handleCloudStatusClick(${file.id}, '${
-    file.l_folder_name || file.m_folder_name
-  }', '${file.cloud_email || ""}')"
+        ${file.cloud_email
+      ? `data-mdb-toggle="tooltip" title="Account: ${file.cloud_email}"`
+      : ""
+    }
+        onclick="handleCloudStatusClick(${file.id}, '${file.l_folder_name || file.m_folder_name
+    }', '${file.cloud_email || ""}')"
         style="cursor: pointer;">
-        ${file.is_cloud 
-           ? (Number(file.m_folder_size) > 0 
-              ? '<i class="fas fa-check-circle text-success"></i>' 
-              : '<i class="fas fa-cloud text-warning" title="Partial/Empty Sync"></i>')
-           : '<i class="fas fa-times-circle text-muted" style="opacity:0.3"></i>'}
+        ${file.is_cloud
+      ? (Number(file.m_folder_size) > 0
+        ? '<i class="fas fa-check-circle text-success"></i>'
+        : '<i class="fas fa-cloud text-warning" title="Partial/Empty Sync"></i>')
+      : '<i class="fas fa-times-circle text-muted" style="opacity:0.3"></i>'}
       </span>
     </td>
     <td class="text-end">
       <div class="d-flex justify-content-end gap-1">
-        <button class="btn btn-sm ${copyBtnColor} shadow-0" ${
-    !hasLink ? "disabled" : ""
-  } title="Copy Sharing Link" onclick="copySharingLink('${
-    file.m_sharing_link
-  }', ${file.id})">
+        <button class="btn btn-sm ${copyBtnColor} shadow-0" ${!hasLink ? "disabled" : ""
+    } title="Copy Sharing Link" onclick="copySharingLink('${file.m_sharing_link
+    }', ${file.id})">
           <i class="fas fa-link"></i>
         </button>
         <div class="btn-group dropdown">
@@ -347,16 +341,14 @@ function updateRowWithFileData(file) {
             <i class="fas fa-ellipsis-v"></i>
           </button>
           <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end">
-            ${
-              file.is_cloud
-                ? `<li><a class="dropdown-item" href="#" onclick="generateSharingLink(${file.id})"><i class="fas fa-link me-2"></i> Generate Sharing Link</a></li>`
-                : ""
-            }
-            ${
-              file.pro_account
-                ? `<li><a class="dropdown-item" href="#" onclick="generateExpiringLink(${file.id})"><i class="fas fa-clock me-2"></i> Generate Expiring Link</a></li>`
-                : ""
-            }
+            ${file.is_cloud
+      ? `<li><a class="dropdown-item" href="#" onclick="generateSharingLink(${file.id})"><i class="fas fa-link me-2"></i> Generate Sharing Link</a></li>`
+      : ""
+    }
+            ${file.pro_account
+      ? `<li><a class="dropdown-item" href="#" onclick="generateExpiringLink(${file.id})"><i class="fas fa-clock me-2"></i> Generate Expiring Link</a></li>`
+      : ""
+    }
             <li><a class="dropdown-item ${file.is_cloud ? 'text-warning' : 'text-success'}" href="#" onclick="uploadToCloud(${file.id})"><i class="fas fa-cloud-upload-alt me-2"></i> ${file.is_cloud ? 'Re-upload to Cloud' : 'Upload to Cloud'}</a></li>
             <li><hr class="dropdown-divider"></li>
             <li><a class="dropdown-item text-secondary small" href="#" onclick="fetchFileDetails(${file.id})"><i class="fas fa-info-circle me-2"></i> Fetch File Details</a></li>
@@ -467,7 +459,7 @@ async function startBatchUpload() {
     const btn = document.getElementById("batchUploadBtn");
     const originalHtml = btn.innerHTML;
     btn.disabled = true;
-    btn.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> Initializing...`;
+    btn.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> Initialising...`;
 
     try {
       const res = await fetch("/run-command", {
@@ -475,7 +467,7 @@ async function startBatchUpload() {
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: `command=file_batch_sync`,
       });
-      
+
       const result = await res.json();
       if (result.status === 200) {
         showToast("🚀 Auto-Batch upload started in background!", "bg-info");
