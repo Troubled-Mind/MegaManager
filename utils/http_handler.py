@@ -25,21 +25,25 @@ class CustomHandler(SimpleHTTPRequestHandler):
         public_paths = ["/login.html"]
         is_static = self.path.startswith("/resources/") or self.path.startswith("/scripts/")
 
-        if self.path == "/api/settings":
+        # Normalize path by removing query strings and trailing slashes
+        clean_path = self.path.split('?')[0].rstrip('/')
+        if not clean_path: clean_path = "/"
+
+        if clean_path == "/api/settings":
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self.end_headers()
             self.wfile.write(json.dumps(settings._values).encode())
             return
 
-        if self.path == "/api/status":
+        if clean_path == "/api/status":
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self.end_headers()
             self.wfile.write(json.dumps(state).encode("utf-8"))
             return
 
-        if self.path == "/api/version":
+        if clean_path == "/api/version":
             try:
                 with open("version", "r") as f:
                     version = f.read().strip()
@@ -54,10 +58,10 @@ class CustomHandler(SimpleHTTPRequestHandler):
                 self.wfile.write(json.dumps({"error": str(e)}).encode("utf-8"))
             return
 
-        if is_static or self.path in public_paths:
+        if is_static or clean_path in public_paths:
             return super().do_GET()
 
-        if self.path in restricted_paths:
+        if clean_path in restricted_paths:
             if settings.get("app_password") and not state["authenticated"]:
                 print(f"🔒 Access blocked to {self.path} → not authenticated")
                 self.send_response(302)

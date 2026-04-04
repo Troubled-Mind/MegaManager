@@ -29,6 +29,9 @@ def maintenance_worker():
                 # 1. Check for active uploads
                 active_uploads = session.query(File).filter(File.upload_status == "In Progress").count()
                 state["uploads_active"] = active_uploads > 0
+                
+                # We are ready for UI interaction once the background thread has at least started
+                state["booting"] = False
 
                 # 2. Refresh Accounts every 30 mins (OR on boot)
                 if is_first_run or (int(time.time()) % 1800 < 30):

@@ -55,9 +55,9 @@ def process_account(account_id):
         password = account.password
 
         try:
-            # User specifically requested full logout/login cycles for consistency
-            print(f"INFO Resetting session for {email}...")
-            subprocess.run([cmd("mega-logout")], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            # Skip synchronization for accounts awaiting manual verification
+            if account.status == "Pending Verification":
+                return {"status": 202, "message": f"Account {email} is pending verification. Please verify before syncing."}
 
             # Consistent Session Management
             from utils.mega_session import ensure_logged_in
