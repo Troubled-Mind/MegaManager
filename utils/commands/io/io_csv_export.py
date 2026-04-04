@@ -21,18 +21,18 @@ def run(args=None):
 
 def export_mega_accounts():
     """Export all MEGA accounts to a CSV file."""
-    session = next(get_db())
-    accounts = session.query(MegaAccount).all()
+    with get_db() as session:
+        accounts = session.query(MegaAccount).all()
 
-    output = io.StringIO()
-    writer = csv.writer(output)
-    writer.writerow(["Email", "Password"])
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow(["Email", "Password"])
 
-    for account in accounts:
-        writer.writerow([
-            account.email,
-            account.password
-        ])
+        for account in accounts:
+            writer.writerow([
+                account.email,
+                account.password
+            ])
 
     # Return file to be downloaded
     output.seek(0)
@@ -43,19 +43,19 @@ def export_mega_accounts():
 
 def export_local_files():
     """Export all local files to a CSV file."""
-    session = next(get_db())
-    files = session.query(File).filter(File.l_folder_name != None).all()
+    with get_db() as session:
+        files = session.query(File).filter(File.l_folder_name != None).all()
 
-    output = io.StringIO()
-    writer = csv.writer(output)
-    writer.writerow(["Local Path", "Folder Name", "Folder Size"])
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow(["Local Path", "Folder Name", "Folder Size"])
 
-    for file in files:
-        writer.writerow([
-            file.l_path,
-            file.l_folder_name,
-            format_bytes(file.l_folder_size)
-        ])
+        for file in files:
+            writer.writerow([
+                file.l_path,
+                file.l_folder_name,
+                format_bytes(file.l_folder_size)
+            ])
 
     # Return file to be downloaded
     output.seek(0)
@@ -66,21 +66,21 @@ def export_local_files():
 
 def export_cloud_files():
     """Export all cloud files to a CSV file."""
-    session = next(get_db())
-    files = session.query(File).filter(File.m_folder_name != None).all()
+    with get_db() as session:
+        files = session.query(File).filter(File.m_folder_name != None).all()
 
-    output = io.StringIO()
-    writer = csv.writer(output)
-    writer.writerow(["MEGA Path", "Folder Name", "Folder Size", "Sharing Link", "Account Email"])
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow(["MEGA Path", "Folder Name", "Folder Size", "Sharing Link", "Account Email"])
 
-    for file in files:
-        writer.writerow([
-            file.m_path,
-            file.m_folder_name,
-            format_bytes(file.m_folder_size),
-            file.m_sharing_link,
-            file.account.email if file.account else None
-        ])
+        for file in files:
+            writer.writerow([
+                file.m_path,
+                file.m_folder_name,
+                format_bytes(file.m_folder_size),
+                file.m_sharing_link,
+                file.account.email if file.account else None
+            ])
     
     # Return file to be downloaded
     output.seek(0)

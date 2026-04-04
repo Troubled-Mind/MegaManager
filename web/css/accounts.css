@@ -64,3 +64,12 @@ ul.dropdown-menu-dark .dropdown-item:hover {
 .btn-pwreveal {
   padding: 0.1em;
 }
+
+.masked-password {
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.masked-password:hover {
+  opacity: 0.7;
+}

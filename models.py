@@ -15,6 +15,7 @@ class MegaAccount(Base):
     total_quota = Column(String, nullable=True)
     storage_quota_updated = Column(DateTime, nullable=True)
     last_login = Column(DateTime, nullable=True)
+    status = Column(String, default="Active")  # e.g. "Active", "Pending Verification"
 
     files = relationship("File", back_populates="account")
 
@@ -40,6 +41,8 @@ class File(Base):
     # Upload info
     upload_progress = Column(Integer, default=0)  
     upload_status = Column(String, nullable=True)  
+    upload_speed = Column(String, nullable=True)
+    upload_eta = Column(String, nullable=True)
 
     # Relationships
     account = relationship("MegaAccount", back_populates="files")

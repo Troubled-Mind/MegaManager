@@ -15,14 +15,25 @@ BYTE_MULTIPLIERS = {
 
 def size_to_bytes(size_str):
     """Convert a human-readable size string (e.g. 6.34 TB) to bytes."""
+    if not size_str or size_str.strip() in ["0", "None", ""]:
+        return 0
+        
     size_str = size_str.strip()
-    number, unit = re.match(r"([0-9.]+)\s*([KMGT]?B)", size_str).groups()
+    match = re.match(r"([0-9.]+)\s*([KMGT]?B)", size_str)
+    if not match:
+        # If it's just a number, assume bytes
+        try:
+            return int(float(size_str))
+        except:
+            return 0
+
+    number, unit = match.groups()
     number = float(number)
     unit = unit.upper()
 
     if unit in BYTE_MULTIPLIERS:
         return int(number * BYTE_MULTIPLIERS[unit])
-    raise ValueError(f"Unknown size unit: {unit}")
+    return 0
 
 def strftime_to_regex(fmt):
     """Convert a strftime-style format string into a regex pattern."""
@@ -57,16 +68,16 @@ def extract_root_dated_folders(paths):
     regex_patterns = []
     if full_fmt:
         regex_patterns.append(strftime_to_regex(full_fmt))
-        print(f"📅 Using full date format: {full_fmt}")
+        print(f"INFO Using full date format: {full_fmt}")
     if month_fmt:
         regex_patterns.append(strftime_to_regex(month_fmt))
-        print(f"🗓️ Using month format: {month_fmt}")
+        print(f"INFO Using month format: {month_fmt}")
     if year_fmt:
         regex_patterns.append(strftime_to_regex(year_fmt))
-        print(f"📆 Using year format: {year_fmt}")
+        print(f"INFO Using year format: {year_fmt}")
 
     if not regex_patterns:
-        print("⚠️ No date formats configured in settings.")
+        print("WARNING No date formats configured in settings.")
         return []
 
     combined_pattern = re.compile(r"|".join(regex_patterns))
@@ -81,12 +92,12 @@ def extract_root_dated_folders(paths):
                 break
 
     result = sorted(root_folders)
-    print(f"📦 Extracted {len(result)} root folders.")
+    print(f"INFO Extracted {len(result)} root folders.")
     return result
 
 def get_account_files(account_id):
     """Call mega-find to get all paths, extract root dated folders and add to the files table."""
-    print(f"🔍 Scanning MEGA account ID {account_id}...")
+    print(f"INFO Scanning MEGA account ID {account_id}...")
     result = subprocess.run(
         [cmd("mega-find"), "/"],
         stdout=subprocess.PIPE,
@@ -99,47 +110,47 @@ def get_account_files(account_id):
     raw_paths = result.stdout.strip().splitlines()
     root_dated_folders = extract_root_dated_folders(raw_paths)
 
-    session = next(get_db())
-    added = 0
-    updated = 0
+    with get_db() as session:
+        added = 0
+        updated = 0
 
-    for folder in root_dated_folders:
-        path, folder_name = os.path.split(folder.rstrip("/"))
-        normalized_folder_name = folder_name.strip()
+        for folder in root_dated_folders:
+            path, folder_name = os.path.split(folder.rstrip("/"))
+            normalized_folder_name = folder_name.strip()
 
-        # Check if MEGA record already exists
-        existing = session.query(File).filter_by(m_path=path, m_folder_name=folder_name).first()
-        if existing:
-            print(f"🔁 Already exists: {folder}")
-            continue
+            # Check if MEGA record already exists
+            existing = session.query(File).filter_by(m_path=path, m_folder_name=folder_name).first()
+            if existing:
+                print(f"INFO Already exists: {folder}")
+                continue
 
-        # Try to match local-only file by folder name
-        fallback = session.query(File).filter(
-            File.m_path == None,
-            File.l_folder_name == normalized_folder_name
-        ).first()
+            # Try to match local-only file by folder name
+            fallback = session.query(File).filter(
+                File.m_path == None,
+                File.l_folder_name == normalized_folder_name
+            ).first()
 
-        if fallback:
-            print(f"🔁 Updating local-only entry to MEGA: {folder}")
-            fallback.m_path = path
-            fallback.m_folder_name = folder_name
-            fallback.m_account_id = account_id
-            updated += 1
-            continue
+            if fallback:
+                print(f"INFO Updating local-only entry to MEGA: {folder}")
+                fallback.m_path = path
+                fallback.m_folder_name = folder_name
+                fallback.m_account_id = account_id
+                updated += 1
+                continue
 
-        print(f"➕ Adding: {folder}")
-        session.add(File(
-            m_path=path,
-            m_folder_name=folder_name,
-            m_account_id=account_id
-        ))
-        added += 1
+            print(f"INFO Adding: {folder}")
+            session.add(File(
+                m_path=path,
+                m_folder_name=folder_name,
+                m_account_id=account_id
+            ))
+            added += 1
 
-    try:
-        session.commit()
-        print(f"✅ {added} added, {updated} updated MEGA folders saved to database")
-        return {"status": 200, "message": f"{added} added, {updated} updated"}
-    except Exception as e:
-        session.rollback()
-        print(f"❌ Failed to save: {e}")
-        return {"status": 500, "message": "Failed to save MEGA folders"}
+        try:
+            session.commit()
+            print(f"DONE {added} added, {updated} updated MEGA folders saved to database")
+            return {"status": 200, "message": f"{added} added, {updated} updated"}
+        except Exception as e:
+            session.rollback()
+            print(f"ERROR Failed to save: {e}")
+            return {"status": 500, "message": "Failed to save MEGA folders"}

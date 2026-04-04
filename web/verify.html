@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en" data-mdb-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="resources/img/logo.png" />
+    <title>Mega Manager - Account Verification</title>
+
+    <!-- Font Awesome -->
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <!-- Google Fonts -->
+    <link
+      href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
+      rel="stylesheet"
+    />
+    <!-- MDB stylesheets -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/mdb-ui-kit@9.0.0/css/mdb.min.css"
+    />
+    <!-- Custom CSS styling -->
+    <link rel="stylesheet" href="css/custom.css?v=0.0.1" />
+  </head>
+
+  <body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand bg-body-tertiary">
+      <div class="container-fluid">
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <a class="navbar-brand mt-2 mt-lg-0" href="/">
+            <img
+              src="resources/img/logo.png"
+              height="60"
+              alt="Mega Manager Logo"
+              loading="lazy"
+            />
+          </a>
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0" id="navbarLinks">
+            <!-- Navbar links injected here -->
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Content Section -->
+    <header class="hero-gradient text-white py-4 mb-5 border-bottom border-white border-opacity-10">
+      <div class="container">
+        <h2 class="fw-bold mb-0"><i class="fas fa-shield-alt text-warning me-2"></i> Account Activation</h2>
+        <p class="text-muted mb-0 small">Finalize your new MEGA registrations by providing verification links from your inbox.</p>
+      </div>
+    </header>
+
+    <div class="container mb-5">
+      <div class="card shadow-lg bg-dark bg-opacity-50 border border-white border-opacity-10 mb-4">
+        <div class="card-body p-4">
+          <h5 class="fw-bold mb-4 text-info">
+             <i class="fas fa-list-ul me-2"></i> Pending Accounts
+          </h5>
+          <div id="pendingContainer" class="row g-4">
+               <!-- Pending account cards injected here -->
+          </div>
+          
+          <div id="emptyState" class="text-center py-5 d-none">
+               <i class="fas fa-check-circle fa-4x text-success opacity-25 mb-4"></i>
+               <h4 class="fw-bold text-white">All Accounts Verified!</h4>
+               <p class="text-muted">There are no accounts currently awaiting activation.</p>
+               <a href="accounts.html" class="btn btn-outline-info">Return to Accounts</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Universal Toast -->
+    <div id="universalToast" class="toast fade position-fixed bottom-0 end-0 m-4" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="toast-header border-0 text-white">
+        <strong id="universalToastTitle" class="me-auto">Notification</strong>
+        <button type="button" class="btn-close btn-close-white" data-mdb-dismiss="toast" aria-label="Close"></button>
+      </div>
+      <div class="toast-body text-white" id="universalToastBody">
+      </div>
+    </div>
+
+    <!-- MDB JS -->
+    <script src="https://cdn.jsdelivr.net/npm/mdb-ui-kit@9.0.0/js/mdb.umd.min.js"></script>
+    <script src="scripts/include.js"></script>
+    <script src="scripts/verify.js"></script>
+  </body>
+</html>

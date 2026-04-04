@@ -1,35 +1,264 @@
-/* Custom CSS for MDBootstrap */
-/* This file is used to override the default MDBootstrap styles */
-/* You can add your custom styles here */
-
-/* Example: Change the primary color */
-/* You can also use CSS variables to customize the theme */
 :root {
-  --mdb-primary: #dd1405;
-  --mdb-secondary: #6c757d;
-  --mdb-success: #198754;
-  --mdb-danger: #dc3545;
-  --mdb-warning: #ffc107;
-  --mdb-info: #0dcaf0;
-  --mdb-light: #f8f9fa;
-  --mdb-dark: #212529;
+  --mega-red: #e11d48;
+  --mega-red-hover: #be123c;
+  --mdb-primary: var(--mega-red);
+  --glass-glow: 0 0 15px rgba(225, 29, 72, 0.1);
+  --transition-speed: 0.3s;
 }
 
-/* Custom header/footer styles */
-html,
-body {
-  height: 100%;
-  margin: 0;
+/* Base variables (Dark mode by default, or if set) */
+html[data-mdb-theme="dark"], html[data-bs-theme="dark"], :root:not([data-mdb-theme="light"]) {
+  --bg-color: #000000;
+  --card-bg: rgba(17, 17, 17, 0.8);
+  --card-border: rgba(255, 255, 255, 0.08);
+  --text-main: #ffffff;
+  --text-muted: #a1a1aa;
+  --nav-bg: rgba(0, 0, 0, 0.7);
+  --table-row-bg: #000000;
+  --table-row-alt-bg: #0a0a0a;
+  --table-row-hover: #161616;
+}
+
+/* Light Mode Overrides */
+html[data-mdb-theme="light"], html[data-bs-theme="light"] {
+  --bg-color: #f8fafc;
+  --card-bg: #ffffff;
+  --card-border: rgba(0, 0, 0, 0.08);
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --nav-bg: rgba(255, 255, 255, 0.9);
+  --table-row-bg: #ffffff;
+  --table-row-alt-bg: #f9fafb;
+  --table-row-hover: #f1f5f9;
 }
 
 body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-color) !important;
+  color: var(--text-main) !important;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
+  transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
+  overflow-x: hidden;
 }
 
-main {
-  flex: 1;
+/* Glassmorphism & Cards */
+.card {
+  background: var(--card-bg) !important;
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid var(--card-border) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
 }
-.container {
-  max-width: 95% !important;
+
+.card-title, .fw-bold, h1, h2, h3, h4, h5, h6 {
+  color: var(--text-main);
+}
+
+/* Navbar Enhancements */
+.navbar {
+  background: var(--nav-bg) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--card-border);
+  padding: 0.8rem 2rem;
+  transition: all var(--transition-speed) ease;
+}
+
+.nav-link {
+  font-weight: 500;
+  color: var(--text-muted) !important;
+  transition: opacity 0.2s ease;
+  padding: 0.5rem 1rem !important;
+  border-radius: 6px;
+  margin: 0 4px;
+}
+
+.nav-link:hover, .nav-link.active {
+  color: var(--text-main) !important;
+  background: rgba(var(--text-main), 0.05);
+}
+
+/* Table Styling */
+.table {
+  border-collapse: collapse !important;
+  border-spacing: 0 !important;
+  color: var(--text-main) !important;
+}
+
+.table thead th {
+  border-bottom: 2px solid var(--card-border) !important;
+  color: var(--text-muted);
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.65rem;
+  letter-spacing: 0.05em;
+  padding: 1rem 1.5rem !important;
+}
+
+.table tbody tr {
+  background: var(--table-row-bg) !important;
+  border-bottom: 1px solid var(--card-border) !important;
+  color: var(--text-main) !important;
+}
+
+.table tbody tr:nth-child(even) {
+  background: var(--table-row-alt-bg) !important;
+}
+
+.table tbody tr:hover {
+  background: var(--table-row-hover) !important;
+}
+
+.table td {
+  padding: 0.75rem 1.5rem !important;
+  vertical-align: middle !important;
+}
+
+/* Cleaner Row Buttons */
+.table .btn-sm {
+  border-radius: 10px !important;
+  padding: 0.5rem 0.75rem !important;
+  font-size: 0.8rem !important;
+  color: var(--text-muted) !important;
+}
+
+/* Progress Bars */
+.progress {
+  height: 8px !important;
+  background-color: var(--card-border) !important;
+  border-radius: 10px !important;
+}
+
+/* Hero Section */
+.hero-gradient {
+  background: linear-gradient(135deg, #111 0%, #000 100%);
+  color: #fff !important;
+  padding: 4rem 0;
+}
+
+html[data-mdb-theme="light"] .hero-gradient, html[data-bs-theme="light"] .hero-gradient {
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  color: var(--text-main) !important;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-color); }
+::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* Buttons */
+.btn {
+  text-transform: none !important;
+  font-weight: 600 !important;
+  border-radius: 10px !important;
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #e11d48 0%, #be123c 100%) !important;
+  border: none !important;
+}
+
+/* THEME OVERRIDES - Killing the brown #332d2d */
+html[data-mdb-theme="dark"], html[data-bs-theme="dark"] {
+  --mdb-body-bg: #000000;
+  --mdb-body-color: #ffffff;
+  --mdb-card-bg: #111111;
+  --mdb-modal-content-bg: #111111;
+  --mdb-dropdown-bg: #111111;
+}
+
+/* MDB Modals & Shell overrides */
+.modal-content {
+  background-color: var(--card-bg) !important;
+  color: var(--text-main) !important;
+  border: 1px solid var(--card-border) !important;
+}
+
+.toast {
+  background: var(--card-bg) !important;
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--card-border) !important;
+  color: var(--text-main) !important;
+}
+
+/* DataTables Styling */
+.dataTables_wrapper .row:first-child,
+.dataTables_wrapper .row:last-child {
+  padding: 1rem 1.5rem !important;
+  margin: 0 !important;
+  align-items: center;
+  width: 100%;
+}
+
+.dataTables_wrapper .row:first-child {
+  border-bottom: 1px solid var(--card-border);
+  background: rgba(var(--text-main), 0.02);
+}
+
+.dataTables_wrapper .row:last-child {
+  border-top: 1px solid var(--card-border);
+  background: rgba(var(--text-main), 0.02);
+  padding-top: 1.25rem !important;
+  padding-bottom: 1.25rem !important;
+}
+
+.dataTables_filter input, 
+.dataTables_length select {
+  background-color: rgba(var(--text-main), 0.05) !important;
+  border: 1px solid var(--card-border) !important;
+  color: var(--text-main) !important;
+  border-radius: 8px !important;
+  padding: 0.35rem 0.75rem !important;
+  transition: all 0.2s ease;
+}
+
+.dataTables_filter input:focus, 
+.dataTables_length select:focus {
+  border-color: var(--mega-red) !important;
+  box-shadow: 0 0 0 0.25rem rgba(225, 29, 72, 0.15);
+  outline: none;
+}
+
+.dataTables_wrapper .pagination {
+  margin-bottom: 0 !important;
+  justify-content: flex-end !important;
+}
+
+.page-link {
+  background-color: rgba(var(--text-main), 0.03) !important;
+  border: 1px solid var(--card-border) !important;
+  color: var(--text-muted) !important;
+  border-radius: 8px !important;
+  margin: 0 3px;
+  padding: 0.4rem 0.85rem !important;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+}
+
+.page-link:hover {
+  background-color: rgba(var(--text-main), 0.1) !important;
+  color: var(--text-main) !important;
+  border-color: var(--text-muted) !important;
+}
+
+.page-item.active .page-link {
+  background: var(--mega-red) !important;
+  border-color: var(--mega-red) !important;
+  color: #fff !important;
+  box-shadow: 0 4px 10px rgba(225, 29, 72, 0.3);
+}
+
+.page-item.disabled .page-link {
+  opacity: 0.4;
+  background-color: transparent !important;
+}
+
+.dataTables_info {
+  color: var(--text-muted) !important;
+  font-size: 0.85rem;
+  font-weight: 500;
 }

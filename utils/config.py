@@ -11,7 +11,9 @@ from models import Setting
 USE_KAREN_LOGO = random.randint(1, 20) == 1
 
 state = {
-    "authenticated": False
+    "authenticated": False,
+    "booting": True,
+    "uploads_active": False
 }
 
 class Settings:
@@ -19,13 +21,10 @@ class Settings:
         self._values = {}
 
     def load(self):
-        session = next(get_db())
-        try:
+        with get_db() as session:
             self._values = {
                 setting.key: setting.value for setting in session.query(Setting).all()
             }
-        finally:
-            session.close()
 
     def get(self, key, default=None):
         return self._values.get(key, default)
@@ -59,8 +58,8 @@ def check_for_update():
             remote_version = response.read().decode("utf-8").strip()
 
         if remote_version > local_version:
-            print(f"\n🚨 A new version is available: {remote_version} (current: {local_version})")
-            print("👉 Updating from GitHub...")
+            print(f"\nUPDATE A new version is available: {remote_version} (current: {local_version})")
+            print("INFO Updating from GitHub...")
             
             repo_url = "https://github.com/Troubled-Mind/MegaManager"
             zip_url = f"{repo_url}/archive/refs/heads/main.zip"
@@ -89,9 +88,9 @@ def check_for_update():
                             shutil.copy2(s, d)
 
                 os.remove(zip_path)
-                print("✅ Update complete! Please restart the application.\n")
+                print("DONE Update complete! Please restart the application.\n")
             except Exception as e:
-                print(f"❌ Update failed: {e}")
+                 print(f"ERROR Update failed: {e}")
 
     except Exception as e:
         print(e)
@@ -99,6 +98,6 @@ def check_for_update():
         if os.path.exists(local_version_path):
             with open(local_version_path, "r") as f:
                 local_version = f.read().strip()
-        print(f"\n⚠️   Unable to check for updates. Please check your internet connection or try again later.")
-        print(f"🔎  Local version: {local_version}\n")
+        print(f"\nWARNING Unable to check for updates. Please check your internet connection or try again later.")
+        print(f"INFO Local version: {local_version}\n")
         pass  

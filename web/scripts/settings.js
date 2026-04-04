@@ -20,7 +20,7 @@ function exportData(exportType, filename) {
   fetch("/run-command", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: `command=csv-export-data:${exportType}`,
+    body: `command=io_csv_export:${exportType}`,
   }).then(res => res.json()).then(data => {
     if (data.status === 200) {
       const blob = new Blob([data.body], { type: "text/csv;charset=utf-8;" });
@@ -123,7 +123,7 @@ document
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        command: "settings-update",
+        command: "system_settings",
         args: data,
       }),
     });

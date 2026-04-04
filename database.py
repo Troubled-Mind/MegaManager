@@ -23,6 +23,9 @@ def create_database():
     if not os.path.exists(DB_FILE):
         Base.metadata.create_all(engine)
 
+import contextlib
+
+@contextlib.contextmanager
 def get_db():
     # Get a new database session
     db = LocalSession()

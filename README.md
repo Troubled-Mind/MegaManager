@@ -59,6 +59,44 @@ Why :6342? It's `MEGA` on a T9 Keyboard :)
     account+4@gmail.com,p455w0rd1!
     ```
     - Click `Refresh all`, it should populate with your accounts, their available quotas and more.
+    
 - Go to /files.html
     - `Update all details` should fetch your local files as well as storage usage on cloud, if the _exact_ folder name is matched on both local & cloud.
-    
+
+
+# Core Features
+
+### 1. Multi-Account Administration
+* Centralised dashboard for tracking storage quotas across an unlimited pool of accounts.
+* Real-time monitoring of used, total, and remaining storage capacity.
+* Automatic detection of Pro vs. Free account status and account-specific capabilities.
+* Secure password management with UI-based masking and reveal functionality.
+* One-click manual synchronisation to refresh account metadata.
+
+### 2. Bulk Registration and Activation
+* Range-based account generator for creating large pools of MEGA accounts.
+* Support for email sub-addressing (plus-addressing) to handle bulk signups through a single inbox.
+* Integrated Verification System: A dedicated activation page for finalising new registrations.
+* Verification Link Processor: Interface for pasting registration links directly from emails to trigger background confirmation.
+* Notification System: Dynamic navbar badges that alert the user to accounts requiring manual activation.
+
+### 3. Intelligent Batch Upload Engine
+* Four-Phase Distribution Pipeline:
+    1. Pre-check: Automatic quota refresh across all accounts to ensure data accuracy.
+    2. Prioritized Scan: Local file discovery with Largest-to-Smallest sorting to maximize bin-packing efficiency.
+    3. Distribution Planning: In-memory mapping of files to accounts with active space subtraction to prevent over-allocation.
+    4. Sequential Execution: Controlled upload queue with cooling periods for API stability.
+* Relative Path Mapping: Configurable base path stripping to ensure cloud folder structures are relative to your local directory rather than absolute root paths.
+* Automatic account switching handles global session transitions during multi-account batch sequences.
+
+### 4. Transfer Telemetry and Management
+* Live monitoring of active, pending, and failed transfers.
+* Real-time metrics including transfer speed and estimated time of completion (ETA).
+* Failure Recovery: Direct Retry and Clear actions for handling interrupted or rejected uploads.
+* Background persistence ensures tasks continue even if the browser session is closed.
+
+### 5. Modern User Interface
+* Responsive Bootstrap-based dashboard with Material Design components.
+* Dark mode optimized for long-term usage.
+* Advanced data tables with global search, filtering, and multi-page navigation.
+* System-wide toast notifications for real-time operation status.
