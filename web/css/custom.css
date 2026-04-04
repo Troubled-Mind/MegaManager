@@ -184,3 +184,81 @@ html[data-mdb-theme="dark"], html[data-bs-theme="dark"] {
   border: 1px solid var(--card-border) !important;
   color: var(--text-main) !important;
 }
+
+/* DataTables Styling */
+.dataTables_wrapper .row:first-child,
+.dataTables_wrapper .row:last-child {
+  padding: 1rem 1.5rem !important;
+  margin: 0 !important;
+  align-items: center;
+  width: 100%;
+}
+
+.dataTables_wrapper .row:first-child {
+  border-bottom: 1px solid var(--card-border);
+  background: rgba(var(--text-main), 0.02);
+}
+
+.dataTables_wrapper .row:last-child {
+  border-top: 1px solid var(--card-border);
+  background: rgba(var(--text-main), 0.02);
+  padding-top: 1.25rem !important;
+  padding-bottom: 1.25rem !important;
+}
+
+.dataTables_filter input, 
+.dataTables_length select {
+  background-color: rgba(var(--text-main), 0.05) !important;
+  border: 1px solid var(--card-border) !important;
+  color: var(--text-main) !important;
+  border-radius: 8px !important;
+  padding: 0.35rem 0.75rem !important;
+  transition: all 0.2s ease;
+}
+
+.dataTables_filter input:focus, 
+.dataTables_length select:focus {
+  border-color: var(--mega-red) !important;
+  box-shadow: 0 0 0 0.25rem rgba(225, 29, 72, 0.15);
+  outline: none;
+}
+
+.dataTables_wrapper .pagination {
+  margin-bottom: 0 !important;
+  justify-content: flex-end !important;
+}
+
+.page-link {
+  background-color: rgba(var(--text-main), 0.03) !important;
+  border: 1px solid var(--card-border) !important;
+  color: var(--text-muted) !important;
+  border-radius: 8px !important;
+  margin: 0 3px;
+  padding: 0.4rem 0.85rem !important;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+}
+
+.page-link:hover {
+  background-color: rgba(var(--text-main), 0.1) !important;
+  color: var(--text-main) !important;
+  border-color: var(--text-muted) !important;
+}
+
+.page-item.active .page-link {
+  background: var(--mega-red) !important;
+  border-color: var(--mega-red) !important;
+  color: #fff !important;
+  box-shadow: 0 4px 10px rgba(225, 29, 72, 0.3);
+}
+
+.page-item.disabled .page-link {
+  opacity: 0.4;
+  background-color: transparent !important;
+}
+
+.dataTables_info {
+  color: var(--text-muted) !important;
+  font-size: 0.85rem;
+  font-weight: 500;
+}

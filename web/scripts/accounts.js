@@ -234,10 +234,12 @@ function createAccountRowHTML(acc, isStale = false) {
     </td>
     <td>
       <div class="d-flex align-items-center">
-        <span id="password-${acc.id}" class="masked-password text-muted" data-password="${acc.password}" style="letter-spacing: 0.1em; font-family: monospace;">
+        <span id="password-${acc.id}" class="masked-password text-muted" data-password="${acc.password}" 
+          onclick="copyToClipboard('${acc.password}', 'Password copied to clipboard!')"
+          style="letter-spacing: 0.1em; font-family: monospace;" title="Click to copy password">
           ${"•".repeat(Math.min(acc.password.length, 12))}
         </span>
-        <button id="toggle-password-${acc.id}" class="btn btn-sm btn-pwreveal shadow-0" onclick="togglePasswordVisibility(${acc.id})" title="Toggle Password">
+        <button id="toggle-password-${acc.id}" class="btn btn-sm btn-pwreveal shadow-0" onclick="togglePasswordVisibility(${acc.id}); event.stopPropagation();" title="Toggle Password">
           <i class="fas fa-eye"></i>
         </button>
       </div>
@@ -577,6 +579,16 @@ function togglePasswordVisibility(accountId) {
 
     // Clear the revealed password tracking
     currentRevealedPasswordId = null;
+  }
+}
+
+async function copyToClipboard(text, message = "Copied to clipboard!") {
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast(`📋 ${message}`, "bg-info");
+  } catch (err) {
+    console.error("Failed to copy text:", err);
+    showToast("❌ Failed to copy to clipboard", "bg-danger");
   }
 }
 
