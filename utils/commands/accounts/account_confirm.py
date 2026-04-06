@@ -9,16 +9,18 @@ def run(command_args=None):
     Finalizes MEGA account registration using a verification link.
     Usage: "account_id|verification_link"
     """
-    if not command_args:
-        return {"status": 400, "message": "Missing arguments"}
-
-    raw_args = command_args[0] if isinstance(command_args, list) else command_args
-    if "|" not in raw_args:
-        return {"status": 400, "message": "Usage: account_id|verification_link"}
-
     try:
-        acc_id_str, link = raw_args.split("|")
+        # Expected format: "account_id|link"
+        if isinstance(command_args, list):
+            command_args = command_args[0]
+            
+        if "|" not in command_args:
+             return {"status": 400, "message": "Usage: account_id|verification_link"}
+
+        acc_id_str, link = command_args.split("|", 1)
         acc_id = int(acc_id_str)
+        # Note: link might be double-encoded depending on how it's sent, 
+        # but parse_qs usually handles it once. 
         link = urllib.parse.unquote(link).strip()
     except Exception as e:
         return {"status": 400, "message": f"Error parsing arguments: {str(e)}"}
@@ -32,14 +34,17 @@ def run(command_args=None):
         password = account.password
 
         print(f"INFO Executing mega-confirm for {email}...")
-        # MEGA-CMD confirm usage: mega-confirm <link> <email> <password>
+        
         try:
-            # We use subprocess.run with a timeout because mega-confirm can occasionally hang if the link is invalid
+            # Ensure no other session is active to prevent 'Access denied' during confirmation
+            subprocess.run([cmd("mega-logout")], capture_output=True, text=True, timeout=10)
+            
+            # MEGA-CMD confirm usage: mega-confirm <link> <email> <password>
             process = subprocess.run(
                 [cmd("mega-confirm"), link, email, password],
                 capture_output=True,
                 text=True,
-                timeout=30
+                timeout=60 # Increased timeout for slow connections
             )
 
             if process.returncode == 0:
@@ -49,6 +54,10 @@ def run(command_args=None):
                 return {"status": 200, "message": f"Account {email} successfully verified!"}
             else:
                 error_msg = process.stderr.strip() or process.stdout.strip()
+                # Clean up known mega-confirm errors for better UI reporting
+                if "Access denied" in error_msg:
+                    error_msg = "Access denied. Ensure the link matches the account and you aren't logged in elsewhere."
+                
                 print(f"ERROR Verification failed for {email}: {error_msg}")
                 return {"status": 500, "message": f"MEGA-CMD error: {error_msg}"}
 
