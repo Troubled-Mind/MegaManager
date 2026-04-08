@@ -19,7 +19,8 @@ class CustomHandler(SimpleHTTPRequestHandler):
             "/accounts.html",
             "/settings.html",
             "/testing.html",
-            '/uploads.html'
+            "/uploads.html",
+            "/import.html"
         ]
 
         public_paths = ["/login.html"]
