@@ -69,12 +69,13 @@ async function loadSettings(repeater) {
   arr = Array.from({ length: localPaths.length }, (_, i) => ({
     local_paths: localPaths[i],
   }));
-  repeater.setList(arr);
+  console.log("INFO Loading folder paths into repeater:", arr);
+  repeater.repeater("setList", arr);
 }
 
 $(document).ready(function () {
-  let repeater = $(".repeater").eq(0).repeater({
-    initEmpty: true,
+  let repeater = $("#folder-repeater").repeater({
+    initEmpty: false,
     defaultValues: {},
     show: function () {
       $(this).slideDown();
