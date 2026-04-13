@@ -55,7 +55,7 @@ async function loadSettings(repeater) {
 
   document.activeElement.blur();
 
-  // Handle local_paths
+  // Handle local_paths — manually add one row per path
   let localPaths = data.local_paths;
   if (typeof localPaths === "string") {
     try {
@@ -66,10 +66,33 @@ async function loadSettings(repeater) {
     }
   }
 
-  arr = Array.from({ length: localPaths.length }, (_, i) => ({
-    local_paths: localPaths[i],
-  }));
-  repeater.repeater("setList", arr);
+  if (Array.isArray(localPaths) && localPaths.length > 0) {
+    const listContainer = repeater.find("[data-repeater-list]");
+
+    localPaths.forEach((path, i) => {
+      const row = $(`
+        <div data-repeater-item class="mb-2">
+          <div class="input-group">
+            <span class="input-group-text border-0 bg-transparent opacity-50">
+              <i class="fas fa-folder"></i>
+            </span>
+            <input type="text"
+              name="folder_paths[${i}][local_paths]"
+              class="form-control bg-transparent"
+              placeholder="/absolute/path/to/files"
+              value="${path.replace(/"/g, '&quot;')}" />
+            <button data-repeater-delete type="button" class="btn btn-link text-danger">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+      `);
+      row.find("[data-repeater-delete]").on("click", function () {
+        $(this).closest("[data-repeater-item]").slideUp(function () { $(this).remove(); });
+      });
+      listContainer.append(row);
+    });
+  }
 }
 
 $(document).ready(function () {
@@ -77,7 +100,7 @@ $(document).ready(function () {
     initEmpty: true,
     defaultValues: {},
     show: function () {
-      $(this).slideDown();
+      $(this).show();
       initMDBInputs();
     },
     hide: function (deleteElement) {
