@@ -37,6 +37,7 @@ def ensure_logged_in(email, password):
                 return True
         
         print(f"ERROR Login failed for {email}: {login_res.stderr.strip() or login_res.stdout.strip()}")
+        subprocess.run([cmd("mega-logout")], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         return False
         
     except Exception as e:
