@@ -1,10 +1,8 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // Initialise theme
   const savedTheme = localStorage.getItem('mm-theme') || 'dark';
   document.documentElement.setAttribute('data-mdb-theme', savedTheme);
   document.documentElement.setAttribute('data-bs-theme', savedTheme);
 
-  // Inject Global UI Elements (Spinner/Lock Overlay)
   const uiOverlay = document.createElement("div");
   uiOverlay.id = "globalSystemOverlay";
   uiOverlay.innerHTML = `
@@ -13,16 +11,18 @@ document.addEventListener("DOMContentLoaded", () => {
       <h4 class="fw-bold text-white mb-1">MegaManager Is Initialising</h4>
       <p class="text-info small opacity-75">Syncing accounts and verifying cloud sessions...</p>
     </div>
-    <div id="uploadLockScreen" style="display:none; position: fixed; bottom: 20px; left: 20px; z-index: 9998; max-width: 300px;">
-      <div class="alert alert-warning shadow-lg border-0 d-flex align-items-center gap-3 py-2 px-3 animate__animated animate__fadeInUp">
-        <div class="spinner-grow spinner-grow-sm text-warning" role="status"></div>
-        <div class="small fw-bold">Account tasks locked while uploads are active.</div>
-      </div>
+    <div id="updateBanner" style="display:none; position: fixed; top: 0; left: 0; width: 100%; z-index: 9998; background: #38bdf8; color: #05202b; padding: 10px 16px; text-align: center; font-weight: 600;">
+      <span id="updateBannerText"></span>
+      <button id="updateBannerDismiss" style="margin-left: 12px; border: none; background: transparent; color: #05202b; font-weight: 700; cursor: pointer;">&times;</button>
     </div>
   `;
   document.body.appendChild(uiOverlay);
 
-  // Start Status Polling
+  document.getElementById("updateBannerDismiss").addEventListener("click", () => {
+    document.getElementById("updateBanner").style.display = "none";
+    sessionStorage.setItem("mm-update-dismissed", "1");
+  });
+
   pollSystemStatus();
   setInterval(pollSystemStatus, 3000);
 
@@ -38,7 +38,6 @@ document.addEventListener("DOMContentLoaded", () => {
           if (link.dataset.page === currentPage) link.classList.add("active");
         });
 
-        // Check for pending accounts
         checkPendingAccounts();
         setInterval(checkPendingAccounts, 15000);
       });
@@ -49,31 +48,28 @@ window.pollSystemStatus = function () {
   fetch("/api/status")
     .then(res => res.json())
     .then(state => {
-      // 1. Boot Spinner Logic
       const bootSpinner = document.getElementById("bootSpinner");
       if (bootSpinner) {
         bootSpinner.style.display = state.booting ? "flex" : "none";
       }
 
-      // 2. Upload Lock Logic
-      const lockUi = document.getElementById("uploadLockScreen");
-      if (lockUi) {
-        lockUi.style.display = state.uploads_active ? "block" : "none";
+      const uploadBadge = document.getElementById("globalUploadBadge");
+      const totalTransfers = (state.active_count || 0) + (state.queued_count || 0);
+      if (uploadBadge) {
+        if (totalTransfers > 0) {
+          uploadBadge.textContent = totalTransfers;
+          uploadBadge.style.display = "inline-block";
+        } else {
+          uploadBadge.style.display = "none";
+        }
       }
 
-      // 3. Disable restricted buttons (Verify, Register, Delete Account)
-      const restrictedButtons = document.querySelectorAll('button[onclick*="Verify"], a[href*="verify"], button[onclick*="Register"], button[onclick*="DeleteAccount"]');
-      restrictedButtons.forEach(btn => {
-        if (state.uploads_active) {
-          btn.classList.add("disabled");
-          btn.setAttribute("disabled", "true");
-          btn.title = "Locked: Ongoing transfers detected.";
-        } else if (!state.booting) {
-          btn.classList.remove("disabled");
-          btn.removeAttribute("disabled");
-          // Keep original title if it exists, or clear it
-        }
-      });
+      const updateBanner = document.getElementById("updateBanner");
+      if (updateBanner && state.update_applied && sessionStorage.getItem("mm-update-dismissed") !== "1") {
+        document.getElementById("updateBannerText").textContent =
+          `Updated to v${state.update_version} - restart the server to apply it.`;
+        updateBanner.style.display = "block";
+      }
     })
     .catch(err => console.error("Status polling failed:", err));
 }
@@ -108,6 +104,38 @@ window.toggleTheme = function () {
   document.documentElement.setAttribute('data-mdb-theme', next);
   document.documentElement.setAttribute('data-bs-theme', next); // Support newer Bootstrap versions
   localStorage.setItem('mm-theme', next);
+};
+
+window.initFilterPanel = function (toggleId, panelId, chevronId) {
+  const toggle = document.getElementById(toggleId);
+  const panel = document.getElementById(panelId);
+  const chevron = chevronId ? document.getElementById(chevronId) : null;
+  if (!toggle || !panel) return;
+
+  const setOpen = (open) => {
+    panel.classList.toggle("show", open);
+    toggle.setAttribute("aria-expanded", open ? "true" : "false");
+    if (chevron) chevron.classList.toggle("rotated", open);
+  };
+
+  toggle.addEventListener("click", () => setOpen(!panel.classList.contains("show")));
+  toggle.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      setOpen(!panel.classList.contains("show"));
+    }
+  });
+};
+
+window.updateFilterBadge = function (badgeId, count) {
+  const badge = document.getElementById(badgeId);
+  if (!badge) return;
+  if (count > 0) {
+    badge.textContent = count;
+    badge.classList.remove("d-none");
+  } else {
+    badge.classList.add("d-none");
+  }
 };
 
 window.showToast = function (message, color = "bg-success") {

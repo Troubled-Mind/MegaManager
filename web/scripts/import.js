@@ -1,8 +1,8 @@
 document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("importBtn").onclick = async () => {
-        showToast(`⚠️ Import starting...`, "bg-info");
+        showToast(`Import starting...`, "bg-info");
         await importLinks();
-        showToast(`✅ Import completed!`, "bg-success");
+        showToast(`Import completed!`, "bg-success");
     }
 });
 
@@ -20,7 +20,6 @@ async function importLinks() {
     document.getElementById('importedTableBody').innerHTML = '';
     document.getElementById('failedTableBody').innerHTML = '';
 
-    // Call backend API
     const res = await fetch('/run-command', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
@@ -33,7 +32,6 @@ async function importLinks() {
 
     console.log(data);
 
-    // Display imported links
     if (data.imported && data.imported.length) {
         let rows = "";
         data.imported.forEach((item, idx) => {
@@ -63,7 +61,6 @@ async function importLinks() {
         document.getElementById('importedTableBody').innerHTML = "";
     }
 
-    // Display failed links
     if (data.failed && data.failed.length) {
         let failedRows = "";
         data.failed.forEach((item, idx) => {
@@ -91,13 +88,13 @@ async function importLinks() {
 
 function copySharingLink(link, rowId) {
     if (!link || link.trim() === "") {
-        alert("⚠️ No sharing link available.");
+        alert("No sharing link available.");
         return;
     }
     navigator.clipboard
         .writeText(link)
         .catch((err) => {
-            console.error("❌ Clipboard copy failed:", err);
+            console.error("Clipboard copy failed:", err);
             alert("Failed to copy link");
         });
 }

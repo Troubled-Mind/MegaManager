@@ -28,6 +28,7 @@ class File(Base):
     l_path = Column(String, nullable=True)
     l_folder_name = Column(String, nullable=True)
     l_folder_size = Column(String, nullable=True)
+    l_largest_file_size = Column(String, nullable=True)
 
     # Cloud (MEGA) info
     m_path = Column(String, nullable=True)
@@ -39,8 +40,8 @@ class File(Base):
     m_sharing_link_expiry = Column(DateTime, nullable=True)
 
     # Upload info
-    upload_progress = Column(Integer, default=0)  
-    upload_status = Column(String, nullable=True)  
+    upload_progress = Column(Integer, default=0)
+    upload_status = Column(String, nullable=True)
     upload_speed = Column(String, nullable=True)
     upload_eta = Column(String, nullable=True)
 

@@ -14,7 +14,7 @@
   <!-- MDB stylesheets -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdb-ui-kit@9.0.0/css/mdb.min.css" />
   <!-- Custom CSS styling -->
-  <link rel="stylesheet" href="css/custom.css?v=0.0.1" />
+  <link rel="stylesheet" href="css/custom.css?v=0.0.3" />
 </head>
 
 <body>
@@ -39,22 +39,109 @@
   <!-- Navbar -->
 
   <!-- Content Section -->
-  <header class="hero-gradient text-white py-4 mb-5 border-bottom border-white border-opacity-10">
-    <div class="container py-4">
-      <h2 class="fw-bold mb-0">Ongoing Uploads</h2>
-      <p class="text-muted mb-0 small">Monitor real-time data transfers to MEGA.</p>
+  <header class="hero-gradient text-white py-2 mb-3 border-bottom border-white border-opacity-10">
+    <div class="container-fluid px-3 px-md-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <div>
+        <h3 class="fw-bold mb-0 fs-4"><i class="fas fa-arrow-up-from-bracket text-info me-2"></i> Ongoing Uploads</h3>
+        <p class="text-muted mb-0" style="font-size: 0.8rem;">Monitor real-time data transfers to MEGA.</p>
+      </div>
     </div>
   </header>
 
-  <section class="container mb-5">
-    <div id="uploads-list" class="row g-4"></div>
-
-    <div id="pending-section" class="mt-5 pt-5 border-top border-white border-opacity-10 d-none">
-      <div class="mb-4">
-        <h4 class="fw-bold mb-1"><i class="fas fa-list-ol text-warning me-2"></i> Pending Queue</h4>
-        <p class="text-muted small">Transfers waiting current upload to complete.</p>
+  <section class="container-fluid px-3 px-md-4 mb-5">
+    <!-- Calculating Banner -->
+    <div id="calculating-banner" class="mb-4 d-none">
+      <div class="card border-0 shadow-sm"
+        style="background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.25) !important; backdrop-filter: blur(12px); border-radius: 12px;">
+        <div class="card-body p-4 d-flex align-items-center justify-content-between">
+          <div class="d-flex align-items-center gap-3">
+            <div class="spinner-border text-info" role="status" style="width: 2rem; height: 2rem;"></div>
+            <div>
+              <h5 class="fw-bold mb-1 text-white"><i class="fas fa-calculator text-info me-2"></i> Calculating...</h5>
+              <p class="text-muted mb-0 small" id="calculating-message">Optimizing account capacity and bin-packing
+                local files...</p>
+            </div>
+          </div>
+          <span class="badge bg-info bg-opacity-25 text-info px-3 py-2 fs-6">
+            <i class="fas fa-sync fa-spin me-1"></i> Working out allocations
+          </span>
+        </div>
       </div>
-      <div id="pending-list" class="row g-4"></div>
+    </div>
+
+    <!-- Main Grid Layout: Active Transfers + Live Logs Stream -->
+    <div class="row g-4 mb-4">
+      <!-- Left: Ongoing Transfers -->
+      <div class="col-12 col-xl-7 col-xxl-8">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <h5 class="fw-bold mb-0 text-white"><i class="fas fa-bolt text-info me-2"></i> Active Transfers</h5>
+          <div class="d-flex align-items-center gap-2">
+            <span id="active-transfers-count"
+              class="badge bg-dark text-info border border-info border-opacity-25 px-2 py-1">0 active</span>
+            <button id="clearStoppedBtn" class="btn btn-sm btn-outline-warning py-1 px-2"
+              onclick="clearStoppedUploads()" title="Remove stopped or failed uploads from this view">
+              <i class="fas fa-eraser me-1"></i> Clear Stopped
+            </button>
+            <button id="stopAllUploadsBtn" class="btn btn-sm btn-outline-danger py-1 px-2" onclick="stopAllUploads()"
+              title="Kill all running mega-put processes and mark transfers as failed">
+              <i class="fas fa-stop-circle me-1"></i> Stop All
+            </button>
+          </div>
+        </div>
+
+        <div id="uploads-list" class="row g-3"></div>
+      </div>
+
+      <!-- Right: Live Uploads Log Stream -->
+      <div class="col-12 col-xl-5 col-xxl-4">
+        <div class="card border border-white border-opacity-10 shadow-sm"
+          style="background: rgba(18, 20, 29, 0.75); backdrop-filter: blur(16px); border-radius: 12px; position: sticky; top: 1rem;">
+          <div
+            class="card-header bg-transparent py-2 px-3 border-bottom border-white border-opacity-10 d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-2">
+              <span class="badge bg-success text-dark fw-bold d-flex align-items-center gap-1 py-1 px-2 font-monospace"
+                style="font-size: 0.72rem; letter-spacing: 0.05em;">
+                <span class="spinner-grow spinner-grow-sm text-dark" style="width: 0.45rem; height: 0.45rem;"
+                  role="status"></span>
+                <span>STREAM</span>
+              </span>
+              <span class="fw-bold text-white small"><i class="fas fa-terminal text-muted me-1"></i> Live Logs</span>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              <button class="btn btn-sm btn-outline-secondary py-1 px-2" title="Clear Log Console"
+                onclick="clearUploadLogs()" style="font-size: 0.75rem;">
+                <i class="fas fa-trash-alt me-1"></i> Clear
+              </button>
+            </div>
+          </div>
+          <div class="card-body p-2 d-flex flex-column">
+            <div id="transfer-logs-stream" class="p-2 font-monospace"
+              style="max-height: 260px; min-height: 180px; overflow-y: auto; font-size: 0.78rem; line-height: 1.45; scroll-behavior: smooth;">
+              <div class="text-muted text-center py-4 small opacity-50">
+                <i class="fas fa-terminal mb-2 fs-4 d-block"></i>
+                Waiting for stream events...
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom: Pending Queue (Full Width) -->
+    <div id="pending-section" class="mt-4 pt-4 border-top border-white border-opacity-10 d-none">
+      <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+        <div class="d-flex align-items-center gap-2">
+          <h5 class="fw-bold mb-0 text-warning"><i class="fas fa-list-ol me-2"></i> Pending Queue</h5>
+          <span class="text-muted small">Queued files awaiting cloud sync</span>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          <span id="pending-queue-size" class="badge bg-warning text-dark fw-bold px-2 py-1 font-monospace"
+            style="font-size: 0.85rem;">0 B</span>
+          <span id="pending-queue-count"
+            class="badge bg-dark text-white border border-white border-opacity-25 px-2 py-1">0 queued</span>
+        </div>
+      </div>
+      <div id="pending-list" class="row g-3"></div>
     </div>
   </section>
 
@@ -68,8 +155,8 @@
   </div>
   <!-- MDB scripts -->
   <script src="https://cdn.jsdelivr.net/npm/mdb-ui-kit@9.0.0/js/mdb.umd.min.js"></script>
-  <script src="scripts/include.js?v=0.0.1"></script>
-  <script src="scripts/uploads.js?v=0.0.1"></script>
+  <script src="scripts/include.js?v=0.0.5"></script>
+  <script src="scripts/uploads.js?v=0.0.12"></script>
 </body>
 
 </html>

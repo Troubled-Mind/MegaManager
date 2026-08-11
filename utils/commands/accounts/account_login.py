@@ -9,7 +9,7 @@ from utils.config import cmd
 def run(args=None):
     try:
         with get_db() as session:
-            print(f"📥 args = {args!r} (type = {type(args).__name__})")
+            print(f"args = {args!r} (type = {type(args).__name__})")
 
             if args == "all" or args is None:
                 account_ids = [acc.id for acc in session.query(MegaAccount).all()]
@@ -29,9 +29,13 @@ def run(args=None):
         print(f"\nINFO Processing account ID {account_id}")
         result = process_account(account_id)
         results.append(f"Account {account_id}: {result['message']}")
-        
+
         if result.get("status") != 200:
             overall_status = 500
+
+    # Invalidate stats cache so total quota updates
+    from utils.stats_cache import invalidate_and_refresh_async
+    invalidate_and_refresh_async()
 
     return {
         "status": overall_status,
@@ -59,79 +63,62 @@ def process_account(account_id):
             if account.status == "Pending Verification":
                 return {"status": 202, "message": f"Account {email} is pending verification. Please verify before syncing."}
 
-            # Consistent Session Management
-            from utils.mega_session import ensure_logged_in
-            if not ensure_logged_in(email, password):
-                return {"status": 500, "message": f"Authentication failed for {email}"}
+            # Holds the process-wide MEGAcmd session lock from login through
+            # the mega-whoami/mega-find calls below, so a concurrent
+            # upload/sync job can't log in as a different account mid-way
+            # and redirect these commands to the wrong account.
+            from utils.mega_session import mega_session
+            with mega_session(email, password) as logged_in:
+                if not logged_in:
+                    return {"status": 500, "message": f"Login failed for {email} after 3 attempts - check server log for the MEGA error detail (wrong password, unverified account, or session conflict)"}
 
-            # Optional info retrieval
-            is_pro = False
-            used_quota = account.used_quota or "0"
-            total_quota = account.total_quota or "0"
+                # Optional info retrieval
+                is_pro = False
+                used_quota = account.used_quota or "0"
+                total_quota = account.total_quota or "0"
 
-            try:
-                # Get pro level
-                whoami_output = subprocess.run([cmd("mega-whoami"), "-l"], capture_output=True, text=True)
-                if pro_level_match := re.search(r"Pro level:\s+(\d+)", whoami_output.stdout):
-                    pro_level = int(pro_level_match.group(1))
-                    is_pro = pro_level > 0
-                
-                # Fetch quota
-                df_cmd = [cmd("mega-df"), "-h"] if is_pro else [cmd("mega-df")]
-                df_output = subprocess.run(df_cmd, capture_output=True, text=True)
-                
-                if df_output.returncode == 0:
-                    u, t = parse_mega_df_h(df_output.stdout) if is_pro else parse_mega_df(df_output.stdout)
-                    used_quota, total_quota = u, t
-                else:
-                    print(f"WARNING Could not fetch quota (Access Denied or similar): {df_output.stderr.strip()}")
-            except Exception as e:
-                print(f"WARNING Non-critical error fetching account info: {e}")
+                try:
+                    whoami_output = subprocess.run([cmd("mega-whoami"), "-l"], capture_output=True, text=True)
+                    if pro_level_match := re.search(r"Pro level:\s+(\d+)", whoami_output.stdout):
+                        pro_level = int(pro_level_match.group(1))
+                        is_pro = pro_level > 0
 
-            # Update Account state
-            now = datetime.utcnow()
-            account.is_pro_account = 1 if is_pro else 0
-            account.used_quota = used_quota
-            account.total_quota = total_quota
-            account.storage_quota_updated = now
-            account.last_login = now
-            session.commit()
+                    # Fetch quota via rclone - ensure the account has an rclone.conf
+                    # entry first. Accounts registered/confirmed through the app
+                    # only ever get one via CSV import today; without this,
+                    # get_account_quota() silently fails forever for any account
+                    # that arrived any other way, and it never contributes to the
+                    # Total Cloud Pool figure no matter how often it's refreshed.
+                    from utils.rclone_config import get_account_quota, add_or_update_account
+                    add_or_update_account(account_id, email, password)
+                    r_used, r_total = get_account_quota(account_id)
+                    if r_used is not None and r_total is not None:
+                        used_quota, total_quota = r_used, r_total
+                    else:
+                        print(f"WARNING Could not fetch quota for {email} via rclone (check rclone.conf)")
 
-            # Index account files
-            print("INFO Indexing account files...")
-            result = get_account_files(account_id)
-            if result.get("status") != 200:
-                print(f"WARNING Indexing failed: {result.get('message')}")
+                except Exception as e:
+                    print(f"WARNING Non-critical error fetching account info for {email}: {e}")
+
+                now = datetime.utcnow()
+                account.is_pro_account = 1 if is_pro else 0
+                account.used_quota = used_quota
+                account.total_quota = total_quota
+                account.storage_quota_updated = now
+                account.last_login = now
+                session.commit()
+
+                # Index account files
+                print("INFO Indexing account files...")
+                result = get_account_files(account_id)
+                if result.get("status") != 200:
+                    print(f"WARNING Indexing failed: {result.get('message')}")
 
             return {"status": 200, "message": f"Login and sync successful for {email}"}
 
         except Exception as e:
             print(f"ERROR Account sync failed for {email}: {e}")
             return {"status": 500, "message": str(e)}
-
-
-
-def parse_mega_df(output):
-    for line in output.splitlines():
-        if "USED STORAGE:" in line:
-            match = re.search(r'USED STORAGE:\s+(\d+).*?of\s+(\d+)', line)
-            if match:
-                used = match.group(1)
-                total = match.group(2)
-                return used, total
-    return "0", "0"
-
-
-def parse_mega_df_h(output):
-    for line in output.splitlines():
-        if "USED STORAGE:" in line:
-            match = re.search(r'USED STORAGE:\s+([0-9.]+\s*[KMGT]?B).*?of\s+([0-9.]+\s*[KMGT]?B)', line)
-            if match:
-                used = size_to_bytes(match.group(1))
-                total = size_to_bytes(match.group(2))
-                return used, total
-    return "0", "0"
-
 
 def parse_pro_level(output):
     for line in output.splitlines():

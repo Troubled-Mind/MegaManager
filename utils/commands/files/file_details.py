@@ -29,36 +29,38 @@ def run(args=None):
             if not account:
                 return {"status": 404, "message": f"No MEGA account found with ID {account_id}"}
 
-            from utils.mega_session import ensure_logged_in
-            if not ensure_logged_in(account.email, account.password):
-                 return {"status": 500, "message": f"Failed to authenticate session for {account.email}"}
+            # Holds the process-wide MEGAcmd session lock across both calls
+            # below, so a concurrent upload/sync job can't log in as a
+            # different account in between and redirect them.
+            from utils.mega_session import mega_session
+            with mega_session(account.email, account.password) as logged_in:
+                if not logged_in:
+                    return {"status": 500, "message": f"Failed to authenticate session for {account.email}"}
 
-            # Fetch file/folder size
-            du_result = subprocess.run([cmd("mega-du"), full_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
-            storage = parse_mega_du(du_result.stdout.strip())
-            mega_file.m_folder_size = str(storage)
-            print(f"💾 Size: {storage}")
+                du_result = subprocess.run([cmd("mega-du"), full_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
+                storage = parse_mega_du(du_result.stdout.strip())
+                mega_file.m_folder_size = str(storage)
+                print(f"Size: {storage}")
 
-            # Fetch file link
-            export_result = subprocess.run([cmd("mega-export"), full_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
-            link = parse_mega_export(export_result.stdout.strip())
-            mega_file.m_sharing_link = link
-            print(f"🔗 Link: {link}")
+                export_result = subprocess.run([cmd("mega-export"), full_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
+                link = parse_mega_export(export_result.stdout.strip())
+                mega_file.m_sharing_link = link
+                print(f"Link: {link}")
 
-            session.commit()
-            return {
-                "status": 200,
-                "message": f"File details updated successfully for {mega_file.m_folder_name}",
-                "file": {
-                    "id": mega_file.id,
-                    "m_path": mega_file.m_path,
-                    "m_folder_name": mega_file.m_folder_name,
-                    "m_folder_size": str(storage),
-                    "is_cloud": True,
-                    "cloud_email": account.email,
-                    "m_sharing_link": link,
-                },
-            }
+                session.commit()
+                return {
+                    "status": 200,
+                    "message": f"File details updated successfully for {mega_file.m_folder_name}",
+                    "file": {
+                        "id": mega_file.id,
+                        "m_path": mega_file.m_path,
+                        "m_folder_name": mega_file.m_folder_name,
+                        "m_folder_size": str(storage),
+                        "is_cloud": True,
+                        "cloud_email": account.email,
+                        "m_sharing_link": link,
+                    },
+                }
 
         except subprocess.CalledProcessError as e:
             stdout = e.stdout.strip() if e.stdout else ""

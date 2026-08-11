@@ -22,7 +22,7 @@
       href="https://cdn.jsdelivr.net/npm/mdb-ui-kit@9.0.0/css/mdb.min.css"
     />
     <!-- Custom CSS styling -->
-    <link rel="stylesheet" href="css/custom.css?v=0.0.1" />
+    <link rel="stylesheet" href="css/custom.css?v=0.0.3" />
   </head>
 
   <body>
@@ -59,94 +59,173 @@
     <!-- Navbar -->
 
     <!-- Hero Section -->
-    <header class="hero-gradient text-white text-center py-5 mb-5 overflow-hidden">
-      <div class="container py-4">
-        <h1 class="display-3 fw-bold mb-3" style="letter-spacing: -1px;">Mega <span style="color: var(--mega-red);">Manager</span></h1>
-        <p class="lead opacity-75 mx-auto" style="max-width: 700px;">
-          Seamlessly bridge your local storage and MEGA cloud accounts.
-          Manage, sync, and monitor your data from a single premium dashboard.
+    <header class="hero-gradient text-white text-center py-4 mb-4">
+      <div class="container py-2">
+        <h1 class="h2 fw-bold mb-2">Mega Manager</h1>
+        <p class="text-muted mx-auto mb-0" style="max-width: 600px; font-size: 0.95rem;">
+          Sync, manage, and monitor your local directories and MEGA accounts.
         </p>
       </div>
     </header>
 
-    <!-- Content Section -->
+    <!-- Main Content -->
     <section class="container mb-5">
-      <!-- Intro Row -->
-      <div class="row mb-5 justify-content-center">
-        <div class="col-lg-10">
-          <div class="p-5 card">
-            <div class="row align-items-center">
-              <div class="col-md-7">
-                <h3 class="mb-4 fw-bold">Elevate Your Data Management</h3>
-                <p class="text-muted mb-4">
-                  Mega Manager provides a unified interface to control your MEGA presence. 
-                  Audit your accounts, track local file changes, and manage cloud exports with precision.
-                </p>
-                <div class="d-flex flex-wrap gap-3">
-                  <div class="d-flex align-items-center">
-                    <i class="fas fa-check-circle text-success me-2"></i>
-                    <span class="small">Real-time Syncing</span>
-                  </div>
-                  <div class="d-flex align-items-center">
-                    <i class="fas fa-check-circle text-success me-2"></i>
-                    <span class="small">Multi-Account Support</span>
-                  </div>
-                </div>
-              </div>
-              <div class="col-md-5 d-none d-md-block text-center">
-                <i class="fas fa-server fa-8x opacity-10 text-danger"></i>
-              </div>
+      <!-- Live Metrics Cards -->
+      <div class="row g-3 mb-4" id="metricsRow">
+        <div class="col-6 col-lg-3">
+          <div class="stat-card hvr-up">
+            <div class="stat-icon stat-icon-red">
+              <i class="fas fa-users-cog"></i>
+            </div>
+            <div>
+              <div class="stat-value" id="statAccountsCount">-</div>
+              <div class="stat-label">Accounts</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 col-lg-3">
+          <div class="stat-card hvr-up">
+            <div class="stat-icon stat-icon-blue">
+              <i class="fas fa-cloud"></i>
+            </div>
+            <div>
+              <div class="stat-value" id="statCloudStorage">-</div>
+              <div class="stat-label">Cloud Used</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 col-lg-3">
+          <div class="stat-card hvr-up">
+            <div class="stat-icon stat-icon-green">
+              <i class="fas fa-folder-open"></i>
+            </div>
+            <div>
+              <div class="stat-value" id="statFilesCount">-</div>
+              <div class="stat-label">Indexed Files</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 col-lg-3">
+          <div class="stat-card hvr-up">
+            <div class="stat-icon stat-icon-amber">
+              <i class="fas fa-cloud-upload-alt"></i>
+            </div>
+            <div>
+              <div class="stat-value" id="statUploadsCount">-</div>
+              <div class="stat-label">Active Transfers</div>
             </div>
           </div>
         </div>
       </div>
-    
+
+      <!-- Quick Actions Bar -->
+      <div class="card p-3 mb-4">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+          <div class="d-flex align-items-center gap-2">
+            <i class="fas fa-bolt text-danger"></i>
+            <span class="fw-bold small text-uppercase" style="letter-spacing: 0.05em;">Quick Actions</span>
+          </div>
+          <div class="d-flex flex-wrap gap-2">
+            <button class="btn btn-sm btn-outline-secondary" onclick="quickRefreshAccounts()">
+              <i class="fas fa-sync-alt me-1"></i> Refresh Quotas
+            </button>
+            <button class="btn btn-sm btn-outline-secondary" onclick="quickScanLocal()">
+              <i class="fas fa-search me-1"></i> Scan Local
+            </button>
+            <button class="btn btn-sm btn-outline-secondary" onclick="quickGenerateLinks()">
+              <i class="fas fa-link me-1"></i> Generate Links
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Feature Grid -->
       <div class="row g-4">
-        <!--Grid column-->
+        <!-- Files Card -->
         <div class="col-lg-4 col-md-6">
           <div class="card h-100 hvr-up">
-            <div class="card-body p-4 text-center">
-              <div class="rounded-circle bg-danger bg-opacity-10 d-inline-flex align-items-center justify-content-center mb-4" style="width: 64px; height: 64px;">
-                <i class="fas fa-folder-open fa-2x text-danger"></i>
+            <div class="card-body p-4 text-center d-flex flex-column">
+              <div class="rounded-3 bg-danger bg-opacity-10 d-inline-flex align-items-center justify-content-center mx-auto mb-3" style="width: 50px; height: 50px;">
+                <i class="fas fa-folder-open text-danger" style="font-size: 1.3rem;"></i>
               </div>
-              <h5 class="card-title fw-bold">Local Files</h5>
-              <p class="card-text text-muted mb-4">
-                Explore your local file system and identify dated folders ready for cloud archival.
+              <h5 class="card-title fw-bold mb-2">Files</h5>
+              <p class="card-text text-muted small mb-4 flex-grow-1">
+                Browse local files, check cloud sync status, generate export links, and queue uploads.
               </p>
-              <a href="/files.html" class="btn btn-danger px-4 py-2 w-100">
+              <a href="/files.html" class="btn btn-danger w-100 py-2">
                 Manage Files
               </a>
             </div>
           </div>
         </div>
+
+        <!-- Accounts Card -->
         <div class="col-lg-4 col-md-6">
           <div class="card h-100 hvr-up">
-            <div class="card-body p-4 text-center">
-              <div class="rounded-circle bg-danger bg-opacity-10 d-inline-flex align-items-center justify-content-center mb-4" style="width: 64px; height: 64px;">
-                <i class="fas fa-cloud fa-2x text-danger"></i>
+            <div class="card-body p-4 text-center d-flex flex-column">
+              <div class="rounded-3 bg-info bg-opacity-10 d-inline-flex align-items-center justify-content-center mx-auto mb-3" style="width: 50px; height: 50px;">
+                <i class="fas fa-users-cog text-info" style="font-size: 1.3rem;"></i>
               </div>
-              <h5 class="card-title fw-bold">Cloud Accounts</h5>
-              <p class="card-text text-muted mb-4">
-                Monitor storage quotas, subscription levels, and account health across all MEGA profiles.
+              <h5 class="card-title fw-bold mb-2">Accounts</h5>
+              <p class="card-text text-muted small mb-4 flex-grow-1">
+                Monitor storage quotas, subscription plans, login health, and import account lists.
               </p>
-              <a href="/accounts.html" class="btn btn-danger px-4 py-2 w-100">
-                View Accounts
+              <a href="/accounts.html" class="btn btn-danger w-100 py-2">
+                Manage Accounts
               </a>
             </div>
           </div>
         </div>
-        <div class="col-lg-4 col-md-12">
+
+        <!-- Ongoing Uploads Card -->
+        <div class="col-lg-4 col-md-6">
           <div class="card h-100 hvr-up">
-            <div class="card-body p-4 text-center">
-              <div class="rounded-circle bg-danger bg-opacity-10 d-inline-flex align-items-center justify-content-center mb-4" style="width: 64px; height: 64px;">
-                <i class="fas fa-sliders-h fa-2x text-danger"></i>
+            <div class="card-body p-4 text-center d-flex flex-column">
+              <div class="rounded-3 bg-warning bg-opacity-10 d-inline-flex align-items-center justify-content-center mx-auto mb-3" style="width: 50px; height: 50px;">
+                <i class="fas fa-cloud-upload-alt text-warning" style="font-size: 1.3rem;"></i>
               </div>
-              <h5 class="card-title fw-bold">System Settings</h5>
-              <p class="card-text text-muted mb-4">
-                Configure command paths, date patterns, and global email preferences for the manager.
+              <h5 class="card-title fw-bold mb-2">Uploads</h5>
+              <p class="card-text text-muted small mb-4 flex-grow-1">
+                Monitor active background upload queues, transfer speeds, and progress.
               </p>
-              <a href="/settings.html" class="btn btn-danger px-4 py-2 w-100">
-                Edit Settings
+              <a href="/uploads.html" class="btn btn-danger w-100 py-2">
+                View Uploads
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bulk Importer Card -->
+        <div class="col-lg-6 col-md-6">
+          <div class="card h-100 hvr-up">
+            <div class="card-body p-4 text-center d-flex flex-column">
+              <div class="rounded-3 bg-success bg-opacity-10 d-inline-flex align-items-center justify-content-center mx-auto mb-3" style="width: 50px; height: 50px;">
+                <i class="fas fa-cloud-arrow-down text-success" style="font-size: 1.3rem;"></i>
+              </div>
+              <h5 class="card-title fw-bold mb-2">Bulk Import</h5>
+              <p class="card-text text-muted small mb-4 flex-grow-1">
+                Import folders and files directly into your MEGA accounts using public sharing links.
+              </p>
+              <a href="/import.html" class="btn btn-outline-secondary w-100 py-2">
+                Import Links
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Settings Card -->
+        <div class="col-lg-6 col-md-12">
+          <div class="card h-100 hvr-up">
+            <div class="card-body p-4 text-center d-flex flex-column">
+              <div class="rounded-3 bg-primary bg-opacity-10 d-inline-flex align-items-center justify-content-center mx-auto mb-3" style="width: 50px; height: 50px;">
+                <i class="fas fa-sliders-h text-primary" style="font-size: 1.3rem;"></i>
+              </div>
+              <h5 class="card-title fw-bold mb-2">Settings</h5>
+              <p class="card-text text-muted small mb-4 flex-grow-1">
+                Configure binary paths, monitored local root directories, and account defaults.
+              </p>
+              <a href="/settings.html" class="btn btn-outline-secondary w-100 py-2">
+                Settings
               </a>
             </div>
           </div>
@@ -170,6 +249,135 @@
     </div>
     <!-- MDB scripts -->
     <script src="https://cdn.jsdelivr.net/npm/mdb-ui-kit@9.0.0/js/mdb.umd.min.js"></script>
-    <script src="scripts/include.js?v=0.0.1"></script>
+    <script src="scripts/include.js?v=0.0.5"></script>
+    <script>
+      // Load Dynamic Metrics on Home Dashboard
+      document.addEventListener("DOMContentLoaded", () => {
+        loadHomeMetrics();
+      });
+
+      function loadHomeMetrics() {
+        // Accounts Stats
+        fetch("/run-command", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: "command=account_get_all"
+        })
+          .then(res => res.json())
+          .then(data => {
+            if (data.status === 200 && Array.isArray(data.accounts)) {
+              document.getElementById("statAccountsCount").textContent = data.accounts.length;
+              let totalUsed = 0;
+              data.accounts.forEach(acc => {
+                totalUsed += parseFloat(acc.used_quota) || 0;
+              });
+              document.getElementById("statCloudStorage").textContent = formatBytes(totalUsed);
+            }
+          })
+          .catch(() => {});
+
+        // Files Stats
+        fetch("/run-command", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: "command=file_db_fetch"
+        })
+          .then(res => res.json())
+          .then(data => {
+            if (data.status === 200 && Array.isArray(data.files)) {
+              document.getElementById("statFilesCount").textContent = data.files.length;
+            }
+          })
+          .catch(() => {});
+
+        // Uploads Stats
+        fetch("/run-command", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: "command=transfer_status"
+        })
+          .then(res => res.json())
+          .then(data => {
+            if (data.status === 200 && Array.isArray(data.uploads)) {
+              document.getElementById("statUploadsCount").textContent = data.uploads.length;
+            } else {
+              document.getElementById("statUploadsCount").textContent = "0";
+            }
+          })
+          .catch(() => {
+            document.getElementById("statUploadsCount").textContent = "0";
+          });
+      }
+
+      function formatBytes(bytes, decimals = 1) {
+        if (!bytes || bytes === 0) return "0 B";
+        const k = 1024;
+        const dm = decimals < 0 ? 0 : decimals;
+        const sizes = ["B", "KB", "MB", "GB", "TB", "PB"];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
+      }
+
+      async function quickRefreshAccounts() {
+        showToast("Starting quota refresh across all accounts...", "bg-info");
+        try {
+          const idsRes = await fetch("/run-command", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: "command=account_fetch_ids"
+          });
+          const idsData = await idsRes.json();
+          const accountIds = idsData.account_ids || [];
+
+          // One account at a time with a short delay, matching the Accounts
+          // page's own "Refresh All" - MEGAcmd only has one active session,
+          // so hammering logins back-to-back just makes them queue up anyway.
+          for (let i = 0; i < accountIds.length; i++) {
+            await fetch("/run-command", {
+              method: "POST",
+              headers: { "Content-Type": "application/x-www-form-urlencoded" },
+              body: `command=account_login:${accountIds[i]}`
+            });
+            if (i < accountIds.length - 1) {
+              await new Promise((r) => setTimeout(r, 2000));
+            }
+          }
+
+          showToast(`Refreshed ${accountIds.length} account(s)`, "bg-success");
+          loadHomeMetrics();
+        } catch (err) {
+          showToast("Failed to refresh quotas", "bg-danger");
+        }
+      }
+
+      function quickScanLocal() {
+        showToast("Starting local directory indexing...", "bg-info");
+        fetch("/run-command", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: "command=file_local_index"
+        })
+          .then(res => res.json())
+          .then(data => {
+            showToast(data.message || "Local scan started", "bg-success");
+            loadHomeMetrics();
+          })
+          .catch(() => showToast("Failed to scan local", "bg-danger"));
+      }
+
+      function quickGenerateLinks() {
+        showToast("Generating missing sharing links in background...", "bg-info");
+        fetch("/run-command", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: "command=transfer_missing_links"
+        })
+          .then(res => res.json())
+          .then(data => {
+            showToast(data.message || "Missing links generation started", "bg-success");
+          })
+          .catch(() => showToast("Failed to start link generation", "bg-danger"));
+      }
+    </script>
   </body>
 </html>

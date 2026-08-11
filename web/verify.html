@@ -22,7 +22,7 @@
       href="https://cdn.jsdelivr.net/npm/mdb-ui-kit@9.0.0/css/mdb.min.css"
     />
     <!-- Custom CSS styling -->
-    <link rel="stylesheet" href="css/custom.css?v=0.0.1" />
+    <link rel="stylesheet" href="css/custom.css?v=0.0.3" />
   </head>
 
   <body>
@@ -54,6 +54,60 @@
     </header>
 
     <div class="container mb-5">
+      <!-- Bulk Verify Card -->
+      <div id="bulkVerifyCard" class="card shadow-lg mb-4 d-none">
+        <div class="card-body p-4">
+          <h5 class="fw-bold mb-3 text-warning">
+            <i class="fas fa-file-pdf me-2"></i> Bulk Verify via PDF
+          </h5>
+          <p class="text-muted small mb-4">
+            Upload a PDF containing one or more MEGA email verification links (e.g. from an exported mail folder). The system will automatically parse the document, extract the confirmation links, and activate the matching accounts.
+          </p>
+
+          <!-- Dropzone -->
+          <div id="dropzone" class="border border-dashed rounded-3 p-5 text-center cursor-pointer position-relative hover-bg-dark transition-all" style="border-color: rgba(255, 255, 255, 0.15) !important; background: rgba(255, 255, 255, 0.02);">
+            <input type="file" id="pdfFileInput" accept=".pdf" class="position-absolute top-0 start-0 w-100 h-100 opacity-0 cursor-pointer" style="z-index: 10;" />
+            <i class="fas fa-cloud-upload-alt fa-3x text-info mb-3"></i>
+            <h6 class="fw-bold text-white mb-1" id="uploadStatusText">Drag & Drop PDF here or Click to Browse</h6>
+            <p class="text-muted small mb-0">Only PDF files containing verification links are supported</p>
+          </div>
+
+          <!-- Processing Overlay / State -->
+          <div id="processingState" class="text-center py-5 d-none">
+            <div class="spinner-border text-warning mb-3" style="width: 2.5rem; height: 2.5rem;" role="status"></div>
+            <h6 class="fw-bold text-white mb-1">Parsing PDF and Verifying Accounts...</h6>
+            <p class="text-muted small mb-0">Running confirmations. This may take a minute depending on the number of accounts.</p>
+          </div>
+
+          <!-- Results Section -->
+          <div id="resultsSection" class="mt-4 d-none">
+            <hr class="border-white border-opacity-10 my-4" />
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h6 class="fw-bold text-info mb-0"><i class="fas fa-poll me-2"></i> Verification Results</h6>
+              <div id="resultsBadges" class="d-flex gap-2">
+                <!-- Badges injected here -->
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="table table-dark table-striped align-middle border border-white border-opacity-10">
+                <thead>
+                  <tr>
+                    <th>Email</th>
+                    <th>Status</th>
+                    <th>Details</th>
+                  </tr>
+                </thead>
+                <tbody id="resultsTableBody">
+                  <!-- Rows injected here -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pending Accounts Card -->
       <div class="card shadow-lg bg-dark bg-opacity-50 border border-white border-opacity-10 mb-4">
         <div class="card-body p-4">
           <h5 class="fw-bold mb-4 text-info">
@@ -85,7 +139,7 @@
 
     <!-- MDB JS -->
     <script src="https://cdn.jsdelivr.net/npm/mdb-ui-kit@9.0.0/js/mdb.umd.min.js"></script>
-    <script src="scripts/include.js"></script>
-    <script src="scripts/verify.js"></script>
+    <script src="scripts/include.js?v=0.0.5"></script>
+    <script src="scripts/verify.js?v=0.0.5"></script>
   </body>
 </html>
