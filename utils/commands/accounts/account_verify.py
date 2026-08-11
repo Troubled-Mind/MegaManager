@@ -31,7 +31,6 @@ def run(args=None):
         if not email or not password:
             return {"status": 400, "message": "Missing email or password for account"}, 400
 
-        # Get megacmd path from settings
         base_path = settings.get("megacmd_path")
         if base_path:
             base_path = os.path.normpath(base_path)
@@ -44,8 +43,8 @@ def run(args=None):
 
         cmd = f'{executable} "{verification_link}" "{email}" "{password}"'
 
-        print(f"🔗 Verifying account {account_id} using link: {verification_link}")
-        print(f"▶ Running: {cmd}")
+        print(f"Verifying account {account_id} using link: {verification_link}")
+        print(f"Running: {cmd}")
 
         result = subprocess.run(
             cmd,
@@ -56,7 +55,7 @@ def run(args=None):
             check=True
         )
 
-        print(f"✅ Verification complete: {result.stdout.strip()}")
+        print(f"Verification complete: {result.stdout.strip()}")
         return {
             "status": 200,
             "message": f"Verification successful for account ID {account_id}"
@@ -64,8 +63,16 @@ def run(args=None):
 
     except subprocess.CalledProcessError as e:
         error_output = e.stderr.strip()
-        print(f"❌ Verification error: {error_output}")
-        return {"status": 500, "message": f"Verification failed: {error_output}"}, 500
+        print(f"Verification error: {error_output}")
+        if "Failed to check email corresponds to link" in error_output or "Not found" in error_output:
+            msg = "The verification link does not match this account or has expired. Please check for the latest link sent to this email."
+        elif "Access denied" in error_output:
+            msg = "Access denied by MEGA. Ensure the credentials are correct."
+        else:
+            import re
+            cleaned = re.sub(r'\[\d{4}-\d{2}-\d{2}[^\]]*\]', '', error_output).strip()
+            msg = cleaned if cleaned else error_output
+        return {"status": 500, "message": msg}, 500
     except Exception as e:
-        print(f"❌ Unexpected error: {e}")
+        print(f"Unexpected error: {e}")
         return {"status": 500, "message": f"Unexpected error: {e}"}, 500

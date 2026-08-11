@@ -1,1 +1,4 @@
-SQLAlchemy==2.0.40
+SQLAlchemy==2.0.40   # Used for sql database read/writes
+pypdf==4.2.0         # Used for reading email PDFs for bulk verification
+pytest==9.0.2        # Framework for running unit and integration tests
+pytest-mock==3.15.1  # Mocking utility for tests (used to stub out subprocess calls)

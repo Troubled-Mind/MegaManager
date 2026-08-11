@@ -22,67 +22,215 @@
       href="https://cdn.jsdelivr.net/npm/mdb-ui-kit@9.0.0/css/mdb.min.css"
     />
     <!-- Custom CSS styling -->
-    <link rel="stylesheet" href="css/custom.css?v=0.0.1" />
+    <link rel="stylesheet" href="css/custom.css?v=0.0.3" />
+
+    <style>
+      .upload-monitor {
+        background: rgba(239, 68, 68, 0.06);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        border-radius: 12px;
+        padding: 1rem 1.25rem;
+        margin-top: 1.25rem;
+      }
+      .upload-monitor.has-uploads {
+        background: rgba(34, 197, 94, 0.06);
+        border-color: rgba(34, 197, 94, 0.2);
+      }
+      .progress-track {
+        height: 6px;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 99px;
+        overflow: hidden;
+        margin: 0.5rem 0;
+      }
+      .progress-fill {
+        height: 100%;
+        border-radius: 99px;
+        background: linear-gradient(90deg, #22c55e, #4ade80);
+        transition: width 1s ease;
+        animation: pulse-bar 2s ease-in-out infinite alternate;
+      }
+      @keyframes pulse-bar {
+        from { opacity: 0.75; }
+        to   { opacity: 1; }
+      }
+      .stat-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 99px;
+        padding: 0.2rem 0.65rem;
+        font-size: 0.75rem;
+        color: rgba(255,255,255,0.7);
+      }
+    </style>
   </head>
 
   <body class="d-flex justify-content-center align-items-center vh-100 hero-gradient">
-    <div class="card p-5 shadow-lg border-0" style="max-width: 400px; width: 100%;">
+    <div class="card p-5 shadow-lg border-0" style="max-width: 440px; width: 100%;">
+
+      <!-- Normal login form (hidden when locked) -->
       <form id="loginForm" class="text-center">
         <img src="resources/img/logo.png" height="80" class="mb-4" alt="Mega Manager Logo" />
         <h2 class="fw-bold mb-1">Mega<span class="text-danger">Manager</span></h2>
         <p class="text-muted small mb-5">Enterprise Cloud Management Console</p>
-        
+
         <div class="form-outline mb-4" data-mdb-input-init>
           <input type="password" id="password" class="form-control form-control-lg" placeholder="••••••••" />
           <label class="form-label text-muted" for="password">Access Key</label>
         </div>
-        
+
         <button type="submit" class="btn btn-danger btn-lg w-100 py-3 shadow-sm mb-4">
           Authenticate <i class="fas fa-sign-in-alt ms-2 opacity-50"></i>
         </button>
 
         <p class="mb-0 x-small text-muted opacity-50">
-          Created by <span class="text-white">TroubledMind</span> & <span class="text-white">hades-is-here</span>
+          Created by <span class="text-white">TroubledMind</span> &amp; <span class="text-white">hades-is-here</span>
         </p>
       </form>
+
+      <!-- Locked state (shown instead of form when locked out) -->
+      <div id="lockedView" class="text-center" style="display: none;">
+        <img src="resources/img/logo.png" height="80" class="mb-4" alt="Mega Manager Logo" />
+        <h2 class="fw-bold mb-1">Mega<span class="text-danger">Manager</span></h2>
+
+        <div class="mt-4 mb-2 rounded-3 p-3" style="background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.25);">
+          <i class="fas fa-lock text-danger mb-2" style="font-size: 1.5rem;"></i>
+          <div class="fw-bold text-white mb-1">Dashboard Locked</div>
+          <div class="text-muted small">Too many incorrect login attempts. Restart the server to regain access.</div>
+        </div>
+
+        <div class="text-muted small mt-3 mb-1">
+          <i class="fas fa-info-circle me-1"></i>
+          Any uploads currently in progress will continue running in the background.
+        </div>
+
+        <!-- Upload monitor panel -->
+        <div id="uploadMonitor" class="upload-monitor" style="display: none;">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="fw-bold small text-white"><i class="fas fa-cloud-upload-alt me-2" style="color: #4ade80;"></i>Uploads Running</span>
+            <span id="monitorUpdated" class="x-small text-muted"></span>
+          </div>
+
+          <div class="progress-track">
+            <div class="progress-fill" id="monitorBar" style="width: 60%;"></div>
+          </div>
+
+          <div class="d-flex flex-wrap gap-2 mt-2 justify-content-center">
+            <span class="stat-pill"><i class="fas fa-circle-notch fa-spin" style="color: #4ade80; font-size: 0.6rem;"></i> <span id="monitorActive">-</span> active</span>
+            <span class="stat-pill"><i class="fas fa-clock" style="color: #94a3b8;"></i> <span id="monitorQueued">-</span> queued</span>
+            <span class="stat-pill"><i class="fas fa-hdd" style="color: #94a3b8;"></i> <span id="monitorSize">-</span> total</span>
+            <span class="stat-pill" id="monitorEtaPill" style="display: none;"><i class="fas fa-hourglass-half" style="color: #94a3b8;"></i> ~<span id="monitorEta">-</span> left</span>
+          </div>
+        </div>
+
+        <div id="noUploadsNote" class="text-muted x-small mt-3" style="display: none;">
+          <i class="fas fa-check-circle text-success me-1"></i> No uploads currently in progress.
+        </div>
+
+        <p class="mb-0 x-small text-muted opacity-50 mt-4">
+          Created by <span class="text-white">TroubledMind</span> &amp; <span class="text-white">hades-is-here</span>
+        </p>
+      </div>
+
     </div>
 
     <script>
-      document
-        .getElementById("loginForm")
-        .addEventListener("submit", async (e) => {
-          e.preventDefault();
-          const password = document.getElementById("password").value;
-          const btn = e.target.querySelector('button');
-          btn.disabled = true;
-          btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Checking...';
-
-          try {
-            const res = await fetch("/run-command", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                command: "system_login",
-                args: { password },
-              }),
-            });
-
-            const result = await res.json();
-            if (result.status === 200) {
-              window.location.href = "/";
-            } else {
-              alert(result.message || "Invalid credentials");
-            }
-          } catch (err) {
-            alert("Network error. Please try again.");
-          } finally {
-            btn.disabled = false;
-            btn.innerHTML = 'Authenticate <i class="fas fa-sign-in-alt ms-2 opacity-50"></i>';
+      // Check if the server is currently locked on load
+      async function checkLockState() {
+        try {
+          const res = await fetch("/run-command", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ command: "system_login", args: { password: "" } }),
+          });
+          const data = await res.json();
+          // 403 with the restart message = locked
+          if (data.status === 403 && data.message && data.message.includes("restart")) {
+            showLockedView();
           }
-        });
+        } catch (_) {}
+      }
+
+      function showLockedView() {
+        document.getElementById("loginForm").style.display = "none";
+        document.getElementById("lockedView").style.display = "block";
+        pollUploadSummary();
+        setInterval(pollUploadSummary, 10000);
+      }
+
+      async function pollUploadSummary() {
+        try {
+          const res = await fetch("/api/upload-summary");
+          const data = await res.json();
+
+          const monitor = document.getElementById("uploadMonitor");
+          const noUploads = document.getElementById("noUploadsNote");
+
+          if (data.uploads_active || data.total_count > 0) {
+            monitor.style.display = "block";
+            monitor.className = "upload-monitor has-uploads";
+            noUploads.style.display = "none";
+
+            document.getElementById("monitorActive").textContent = data.active_count ?? 0;
+            document.getElementById("monitorQueued").textContent = data.queued_count ?? 0;
+            document.getElementById("monitorSize").textContent = data.total_size ?? "-";
+
+            const etaPill = document.getElementById("monitorEtaPill");
+            if (data.eta_display) {
+              document.getElementById("monitorEta").textContent = data.eta_display;
+              etaPill.style.display = "inline-flex";
+            } else {
+              etaPill.style.display = "none";
+            }
+
+            const now = new Date();
+            document.getElementById("monitorUpdated").textContent =
+              `Updated ${now.getHours().toString().padStart(2,"0")}:${now.getMinutes().toString().padStart(2,"0")}`;
+          } else {
+            monitor.style.display = "none";
+            noUploads.style.display = "block";
+          }
+        } catch (_) {}
+      }
+
+      document.getElementById("loginForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const password = document.getElementById("password").value;
+        const btn = e.target.querySelector("button");
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Checking...';
+
+        try {
+          const res = await fetch("/run-command", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ command: "system_login", args: { password } }),
+          });
+
+          const result = await res.json();
+          if (result.status === 200) {
+            window.location.href = "/";
+          } else if (result.status === 403 && result.message && result.message.includes("restart")) {
+            showLockedView();
+          } else {
+            alert(result.message || "Invalid credentials");
+          }
+        } catch (err) {
+          alert("Network error. Please try again.");
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = 'Authenticate <i class="fas fa-sign-in-alt ms-2 opacity-50"></i>';
+        }
+      });
+
+      // Check lock state on page load (handles direct visit while already locked)
+      checkLockState();
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/mdb-ui-kit@9.0.0/js/mdb.umd.min.js"></script>
-    <script src="scripts/include.js?v=0.0.1"></script>
+    <script src="scripts/include.js?v=0.0.5"></script>
   </body>
 </html>

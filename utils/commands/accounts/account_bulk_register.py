@@ -6,12 +6,12 @@ def run(command_args=None):
     """
     Bulk registers a range of MEGA accounts.
     Expected args: "prefix|start_idx|end_idx|domain"
-    Example: "contact|1|20|troubledmind.trade" 
+    Example: "contact|1|20|troubledmind.trade"
     -> contact+1@troubledmind.trade ... contact+20@troubledmind.trade
     """
     if not command_args:
         return {"status": 400, "message": "Usage: prefix|start|end|domain"}, 400
-        
+
     raw_args = command_args[0] if isinstance(command_args, list) else str(command_args)
     if "|" not in raw_args:
         return {"status": 400, "message": "Usage: prefix|start|end|domain (missing separator)"}, 400
@@ -34,24 +34,23 @@ def run(command_args=None):
     success_count = 0
     fail_count = 0
 
-    print(f"🚀 Starting bulk registration for {count} accounts...")
+    print(f"INFO Starting bulk registration for {count} accounts...")
 
     for i in range(start, end + 1):
         separator = "+" if "+" not in prefix else ""
         email = f"{prefix}{separator}{i}@{domain}"
-        print(f"▶ [{i - start + 1}/{count}] Registering {email}...")
-        
-        # We call the existing register_single logic
-        # Note: account_register.run(args) expects [encoded_email]
+        print(f"INFO [{i - start + 1}/{count}] Registering {email}...")
+
+        # account_register.run(args) expects [encoded_email]
         res, status = register_single([urllib.parse.quote(email)])
-        
+
         if status == 200:
             success_count += 1
             results.append({"email": email, "status": "Success"})
         else:
             fail_count += 1
             results.append({"email": email, "status": "Failed", "message": res.get("message")})
-        
+
         # Small sleep to be somewhat polite to the system (and avoid potential race conditions on local files)
         time.sleep(1)
 

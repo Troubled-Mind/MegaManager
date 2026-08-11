@@ -1,8 +1,8 @@
 import csv
 import io
+from sqlalchemy.orm import joinedload
 from database import get_db
 from models import File, MegaAccount
-from utils.config import cmd
 
 FILENAME = "mega_accounts.csv"
 
@@ -34,7 +34,6 @@ def export_mega_accounts():
                 account.password
             ])
 
-    # Return file to be downloaded
     output.seek(0)
     return {
         "status": 200,
@@ -57,7 +56,6 @@ def export_local_files():
                 format_bytes(file.l_folder_size)
             ])
 
-    # Return file to be downloaded
     output.seek(0)
     return {
         "status": 200,
@@ -67,7 +65,7 @@ def export_local_files():
 def export_cloud_files():
     """Export all cloud files to a CSV file."""
     with get_db() as session:
-        files = session.query(File).filter(File.m_folder_name != None).all()
+        files = session.query(File).options(joinedload(File.account)).filter(File.m_folder_name != None).all()
 
         output = io.StringIO()
         writer = csv.writer(output)
@@ -81,8 +79,7 @@ def export_cloud_files():
                 file.m_sharing_link,
                 file.account.email if file.account else None
             ])
-    
-    # Return file to be downloaded
+
     output.seek(0)
     return {
         "status": 200,
@@ -94,7 +91,6 @@ def format_bytes(bytes):
     if bytes is None:
         return None
 
-    # Convert to int
     try:
         bytes = int(bytes)
     except ValueError:

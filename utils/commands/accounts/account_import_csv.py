@@ -3,44 +3,41 @@ from models import MegaAccount
 
 def run(args=None):
     try:
-        # Ensure args is passed and has valid data
         if not args or len(args) < 1:
             return {"status": 400, "message": "Invalid CSV data"}, 400
 
-        # Get database session
         with get_db() as db:
             account_ids = []
 
-            # Loop through the incoming CSV data rows (args)
             for row in args:
-                # Split each row by comma to get email and password
                 parts = row.strip().split(',')
                 if len(parts) != 2:
                     print(f"Invalid row format: {row}")
-                    continue  # or return 400 with error message
+                    continue
                 email, password = parts
-
-                # Trim extra spaces from email and password
                 email = email.strip()
                 password = password.strip()
 
-                # Check if the account already exists in the database
                 account = db.query(MegaAccount).filter(MegaAccount.email == email).first()
                 if account:
-                    # Skip if account already exists
                     print(f"Account already exists: {email}")
                     continue
                 else:
-                    # Add new account to the database
                     new_account = MegaAccount(email=email, password=password)
                     db.add(new_account)
-
-                    # Get ID of the new account
-                    db.flush()  # Ensure the account is flushed to get the ID
+                    db.flush()
                     account_ids.append(new_account.id)
-
                     db.commit()
                     print(f"Added account: {email}")
+
+                    try:
+                        from utils.rclone_config import add_or_update_account
+                        add_or_update_account(new_account.id, email, password)
+                    except Exception as rclone_err:
+                        print(f"WARNING rclone config update failed for {email}: {rclone_err}")
+
+            from utils.stats_cache import invalidate_and_refresh_async
+            invalidate_and_refresh_async()
 
             return {
                 "status": 200,

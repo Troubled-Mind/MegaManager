@@ -1,15 +1,21 @@
 import os
 import threading
 import time
+import subprocess
+from datetime import datetime
 from database import get_db
 from models import File, MegaAccount
-from utils.commands.transfers.transfer_upload import upload_file_in_thread
+from utils.commands.transfers.transfer_upload import ensure_upload_worker
 from utils.commands.shared import size_to_bytes
+from utils.config import state, cmd
 
 def run(args=None):
     """
     Triggers a batch upload process in the background.
     """
+    state["batch_calculating"] = True
+    state["batch_status"] = "Calculating file allocation and analyzing free storage..."
+
     thread = threading.Thread(target=process_batch_upload)
     thread.daemon = True
     thread.start()
@@ -17,173 +23,151 @@ def run(args=None):
 
 def process_batch_upload():
     """
-    Automated Batch Upload Engine:
-    1. Scan/Refresh all MEGA accounts for accurate quota.
-    2. Sort candidate files (Largest to Smallest).
-    3. Map files to accounts in-memory (using tracked free space).
-    4. Execute uploads sequentially.
+    Streaming Batch Upload Engine:
+    1. Scan candidate files once (largest first).
+    2. For each account: login, get live quota, assign as many files as fit.
+    3. Immediately enqueue & start the upload worker - don't wait for other accounts.
+    This means uploading begins as soon as the FIRST account is checked.
     """
-    print("INFO Batch Upload: Starting background processor...")
-    
-    with get_db() as db:
-        # --- PHASE 1: Account Refresh ---
-        print("INFO Phase 1: Refreshing all MEGA account quotas...")
-        all_accounts = db.query(MegaAccount).all()
-        from utils.commands.accounts.account_login import process_account
-        
-        account_pool = []
-        for acc in all_accounts:
-            # We refresh EVERY account to ensure our in-memory math is 100% accurate
-            print(f"   - Refreshing {acc.email}...")
-            process_account(acc.id)
-            db.refresh(acc)
-            
-            try:
-                used = size_to_bytes(acc.used_quota)
-                total = size_to_bytes(acc.total_quota)
-                free = total - used
-                if total > 0:
-                    account_pool.append({
-                        "id": acc.id,
-                        "email": acc.email,
-                        "free_bytes": free,
-                        "model": acc
-                    })
-            except:
-                continue
+    print("INFO Batch Upload: Starting streaming background processor...")
+    state["batch_calculating"] = True
+    state["batch_status"] = "Scanning local files for upload candidates..."
 
-        if not account_pool:
-            print("❌ Batch Upload: Stop. No usable MEGA accounts found.")
-            return
+    SAFETY_BUFFER_BYTES = 10 * 1024 * 1024  # 10 MB overhead margin
+    MAX_ACCOUNT_QUOTA_BYTES = 20 * 1024 * 1024 * 1024  # 20 GB free account cap
 
-        # --- PHASE 2: Candidate Discovery & Sorting ---
-        print("INFO Phase 2: Scanning local files for candidates...")
-        from sqlalchemy import or_
-        candidates = db.query(File).filter(
-            File.l_path != None,
-            or_(File.m_path == None, File.m_path == ""),
-            or_(File.m_sharing_link == None, File.m_sharing_link == ""),
-            or_(
-                File.upload_status == None,
-                File.upload_status == "",
-                File.upload_status.notin_(['In Progress', 'Completed'])
-            )
-        ).all()
+    # Ensure rclone config is up to date before starting
+    try:
+        from utils.rclone_config import rebuild_all_accounts
+        rebuild_all_accounts()
+    except Exception as e:
+        print(f"WARNING Could not rebuild rclone config: {e}")
 
-        if not candidates:
-            print("DONE Batch Upload: No more files to upload.")
-            return
+    try:
+        with get_db() as db:
+            # --- PHASE 1: Build candidate file list once ---
+            print("INFO Phase 1: Scanning local files for candidates...")
+            from sqlalchemy import or_
+            candidates = db.query(File).filter(
+                File.l_path != None,
+                or_(File.m_path == None, File.m_path == ""),
+                or_(File.m_sharing_link == None, File.m_sharing_link == ""),
+                or_(
+                    File.upload_status == None,
+                    File.upload_status.notin_(["In Progress", "Completed"]),
+                )
+            ).all()
 
-        def get_size(f):
-            if f.l_folder_size:
-                try:
-                    return size_to_bytes(f.l_folder_size)
-                except: pass
-            local_path = os.path.join(f.l_path, f.l_folder_name)
-            total = 0
-            if os.path.exists(local_path):
-                try:
-                    for r, d, files in os.walk(local_path):
-                        for file_item in files:
-                            total += os.path.getsize(os.path.join(r, file_item))
-                except: pass
-            return total
+            if not candidates:
+                print("DONE Batch Upload: No more files to upload.")
+                return
 
-        file_list = []
-        for f in candidates:
-            sz = get_size(f)
-            if sz > 0:
-                file_list.append({"model": f, "size_bytes": sz})
-        
-        # Sort Largest First
-        file_list.sort(key=lambda x: x["size_bytes"], reverse=True)
-        print(f"INFO Batch Upload: Found {len(file_list)} files. Sorting complete (Largest First).")
+            def get_size(f):
+                if f.l_folder_size:
+                    try:
+                        return size_to_bytes(f.l_folder_size)
+                    except: pass
+                local_path = os.path.join(f.l_path, f.l_folder_name)
+                total = 0
+                if os.path.exists(local_path):
+                    try:
+                        for r, d, files in os.walk(local_path):
+                            for file_item in files:
+                                total += os.path.getsize(os.path.join(r, file_item))
+                    except: pass
+                return total
 
-        # --- PHASE 3: In-Memory Assignment (Bin Packing) ---
-        print("INFO Phase 3: Planning distribution...")
-        upload_queue = []
-        
-        for item in file_list:
-            f_model = item["model"]
-            f_size = item["size_bytes"]
-            
-            # Find best-fit account in our tracked pool
-            best_acc = None
-            max_remaining = -1
-            
-            for acc_data in account_pool:
-                if acc_data["free_bytes"] >= f_size:
-                    if acc_data["free_bytes"] > max_remaining:
-                        max_remaining = acc_data["free_bytes"]
-                        best_acc = acc_data
-            
-            if best_acc:
-                # Assign in-memory and in-database
-                f_model.m_account_id = best_acc["id"]
-                f_model.upload_status = 'Queued'
-                db.commit()
+            # Build and sort the file list once (Largest First for best-fit)
+            file_list = []
+            for f in candidates:
+                sz = get_size(f)
+                if sz > 0:
+                    file_list.append({"model": f, "size_bytes": sz, "assigned": False})
+            file_list.sort(key=lambda x: x["size_bytes"], reverse=True)
+            print(f"INFO Found {len(file_list)} candidate files. Streaming allocation starting...")
 
-                upload_queue.append({
-                    "file": f_model,
-                    "account": best_acc["model"],
-                    "size_bytes": f_size
-                })
-                # Subtract from tracked space so next file doesn't overfill it
-                best_acc["free_bytes"] -= f_size
-                print(f"   [Mapped] {f_model.l_folder_name} ({(f_size/1024/1024/1024):.2f} GB) -> {best_acc['email']}")
+            # --- PHASE 2: Per-account streaming allocation ---
+            all_accounts = db.query(MegaAccount).filter(MegaAccount.status == "Active").all()
+            if not all_accounts:
+                all_accounts = db.query(MegaAccount).all()
 
-        if not upload_queue:
-            print("ERROR Batch Upload: Stop. No files could fit into remaining account space.")
-            return
+            total_enqueued = 0
+            worker_started = False
 
-        print(f"INFO Phase 4: Executing {len(upload_queue)} assigned uploads...")
-        
-        # --- PHASE 4: Sequential Execution ---
-        for task in upload_queue:
-            f = task["file"]
-            acc = task["account"]
-            size = task["size_bytes"]
-            
-            # Final database health check/refresh
-            db.refresh(f)
-            if f.upload_status in ['In Progress', 'Completed']:
-                continue
-
-            print(f"INFO Processing: {f.l_folder_name} to {acc.email}...")
-            
-            # Map path logic
-            from utils.config import settings
-            import json
-            local_full_path = os.path.join(f.l_path, f.l_folder_name)
-            
-            # Properly parse local_paths from settings
-            local_paths_setting = settings.get("local_paths", "[]")
-            try:
-                local_paths = json.loads(local_paths_setting) if isinstance(local_paths_setting, str) else local_paths_setting
-            except:
-                local_paths = []
-            
-            mega_target_path = local_full_path
-            for local_base in local_paths:
-                if local_full_path.startswith(local_base):
-                    # Strip the local base to get the relative path for cloud
-                    mega_target_path = "/" + local_full_path[len(local_base):].lstrip(os.sep)
+            for acc in all_accounts:
+                remaining = [x for x in file_list if not x["assigned"]]
+                if not remaining:
+                    print("INFO All files assigned - stopping early.")
                     break
-            
-            mega_remote_parent = os.path.dirname(mega_target_path) or "/"
 
-            # Mark state
-            f.m_account_id = acc.id
-            f.upload_status = 'In Progress'
-            db.commit()
+                state["batch_status"] = f"Checking quota for {acc.email}..."
+                print(f"INFO Checking account: {acc.email}")
 
-            # Execute blocking upload
-            try:
-                upload_file_in_thread(f.id, acc.id, mega_remote_parent, local_full_path)
-            except Exception as e:
-                print(f"ERROR Batch Upload: Failed {f.l_folder_name}: {e}")
-            
-            print(f"INFO Cooling down after {f.l_folder_name}...")
-            time.sleep(5)
+                # Get live quota via rclone about (no session switching needed!)
+                used_raw, total_raw = acc.used_quota, acc.total_quota
+                try:
+                    from utils.rclone_config import get_account_quota
+                    u, t = get_account_quota(acc.id)
+                    if u is not None and t is not None:
+                        acc.used_quota = str(u)
+                        acc.total_quota = str(t)
+                        acc.last_login = datetime.utcnow()
+                        db.commit()
+                        used_raw, total_raw = str(u), str(t)
+                except Exception as e:
+                    print(f"rclone quota check failed for {acc.email}: {e}")
 
-    print("DONE Batch Upload: Finished all assigned tasks.")
+                try:
+                    used = size_to_bytes(used_raw)
+                    total = size_to_bytes(total_raw)
+
+                    if not acc.is_pro_account:
+                        if total <= 0 or total > MAX_ACCOUNT_QUOTA_BYTES:
+                            print(f"INFO Capping {acc.email} to 20 GB (reported: {total/(1024**3):.2f} GB)")
+                            total = MAX_ACCOUNT_QUOTA_BYTES
+                    else:
+                        if total <= 0:
+                            print(f"WARNING {acc.email} is pro but mega-df returned 0 - skipping.")
+                            continue
+
+                    free = total - used - SAFETY_BUFFER_BYTES
+                    if free <= 1024 * 1024:
+                        print(f"INFO Skipping {acc.email}: insufficient free space ({max(0,free)/(1024**3):.2f} GB)")
+                        continue
+                except Exception:
+                    continue
+
+                acc_enqueued = 0
+                for item in file_list:
+                    if item["assigned"]:
+                        continue
+                    if item["size_bytes"] <= free:
+                        f_model = item["model"]
+                        f_model.m_account_id = acc.id
+                        f_model.upload_status = "Queued"
+                        f_model.upload_progress = 0
+                        f_model.upload_speed = None
+                        f_model.upload_eta = None
+                        db.commit()
+
+                        free -= item["size_bytes"]
+                        item["assigned"] = True
+                        acc_enqueued += 1
+                        total_enqueued += 1
+                        print(f"[Queued] {f_model.l_folder_name} ({item['size_bytes']/(1024**3):.2f} GB) -> {acc.email}")
+
+                if acc_enqueued > 0:
+                    print(f"INFO Enqueued {acc_enqueued} files for {acc.email}. Starting upload worker...")
+                    ensure_upload_worker()
+                    worker_started = True
+
+            if total_enqueued == 0:
+                print("ERROR Batch Upload: No files could be assigned to any account.")
+            else:
+                print(f"DONE Batch Upload: {total_enqueued} files enqueued across accounts.")
+
+    except Exception as e:
+        print(f"Batch upload calculation error: {e}")
+    finally:
+        state["batch_calculating"] = False
+        state["batch_status"] = ""

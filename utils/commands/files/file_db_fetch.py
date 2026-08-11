@@ -1,35 +1,26 @@
-from database import get_db
-from models import File, MegaAccount
+import json
+from utils.config import settings
 
 def run(args=None):
     try:
-        with get_db() as session:
-            # Using join for performance and to get cloud_email
-            rows = session.query(File, MegaAccount).outerjoin(MegaAccount, File.m_account_id == MegaAccount.id).all()
+        local_paths_raw = settings.get("local_paths", [])
+        if isinstance(local_paths_raw, str):
+            try:
+                local_paths = json.loads(local_paths_raw)
+            except Exception:
+                local_paths = [local_paths_raw] if local_paths_raw else []
+        elif isinstance(local_paths_raw, list):
+            local_paths = local_paths_raw
+        else:
+            local_paths = []
 
-            files = []
-            for file, account in rows:
-                files.append({
-                    "id": file.id,
-                    "l_path": file.l_path,
-                    "l_folder_name": file.l_folder_name,
-                    "l_folder_size": file.l_folder_size,
-                    "m_path": file.m_path,
-                    "m_folder_name": file.m_folder_name,
-                    "m_folder_size": file.m_folder_size,
-                    "m_sharing_link": file.m_sharing_link,
-                    "m_sharing_link_expiry": file.m_sharing_link_expiry,
-                    "m_account_id": file.m_account_id,
-                    "cloud_email": account.email if account else None,
-                    "pro_account": bool(account.is_pro_account) if account else False,
-                    "is_local": bool(file.l_path),
-                    "is_cloud": bool(file.m_path),
-                })
-
-            return {
-                "status": 200,
-                "files": files
-            }
+        from utils.stats_cache import get_cached_files, get_cached_stats
+        return {
+            "status": 200,
+            "files": get_cached_files(),
+            "local_paths": local_paths,
+            "stats": get_cached_stats()
+        }
 
     except Exception as e:
         return {"status": 500, "message": f"Database error: {str(e)}"}

@@ -1,208 +1,719 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" data-mdb-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="resources/img/logo.png" />
+    <title>Mega Manager - Settings</title>
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="icon" type="image/png" href="resources/img/logo.png" />
-  <title>Mega Manager - Settings</title>
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
+    <!-- MDB stylesheets -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdb-ui-kit@9.0.0/css/mdb.min.css" />
+    <!-- Custom CSS styling -->
+    <link rel="stylesheet" href="css/custom.css?v=0.0.3" />
+  </head>
 
-  <!-- Font Awesome -->
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
-  <!-- MDB stylesheets -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdb-ui-kit@9.0.0/css/mdb.min.css" />
-  <!-- Custom CSS styling -->
-  <link rel="stylesheet" href="css/custom.css?v=0.0.1" />
-</head>
+  <body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand bg-body-tertiary">
+      <div class="container-fluid">
+        <button
+          data-mdb-collapse-init
+          class="navbar-toggler"
+          type="button"
+          data-mdb-target="#navbarSupportedContent"
+          aria-controls="navbarSupportedContent"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <i class="fas fa-bars"></i>
+        </button>
 
-<body>
-  <!-- Navbar -->
-  <nav class="navbar navbar-expand bg-body-tertiary">
-    <div class="container-fluid">
-      <button data-mdb-collapse-init class="navbar-toggler" type="button" data-mdb-target="#navbarSupportedContent"
-        aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-        <i class="fas fa-bars"></i>
-      </button>
-
-      <div class="collapse navbar-collapse" id="navbarSupportedContent">
-        <a class="navbar-brand mt-2 mt-lg-0" href="/">
-          <img src="resources/img/logo.png" height="60" alt="Mega Manager Logo" loading="lazy" />
-        </a>
-        <ul class="navbar-nav me-auto mb-2 mb-lg-0" id="navbarLinks">
-          <!-- dynamically loaded from /web/navbar/links.html -->
-        </ul>
-      </div>
-    </div>
-  </nav>
-  <!-- Navbar -->
-
-  <!-- Content Section -->
-  <header class="hero-gradient text-white py-4 mb-5 border-bottom border-white border-opacity-10">
-    <div class="container d-flex justify-content-between align-items-center">
-      <div>
-        <h2 class="fw-bold mb-0">System Settings</h2>
-        <p class="text-muted mb-0 small">App Version: <span id="appVersion" class="text-white fw-bold"></span></p>
-      </div>
-      <button type="submit" form="settingsForm" class="btn btn-danger px-4">
-        <i class="fas fa-save me-2"></i> Save All
-      </button>
-    </div>
-  </header>
-
-  <section class="container mb-5">
-    <form id="settingsForm">
-      <div class="row g-4">
-        <!-- Left Column: Core App Config -->
-        <div class="col-lg-6">
-          <div class="card h-100">
-            <div class="card-header border-0 bg-transparent pt-4 px-4">
-              <h5 class="fw-bold mb-0 text-danger"><i class="fas fa-cog me-2"></i> Core Configuration</h5>
-            </div>
-            <div class="card-body p-4">
-              <div class="alert alert-info py-2 px-3 mb-3 border-0 bg-info bg-opacity-10" style="font-size: 0.75rem">
-                <i class="fas fa-info-circle me-1"></i> Enter the <strong>full</strong> binary path. <br>
-                🪟 %LOCALAPPDATA%/MEGAcmd | 🍎 /Applications/MegaCMD.app/Contents/MacOS | 🐧 /usr/bin/mega-cmd
-              </div>
-              <div class="mb-4">
-                <label class="form-label text-muted small fw-bold">MegaCMD Binary Path</label>
-                <div class="form-outline" data-mdb-input-init>
-                  <input type="text" id="megacmd_path" class="form-control" placeholder="/usr/bin/mega-cmd" />
-                </div>
-              </div>
-
-              <div class="alert alert-info py-2 px-3 mb-3 border-0 bg-info bg-opacity-10" style="font-size: 0.75rem">
-                <i class="fas fa-info-circle me-1"></i> Accounts will be created as <code>template+mm#@gmail.com</code>.
-              </div>
-              <div class="mb-4">
-                <label class="form-label text-muted small fw-bold">Template Email</label>
-                <div class="form-outline" data-mdb-input-init>
-                  <input type="email" id="mega_email" class="form-control" placeholder="user+mm@gmail.com" />
-                </div>
-              </div>
-
-              <div>
-                <label class="form-label text-muted small fw-bold">Template Password</label>
-                <div class="form-outline" data-mdb-input-init>
-                  <input type="password" id="mega_passwords" class="form-control" />
-                </div>
-              </div>
-            </div>
-          </div>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <a class="navbar-brand mt-2 mt-lg-0" href="/">
+            <img src="resources/img/logo.png" height="60" alt="Mega Manager Logo" loading="lazy" />
+          </a>
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0" id="navbarLinks">
+            <!-- dynamically loaded from /web/navbar/links.html -->
+          </ul>
         </div>
+      </div>
+    </nav>
+    <!-- Navbar -->
 
-        <!-- Right Column: Detection & Security -->
-        <div class="col-lg-6">
-          <div class="card h-100">
-            <div class="card-header border-0 bg-transparent pt-4 px-4">
-              <h5 class="fw-bold mb-0 text-danger"><i class="fas fa-search me-2"></i> Intelligence & Security</h5>
-            </div>
-            <div class="card-body p-4">
-              <div class="alert alert-info py-2 px-3 mb-3 border-0 bg-info bg-opacity-10" style="font-size: 0.75rem">
-                <i class="fas fa-calendar-alt me-2"></i> Use <strong>strftime</strong> codes (e.g.
-                <code>%Y-%m-%d</code>). <br>
-                <a href="https://strfti.me" target="_blank" class="text-info">Full list of codes ↗</a>
-              </div>
-              <label class="form-label text-muted small fw-bold mb-2">Folder Date Detection Patterns</label>
-              <div class="row g-2 mb-4">
-                <div class="col-4">
-                  <div class="form-outline border rounded p-1" data-mdb-input-init
-                    title="Full Date Example: 2024-10-18">
-                    <input type="text" id="date_format_full" class="form-control form-control-sm border-0"
-                      placeholder="%Y-%m-%d" />
-                  </div>
-                </div>
-                <div class="col-4">
-                  <div class="form-outline border rounded p-1" data-mdb-input-init
-                    title="Year & Month Example: October 2024">
-                    <input type="text" id="date_format_month" class="form-control form-control-sm border-0"
-                      placeholder="%B %Y" />
-                  </div>
-                </div>
-                <div class="col-4">
-                  <div class="form-outline border rounded p-1" data-mdb-input-init title="Year Only Example: 2024">
-                    <input type="text" id="date_format_year" class="form-control form-control-sm border-0"
-                      placeholder="%Y" />
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <label class="form-label text-muted small fw-bold">Dashboard Access Key</label>
-                <div class="form-outline" data-mdb-input-init>
-                  <input type="password" id="app_password" class="form-control" placeholder="••••••••" />
-                </div>
-                <div class="x-small text-muted mt-1">Required to access this UI if set. Not high security.</div>
-              </div>
-            </div>
-          </div>
+    <!-- Content Section -->
+    <header class="hero-gradient text-white py-4 mb-5 border-bottom border-white border-opacity-10">
+      <div class="container d-flex justify-content-between align-items-center">
+        <div>
+          <h2 class="fw-bold mb-0">System Settings</h2>
+          <p class="text-muted mb-0 small">App Version: <span id="appVersion" class="text-white fw-bold"></span></p>
         </div>
+        <button type="submit" form="settingsForm" class="btn btn-danger px-4"><i class="fas fa-save me-2"></i> Save All</button>
+      </div>
+    </header>
 
-        <!-- Full Width: Monitored Folders -->
-        <div class="col-12">
-          <div class="card" id="folder-repeater">
+    <style>
+      .settings-nav-btn {
+        text-align: left;
+        border: 1px solid transparent;
+        transition: all 0.2s ease-in-out;
+        border-radius: 10px;
+        color: rgba(255, 255, 255, 0.75);
+        background: transparent;
+        padding: 0.85rem 1rem;
+        width: 100%;
+      }
+      .settings-nav-btn:hover {
+        background: rgba(255, 255, 255, 0.05);
+        color: #fff;
+      }
+      .settings-nav-btn.active {
+        background: rgba(255, 255, 255, 0.07) !important;
+        border-color: rgba(255, 255, 255, 0.18) !important;
+        color: #fff !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+      }
+      .settings-nav-btn.active i.tab-icon {
+        transform: scale(1.1);
+      }
+      .tab-icon {
+        transition: transform 0.2s ease;
+      }
+    </style>
+
+    <section class="container mb-5">
+      <form id="settingsForm" novalidate>
+        <div class="row g-4">
+          <!-- Left Column: Vertical Settings Navigation -->
+          <div class="col-12 col-md-4 col-xl-3">
             <div
-              class="card-header border-0 bg-transparent pt-4 px-4 d-flex justify-content-between align-items-center">
-              <h5 class="fw-bold mb-0 text-danger"><i class="fas fa-hdd me-2"></i> Monitored Local Folders</h5>
-              <button data-repeater-create type="button" class="btn btn-sm btn-danger px-3">
-                <i class="fas fa-plus me-1"></i> Add Folder
-              </button>
+              class="card border border-white border-opacity-10 shadow-sm p-2"
+              style="background: rgba(18, 20, 29, 0.75); backdrop-filter: blur(16px); border-radius: 14px; position: sticky; top: 1.5rem"
+            >
+              <div class="px-3 pt-2 pb-1 text-muted small fw-bold text-uppercase letter-spacing-1">Preferences</div>
+              <div class="nav flex-column gap-1" id="settingsTabs" role="tablist">
+                <button
+                  class="settings-nav-btn active d-flex align-items-center gap-3"
+                  id="tab-core-link"
+                  data-mdb-tab-init
+                  data-mdb-target="#tab-core"
+                  type="button"
+                  role="tab"
+                  aria-controls="tab-core"
+                  aria-selected="true"
+                >
+                  <div
+                    class="d-flex align-items-center justify-content-center rounded-3"
+                    style="width: 38px; height: 38px; min-width: 38px; background: rgba(239, 68, 68, 0.18)"
+                  >
+                    <i class="fas fa-cog tab-icon" style="color: #f87171"></i>
+                  </div>
+                  <div class="overflow-hidden">
+                    <div class="fw-bold small text-truncate">Core Config</div>
+                    <div class="text-muted text-truncate" style="font-size: 0.75rem">Binary &amp; templates</div>
+                  </div>
+                </button>
+
+                <button
+                  class="settings-nav-btn d-flex align-items-center gap-3"
+                  id="tab-folders-link"
+                  data-mdb-tab-init
+                  data-mdb-target="#tab-folders"
+                  type="button"
+                  role="tab"
+                  aria-controls="tab-folders"
+                  aria-selected="false"
+                >
+                  <div
+                    class="d-flex align-items-center justify-content-center rounded-3"
+                    style="width: 38px; height: 38px; min-width: 38px; background: rgba(34, 211, 238, 0.15)"
+                  >
+                    <i class="fas fa-folder-tree tab-icon" style="color: #22d3ee"></i>
+                  </div>
+                  <div class="overflow-hidden">
+                    <div class="fw-bold small text-truncate">Monitored Folders</div>
+                    <div class="text-muted text-truncate" style="font-size: 0.75rem">Paths &amp; date detection</div>
+                  </div>
+                </button>
+
+                <button
+                  class="settings-nav-btn d-flex align-items-center gap-3"
+                  id="tab-security-link"
+                  data-mdb-tab-init
+                  data-mdb-target="#tab-security"
+                  type="button"
+                  role="tab"
+                  aria-controls="tab-security"
+                  aria-selected="false"
+                >
+                  <div
+                    class="d-flex align-items-center justify-content-center rounded-3"
+                    style="width: 38px; height: 38px; min-width: 38px; background: rgba(251, 191, 36, 0.15)"
+                  >
+                    <i class="fas fa-shield-alt tab-icon" style="color: #fbbf24"></i>
+                  </div>
+                  <div class="overflow-hidden">
+                    <div class="fw-bold small text-truncate">Security</div>
+                    <div class="text-muted text-truncate" style="font-size: 0.75rem">App password protection</div>
+                  </div>
+                </button>
+
+                <button
+                  class="settings-nav-btn d-flex align-items-center gap-3"
+                  id="tab-maintenance-link"
+                  data-mdb-tab-init
+                  data-mdb-target="#tab-maintenance"
+                  type="button"
+                  role="tab"
+                  aria-controls="tab-maintenance"
+                  aria-selected="false"
+                >
+                  <div
+                    class="d-flex align-items-center justify-content-center rounded-3"
+                    style="width: 38px; height: 38px; min-width: 38px; background: rgba(52, 211, 153, 0.15)"
+                  >
+                    <i class="fas fa-database tab-icon" style="color: #34d399"></i>
+                  </div>
+                  <div class="overflow-hidden">
+                    <div class="fw-bold small text-truncate">Data</div>
+                    <div class="text-muted text-truncate" style="font-size: 0.75rem">CSV data backups</div>
+                  </div>
+                </button>
+              </div>
             </div>
-            <div class="card-body p-4">
-              <div data-repeater-list="folder_paths">
-                <div data-repeater-item class="mb-2">
-                  <div class="input-group">
-                    <span class="input-group-text border-0 bg-transparent opacity-50"><i
-                        class="fas fa-folder"></i></span>
-                    <input type="text" name="local_paths" class="form-control bg-transparent"
-                      placeholder="/absolute/path/to/files" />
-                    <button data-repeater-delete type="button" class="btn btn-link text-danger">
-                      <i class="fas fa-times"></i>
-                    </button>
+          </div>
+
+          <!-- Right Column: Settings Content Panels -->
+          <div class="col-12 col-md-8 col-xl-9">
+            <div class="tab-content" id="settingsTabContent">
+              <!-- Tab 1: Core Configuration -->
+              <div class="tab-pane fade show active" id="tab-core" role="tabpanel" aria-labelledby="tab-core-link">
+                <div class="d-flex flex-column gap-4">
+                  <!-- MegaCMD Card -->
+                  <div
+                    class="card shadow-sm border border-white border-opacity-10"
+                    style="background: rgba(18, 20, 29, 0.75); backdrop-filter: blur(16px); border-radius: 14px"
+                  >
+                    <div class="card-header border-bottom border-white border-opacity-10 bg-transparent py-3 px-4">
+                      <h5 class="fw-bold mb-0 text-white"><i class="fas fa-cog text-danger me-2"></i> MegaCMD</h5>
+                      <p class="text-muted small mb-0 mt-1">Configure your MEGAcmd CLI binary location for account management.</p>
+                    </div>
+                    <div class="card-body p-4">
+                      <div class="alert alert-info py-2 px-3 mb-3 border-0 bg-info bg-opacity-10" style="font-size: 0.78rem">
+                        <i class="fas fa-info-circle me-1"></i> Enter the <strong>full</strong> binary path.<br />
+                        <code>%LOCALAPPDATA%/MEGAcmd</code> &nbsp;|&nbsp;
+                        <code>/Applications/MegaCMD.app/Contents/MacOS</code> &nbsp;|&nbsp; <code>/usr/bin/mega-cmd</code>
+                      </div>
+
+                      <div class="mb-2">
+                        <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                          <div class="d-flex align-items-center gap-2">
+                            <label class="form-label text-muted small fw-bold mb-0">MegaCMD Binary Path</label>
+                            <span id="megacmdStatusBadge" style="display: none"></span>
+                          </div>
+                          <div class="d-flex gap-2 flex-wrap">
+                            <button
+                              type="button"
+                              id="discoverMegaCmdBtn"
+                              onclick="discoverMegaCmd()"
+                              class="btn btn-sm btn-outline-warning py-1 px-2"
+                              style="font-size: 0.75rem"
+                            >
+                              <i class="fas fa-search-location me-1"></i> Auto-discover
+                            </button>
+                            <button
+                              type="button"
+                              id="testMegaCmdBtn"
+                              onclick="testMegaCmd()"
+                              class="btn btn-sm btn-outline-secondary py-1 px-2"
+                              style="font-size: 0.75rem"
+                            >
+                              <i class="fas fa-vial me-1"></i> Test MEGAcmd
+                            </button>
+                            <a
+                              href="https://mega.io/cmd"
+                              id="downloadMegaCmdBtn"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              class="btn btn-sm btn-outline-info py-1 px-2"
+                              style="font-size: 0.75rem"
+                            >
+                              <i class="fas fa-download me-1"></i> Download
+                              <i class="fas fa-external-link-alt ms-1 opacity-75" style="font-size: 0.65rem"></i>
+                            </a>
+                          </div>
+                        </div>
+                        <div class="form-outline" data-mdb-input-init>
+                          <input type="text" id="megacmd_path" class="form-control" placeholder="/usr/bin" />
+                        </div>
+                        <div id="megacmdTestResult" class="small mt-1" style="display: none"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- rclone Card -->
+                  <div
+                    class="card shadow-sm border border-white border-opacity-10"
+                    style="background: rgba(18, 20, 29, 0.75); backdrop-filter: blur(16px); border-radius: 14px"
+                  >
+                    <div class="card-header border-bottom border-white border-opacity-10 bg-transparent py-3 px-4">
+                      <h5 class="fw-bold mb-0 text-white">
+                        <i class="fas fa-cloud-upload-alt text-primary me-2" style="color: #a78bfa !important"></i> rclone Engine
+                      </h5>
+                      <p class="text-muted small mb-0 mt-1">
+                        rclone is used for all uploads to enable parallel multi-account transfers without session conflicts.
+                      </p>
+                    </div>
+                    <div class="card-body p-4">
+                      <div class="alert alert-info py-2 px-3 mb-3 border-0 bg-info bg-opacity-10" style="font-size: 0.78rem">
+                        <i class="fas fa-info-circle me-1"></i> Enter the <strong>full</strong> binary path or use Auto-discover.<br />
+                        <code>/usr/bin/rclone</code> &nbsp;|&nbsp; <code>/opt/homebrew/bin/rclone</code> &nbsp;|&nbsp;
+                        <code>C:\rclone\rclone.exe</code>
+                      </div>
+
+                      <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                          <div class="d-flex align-items-center gap-2">
+                            <label class="form-label text-muted small fw-bold mb-0">rclone Binary Path</label>
+                            <span id="rcloneStatusBadge" style="display: none"></span>
+                          </div>
+                          <div class="d-flex gap-2 flex-wrap">
+                            <button
+                              type="button"
+                              id="discoverRcloneBtn"
+                              onclick="discoverRclone()"
+                              class="btn btn-sm btn-outline-warning py-1 px-2"
+                              style="font-size: 0.75rem"
+                            >
+                              <i class="fas fa-search-location me-1"></i> Auto-discover
+                            </button>
+                            <button
+                              type="button"
+                              id="testRcloneBtn"
+                              onclick="testRclone()"
+                              class="btn btn-sm btn-outline-secondary py-1 px-2"
+                              style="font-size: 0.75rem"
+                            >
+                              <i class="fas fa-vial me-1"></i> Test rclone
+                            </button>
+                            <a
+                              href="https://rclone.org/downloads/"
+                              id="downloadRcloneBtn"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              class="btn btn-sm btn-outline-info py-1 px-2"
+                              style="font-size: 0.75rem"
+                            >
+                              <i class="fas fa-download me-1"></i> Download
+                              <i class="fas fa-external-link-alt ms-1 opacity-75" style="font-size: 0.65rem"></i>
+                            </a>
+                          </div>
+                        </div>
+                        <div class="form-outline" data-mdb-input-init>
+                          <input type="text" id="rclone_path" class="form-control" placeholder="/usr/bin/rclone" />
+                        </div>
+                        <div id="rcloneTestResult" class="small mt-1" style="display: none"></div>
+                      </div>
+
+                      <div class="pt-3 mt-3 border-top border-white border-opacity-10">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                          <div>
+                            <label class="form-label text-muted small fw-bold mb-0">rclone Config File</label>
+                            <div class="x-small text-muted mt-1">
+                              <i class="fas fa-file-code me-1"></i> Auto-managed - one entry per MEGA account. Regenerated on batch sync.
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onclick="rebuildRcloneConfig()"
+                            id="rebuildRcloneConfigBtn"
+                            class="btn btn-sm btn-outline-warning py-1 px-2"
+                            style="font-size: 0.75rem"
+                          >
+                            <i class="fas fa-sync me-1"></i> Sync Config
+                          </button>
+                        </div>
+                        <div
+                          id="rcloneConfPath"
+                          class="font-monospace small text-muted px-2 py-1 rounded"
+                          style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); word-break: break-all"
+                        >
+                          Loading...
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Email Accounts Card -->
+                  <div
+                    class="card shadow-sm border border-white border-opacity-10"
+                    style="background: rgba(18, 20, 29, 0.75); backdrop-filter: blur(16px); border-radius: 14px"
+                  >
+                    <div class="card-header border-bottom border-white border-opacity-10 bg-transparent py-3 px-4">
+                      <h5 class="fw-bold mb-0 text-white"><i class="fas fa-users text-success me-2"></i> Account Generation Templates</h5>
+                      <p class="text-muted small mb-0 mt-1">Default credentials used when bulk registering new MEGA accounts.</p>
+                    </div>
+                    <div class="card-body p-4">
+                      <div class="alert alert-info py-2 px-3 mb-3 border-0 bg-info bg-opacity-10" style="font-size: 0.78rem">
+                        <i class="fas fa-info-circle me-1"></i> Use standard plus-addressing (e.g. <code>user+mm*@domain.com</code> or
+                        <code>user+mm#@domain.com</code>).
+                      </div>
+                      <div class="row g-3">
+                        <div class="col-md-6">
+                          <label class="form-label text-muted small fw-bold">Template Email</label>
+                          <div class="form-outline" data-mdb-input-init>
+                            <input type="text" id="mega_email" class="form-control" placeholder="contact+mm*@troubledmind.trade" />
+                          </div>
+                        </div>
+                        <div class="col-md-6">
+                          <label class="form-label text-muted small fw-bold">Template Password</label>
+                          <div class="form-outline" data-mdb-input-init>
+                            <input type="password" id="mega_passwords" class="form-control" />
+                          </div>
+                          <div id="passwordWarning" class="text-danger small mt-1" style="display: none">
+                            <i class="fas fa-exclamation-circle me-1"></i> Password contains unsupported characters.
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tab 2: Monitored Folders & Date Detection -->
+              <div class="tab-pane fade" id="tab-folders" role="tabpanel" aria-labelledby="tab-folders-link">
+                <div class="d-flex flex-column gap-4">
+                  <!-- Monitored Folders Card -->
+                  <div
+                    class="card shadow-sm border border-white border-opacity-10"
+                    id="folder-repeater"
+                    style="background: rgba(18, 20, 29, 0.75); backdrop-filter: blur(16px); border-radius: 14px"
+                  >
+                    <div
+                      class="card-header border-bottom border-white border-opacity-10 bg-transparent py-3 px-4 d-flex justify-content-between align-items-center flex-wrap gap-2"
+                    >
+                      <div>
+                        <h5 class="fw-bold mb-0 text-white"><i class="fas fa-folder-open text-info me-2"></i> Monitored Local Folders</h5>
+                        <p class="text-muted small mb-0 mt-1">Specify local directory paths scanned for files to index and upload.</p>
+                      </div>
+                      <button data-repeater-create type="button" class="btn btn-sm btn-info px-3">
+                        <i class="fas fa-plus me-1"></i> Add Folder
+                      </button>
+                    </div>
+                    <div class="card-body p-4">
+                      <div data-repeater-list="folder_paths">
+                        <div data-repeater-item class="mb-2">
+                          <div class="input-group">
+                            <span class="input-group-text border-0 bg-transparent opacity-50"><i class="fas fa-folder text-info"></i></span>
+                            <input
+                              type="text"
+                              name="local_paths"
+                              class="form-control bg-transparent"
+                              placeholder="/absolute/path/to/files"
+                            />
+                            <button data-repeater-delete type="button" class="btn btn-link text-danger">
+                              <i class="fas fa-times"></i>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Folder Date Detection Patterns Card -->
+                  <div
+                    class="card shadow-sm border border-white border-opacity-10"
+                    style="background: rgba(18, 20, 29, 0.75); backdrop-filter: blur(16px); border-radius: 14px"
+                  >
+                    <div class="card-header border-bottom border-white border-opacity-10 bg-transparent py-3 px-4">
+                      <h5 class="fw-bold mb-0 text-white">
+                        <i class="fas fa-calendar-alt text-info me-2"></i> Folder Date Detection Patterns
+                      </h5>
+                      <p class="text-muted small mb-0 mt-1">
+                        Regex/strftime formatting applied to parse recording dates from local folder names.
+                      </p>
+                    </div>
+                    <div class="card-body p-4">
+                      <div class="alert alert-info py-2 px-3 mb-3 border-0 bg-info bg-opacity-10" style="font-size: 0.78rem">
+                        <i class="fas fa-calendar-check me-2"></i> Use standard <strong>strftime</strong> format codes (e.g.
+                        <code>%Y-%m-%d</code>). <br />
+                        <a href="https://strfti.me" target="_blank" rel="noopener noreferrer" class="text-info"
+                          >View full list of strftime format codes <i class="fas fa-external-link-alt ms-1" style="font-size: 0.65rem"></i
+                        ></a>
+                      </div>
+                      <div class="row g-3">
+                        <div class="col-md-4">
+                          <label class="form-label text-muted small fw-bold">Full Date Pattern</label>
+                          <div class="form-outline border rounded p-1" data-mdb-input-init title="Full Date Example: 2024-10-18">
+                            <input type="text" id="date_format_full" class="form-control form-control-sm border-0" placeholder="%Y-%m-%d" />
+                          </div>
+                          <div class="x-small text-muted mt-1">e.g. 2024-10-18</div>
+                        </div>
+                        <div class="col-md-4">
+                          <label class="form-label text-muted small fw-bold">Month & Year Pattern</label>
+                          <div class="form-outline border rounded p-1" data-mdb-input-init title="Year & Month Example: October 2024">
+                            <input type="text" id="date_format_month" class="form-control form-control-sm border-0" placeholder="%B %Y" />
+                          </div>
+                          <div class="x-small text-muted mt-1">e.g. October 2024</div>
+                        </div>
+                        <div class="col-md-4">
+                          <label class="form-label text-muted small fw-bold">Year Only Pattern</label>
+                          <div class="form-outline border rounded p-1" data-mdb-input-init title="Year Only Example: 2024">
+                            <input type="text" id="date_format_year" class="form-control form-control-sm border-0" placeholder="%Y" />
+                          </div>
+                          <div class="x-small text-muted mt-1">e.g. 2024</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tab 3: Security & Access -->
+              <div class="tab-pane fade" id="tab-security" role="tabpanel" aria-labelledby="tab-security-link">
+                <div
+                  class="card shadow-sm border border-white border-opacity-10"
+                  style="background: rgba(18, 20, 29, 0.75); backdrop-filter: blur(16px); border-radius: 14px"
+                >
+                  <div
+                    class="card-header border-bottom border-white border-opacity-10 bg-transparent py-3 px-4 d-flex align-items-center justify-content-between flex-wrap gap-2"
+                  >
+                    <div>
+                      <h5 class="fw-bold mb-0 text-white"><i class="fas fa-shield-alt text-warning me-2"></i> Security</h5>
+                      <p class="text-muted small mb-0 mt-1">Set an optional application password lock to prevent unauthorized access.</p>
+                    </div>
+                    <span id="securityStatusBadge" class="badge px-3 py-2 fw-bold fs-6" style="letter-spacing: 0.04em"></span>
+                  </div>
+                  <div class="card-body p-4">
+                    <div
+                      id="securityUnprotectedAlert"
+                      class="alert border-0 mb-4 d-flex align-items-center gap-3"
+                      style="
+                        background: rgba(239, 68, 68, 0.12);
+                        border-left: 3px solid #ef4444 !important;
+                        border-radius: 10px;
+                        display: none !important;
+                      "
+                    >
+                      <i class="fas fa-exclamation-triangle fs-4" style="color: #f87171"></i>
+                      <div>
+                        <div class="fw-bold text-white mb-0" style="font-size: 0.9rem">Dashboard is currently unprotected</div>
+                        <div class="text-muted small">
+                          Anyone with network access to this server can view and control MegaManager. Set a password below to secure it.
+                        </div>
+                      </div>
+                    </div>
+                    <div class="mb-3">
+                      <label class="form-label text-muted small fw-bold">Dashboard Access Key</label>
+                      <div class="form-outline" data-mdb-input-init>
+                        <input type="password" id="app_password" class="form-control" placeholder="••••••••" />
+                      </div>
+                      <div class="x-small text-muted mt-2">
+                        <i class="fas fa-info-circle me-1"></i> If set, users must authenticate before accessing the dashboard. Leave blank
+                        to disable.
+                      </div>
+                    </div>
+
+                    <div class="pt-3 border-top border-white border-opacity-10">
+                      <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
+                        <div>
+                          <label class="form-label text-muted small fw-bold mb-0">Max Login Attempts</label>
+                          <div class="x-small text-muted mt-1">
+                            <i class="fas fa-lock me-1"></i> After this many incorrect passwords, the dashboard locks permanently until the
+                            server is restarted.
+                          </div>
+                        </div>
+                        <span
+                          class="badge px-2 py-1 fw-bold"
+                          style="
+                            background: rgba(251, 191, 36, 0.15);
+                            color: #fbbf24;
+                            border: 1px solid rgba(251, 191, 36, 0.3);
+                            font-size: 0.75rem;
+                          "
+                        >
+                          Max: 10
+                        </span>
+                      </div>
+                      <div class="d-flex align-items-center gap-3">
+                        <input
+                          type="range"
+                          id="login_max_attempts"
+                          class="form-range flex-grow-1"
+                          min="1"
+                          max="10"
+                          step="1"
+                          value="5"
+                          oninput="document.getElementById('lockoutAttemptsDisplay').textContent = this.value"
+                        />
+                        <span
+                          id="lockoutAttemptsDisplay"
+                          class="badge px-3 py-2 fw-bold font-monospace"
+                          style="
+                            min-width: 2.5rem;
+                            text-align: center;
+                            background: rgba(255, 255, 255, 0.08);
+                            color: #fff;
+                            border: 1px solid rgba(255, 255, 255, 0.15);
+                            font-size: 1rem;
+                          "
+                          >5</span
+                        >
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tab 4: Maintenance & Exports -->
+              <div class="tab-pane fade" id="tab-maintenance" role="tabpanel" aria-labelledby="tab-maintenance-link">
+                <div
+                  class="card shadow-sm border border-white border-opacity-10"
+                  style="background: rgba(18, 20, 29, 0.75); backdrop-filter: blur(16px); border-radius: 14px"
+                >
+                  <div class="card-header border-bottom border-white border-opacity-10 bg-transparent py-3 px-4">
+                    <h5 class="fw-bold mb-0 text-white"><i class="fas fa-database text-success me-2"></i> Maintenance & Data Exports</h5>
+                    <p class="text-muted small mb-0 mt-1">
+                      Export full database records in standard CSV format for backups or external analysis.
+                    </p>
+                  </div>
+                  <div class="card-body p-4">
+                    <div class="row g-3">
+                      <div class="col-md-4">
+                        <div
+                          class="p-3 rounded-3 border border-white border-opacity-10 h-100 d-flex flex-column justify-content-between"
+                          style="background: rgba(255, 255, 255, 0.02)"
+                        >
+                          <div>
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                              <i class="fas fa-users text-info fs-5"></i>
+                              <h6 class="fw-bold mb-0 text-white">Accounts Export</h6>
+                            </div>
+                            <p class="text-muted small mb-3">Download complete account roster, usage quotas, and login status.</p>
+                          </div>
+                          <button
+                            type="button"
+                            onclick="exportData('accounts', 'mega_accounts.csv')"
+                            class="btn btn-sm btn-outline-light border-secondary w-100"
+                          >
+                            <i class="fas fa-download me-2"></i> Accounts CSV
+                          </button>
+                        </div>
+                      </div>
+                      <div class="col-md-4">
+                        <div
+                          class="p-3 rounded-3 border border-white border-opacity-10 h-100 d-flex flex-column justify-content-between"
+                          style="background: rgba(255, 255, 255, 0.02)"
+                        >
+                          <div>
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                              <i class="fas fa-file-alt text-warning fs-5"></i>
+                              <h6 class="fw-bold mb-0 text-white">Local Files Export</h6>
+                            </div>
+                            <p class="text-muted small mb-3">Download catalog of discovered local files, folder sizes, and paths.</p>
+                          </div>
+                          <button
+                            type="button"
+                            onclick="exportData('local_files', 'local_files.csv')"
+                            class="btn btn-sm btn-outline-light border-secondary w-100"
+                          >
+                            <i class="fas fa-download me-2"></i> Local CSV
+                          </button>
+                        </div>
+                      </div>
+                      <div class="col-md-4">
+                        <div
+                          class="p-3 rounded-3 border border-white border-opacity-10 h-100 d-flex flex-column justify-content-between"
+                          style="background: rgba(255, 255, 255, 0.02)"
+                        >
+                          <div>
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                              <i class="fas fa-cloud text-success fs-5"></i>
+                              <h6 class="fw-bold mb-0 text-white">Cloud Files Export</h6>
+                            </div>
+                            <p class="text-muted small mb-3">Download status of cloud synced assets, assigned accounts, and share links.</p>
+                          </div>
+                          <button
+                            type="button"
+                            onclick="exportData('cloud_files', 'cloud_files.csv')"
+                            class="btn btn-sm btn-outline-light border-secondary w-100"
+                          >
+                            <i class="fas fa-download me-2"></i> Cloud CSV
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Cloud Verification Card -->
+                <div
+                  class="card shadow-sm border border-white border-opacity-10 mt-4"
+                  style="background: rgba(18, 20, 29, 0.75); backdrop-filter: blur(16px); border-radius: 14px"
+                >
+                  <div class="card-header border-bottom border-white border-opacity-10 bg-transparent py-3 px-4">
+                    <h5 class="fw-bold mb-0 text-white"><i class="fas fa-check-double text-info me-2"></i> Cloud Verification</h5>
+                    <p class="text-muted small mb-0 mt-1">
+                      Audit the MEGA cloud against your local database to ensure structure and file sizes match perfectly.
+                    </p>
+                  </div>
+                  <div class="card-body p-4">
+                    <div
+                      class="alert alert-warning py-2 px-3 mb-3 border-0 bg-warning bg-opacity-10 text-warning"
+                      style="font-size: 0.78rem"
+                    >
+                      <i class="fas fa-exclamation-triangle me-1"></i> Any folders found to be missing, corrupted, or mismatched in size
+                      will be automatically deleted from the cloud and re-queued for upload.
+                    </div>
+                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                      <p class="mb-0 text-muted small" style="max-width: 600px">
+                        This process scans every completed file across all active accounts using `rclone size`. It checks that the exact
+                        byte-size matches the original local footprint. If you have many large accounts, this may take several minutes.
+                      </p>
+                      <button type="button" id="verifyCloudBtn" onclick="verifyAllCloudFiles()" class="btn btn-info shadow-sm px-4">
+                        <i class="fas fa-shield-alt me-2"></i> Verify All
+                      </button>
+                    </div>
+                    <!-- Progress Visualizer -->
+                    <div class="mt-4 d-none" id="verifyProgressContainer">
+                      <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-white small fw-bold" id="verifyProgressMessage">Initializing...</span>
+                        <span class="text-info small fw-bold font-monospace" id="verifyProgressCount">0 / 0</span>
+                      </div>
+                      <div class="progress" style="height: 6px; background-color: rgba(255, 255, 255, 0.1)">
+                        <div
+                          class="progress-bar progress-bar-striped progress-bar-animated bg-info"
+                          id="verifyProgressBar"
+                          role="progressbar"
+                          style="width: 0%"
+                        ></div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-    </form>
+      </form>
+    </section>
 
-    <!-- Data Operations -->
-    <div class="mt-5 pt-4">
-      <h6 class="text-uppercase small fw-bold text-muted mb-3 letter-spacing-1">Maintenance & Exports</h6>
-      <div class="d-flex flex-wrap gap-2">
-        <button onclick="exportData('accounts', 'mega_accounts.csv')"
-          class="btn btn-sm btn-outline-light border-secondary">
-          <i class="fas fa-users me-2"></i> Accounts CSV
-        </button>
-        <button onclick="exportData('local_files', 'local_files.csv')"
-          class="btn btn-sm btn-outline-light border-secondary">
-          <i class="fas fa-file-alt me-2"></i> Local CSV
-        </button>
-        <button onclick="exportData('cloud_files', 'cloud_files.csv')"
-          class="btn btn-sm btn-outline-light border-secondary">
-          <i class="fas fa-cloud me-2"></i> Cloud CSV
-        </button>
+    <!-- Universal Toast -->
+    <div class="position-fixed top-0 end-0 p-3" style="z-index: 1055">
+      <div id="universalToast" class="toast fade" role="alert" data-mdb-delay="4000" data-mdb-autohide="true">
+        <div class="toast-body text-white" id="universalToastBody">
+          <!-- Message will go here -->
+        </div>
       </div>
     </div>
-  </section>
-
-  <!-- Universal Toast -->
-  <div class="position-fixed top-0 end-0 p-3" style="z-index: 1055">
-    <div id="universalToast" class="toast fade" role="alert" data-mdb-delay="4000" data-mdb-autohide="true">
-      <div class="toast-body text-white" id="universalToastBody">
-        <!-- Message will go here -->
-      </div>
-    </div>
-  </div>
-  <!-- MDB scripts -->
-  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mdb-ui-kit@9.0.0/js/mdb.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jquery.repeater/jquery.repeater.min.js"></script>
-  <script src="scripts/include.js?v=0.0.1"></script>
-  <script src="scripts/settings.js?v=0.0.5"></script>
-</body>
-
+    <!-- MDB scripts -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mdb-ui-kit@9.0.0/js/mdb.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery.repeater/jquery.repeater.min.js"></script>
+    <script src="scripts/include.js?v=0.0.5"></script>
+    <script src="scripts/settings.js?v=0.0.10"></script>
+  </body>
 </html>

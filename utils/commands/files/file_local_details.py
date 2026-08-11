@@ -26,7 +26,7 @@ def run(args=None):
 
         try:
             session.commit()
-            print(f"📦 Updated size for {local_file.l_folder_name}: {folder_size} bytes")
+            print(f"INFO Updated size for {local_file.l_folder_name}: {folder_size} bytes")
 
             return {
                 "status": 200,
@@ -55,5 +55,5 @@ def calculate_folder_size(path):
                 if os.path.exists(fp):
                     total_size += os.path.getsize(fp)
             except Exception as e:
-                print(f"⚠️ Skipped file {fp}: {e}")
+                print(f"WARNING Skipped file {fp}: {e}")
     return total_size
