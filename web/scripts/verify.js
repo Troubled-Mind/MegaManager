@@ -2,7 +2,7 @@ function fetchPendingAccounts() {
   fetch("/run-command", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: " command=account_get_pending",
+    body: "command=account_get_pending",
   })
     .then((res) => res.json())
     .then((data) => {
