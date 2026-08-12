@@ -334,10 +334,17 @@ class CustomHandler(SimpleHTTPRequestHandler):
 
         with _COMMAND_CACHE_LOCK:
             existing = sys.modules.get(dotted_name)
-            if existing is not None and _COMMAND_MODULE_MTIME.get(dotted_name) == mtime:
-                return existing
-
-            module = importlib.reload(existing) if existing is not None else importlib.import_module(dotted_name)
+            if existing is not None:
+                # No cached mtime means someone else imported it first; adopt it rather than reload,
+                # which would reset live module state (e.g. transfer_upload's worker counters).
+                if dotted_name not in _COMMAND_MODULE_MTIME:
+                    _COMMAND_MODULE_MTIME[dotted_name] = mtime
+                    return existing
+                if _COMMAND_MODULE_MTIME[dotted_name] == mtime:
+                    return existing
+                module = importlib.reload(existing)
+            else:
+                module = importlib.import_module(dotted_name)
             _COMMAND_MODULE_MTIME[dotted_name] = mtime
 
         return module
