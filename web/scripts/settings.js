@@ -459,6 +459,7 @@ async function testRclone(isSilent = false) {
   const resultEl = document.getElementById("rcloneTestResult");
   const downloadBtn = document.getElementById("downloadRcloneBtn");
   const discoverBtn = document.getElementById("discoverRcloneBtn");
+  const pathInput = document.getElementById("rclone_path")?.value?.trim() || "";
 
   if (testBtn && !isSilent) {
     testBtn.disabled = true;
@@ -469,7 +470,10 @@ async function testRclone(isSilent = false) {
     const res = await fetch("/run-command", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ command: "system_rclone_test" }),
+      body: JSON.stringify({
+        command: "system_rclone_test",
+        args: { rclone_path: pathInput },
+      }),
     });
     const data = await res.json();
 

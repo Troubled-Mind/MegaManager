@@ -15,6 +15,19 @@ COMMON_PATHS = [
     os.path.expanduser("~/bin/rclone"),
 ]
 
+if os.name == "nt":
+    _local_app = os.environ.get("LOCALAPPDATA", "")
+    _program_files = os.environ.get("PROGRAMFILES", "C:\\Program Files")
+    COMMON_PATHS += [
+        "C:\\rclone\\rclone.exe",
+        os.path.join(_program_files, "rclone", "rclone.exe"),
+        os.path.join(_local_app, "rclone", "rclone.exe") if _local_app else "",
+        # Common package-manager install locations
+        os.path.join(os.environ.get("ChocolateyInstall", "C:\\ProgramData\\chocolatey"), "bin", "rclone.exe"),
+        os.path.expanduser("~\\scoop\\shims\\rclone.exe"),
+    ]
+    COMMON_PATHS = [p for p in COMMON_PATHS if p]
+
 def run(args=None):
     # 1. Try shutil.which (searches system PATH)
     found = shutil.which("rclone")
