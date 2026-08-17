@@ -6,7 +6,18 @@ from utils.rclone_config import rclone_cmd, RCLONE_CONF_PATH
 import os
 
 def run(args=None):
-    binary = rclone_cmd()
+    binary = None
+    if isinstance(args, dict):
+        binary = args.get("rclone_path") or args.get("path")
+    elif isinstance(args, str) and args.strip():
+        binary = args.strip()
+
+    binary = os.path.expandvars(os.path.expanduser(binary.strip())) if binary else ""
+
+    # Only fall back to the saved setting / bare "rclone" (PATH lookup) when
+    # the caller didn't explicitly pass a path to test.
+    if not binary:
+        binary = rclone_cmd()
     try:
         result = subprocess.run(
             [binary, "version"],

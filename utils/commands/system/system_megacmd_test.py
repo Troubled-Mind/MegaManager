@@ -88,8 +88,11 @@ def run(args=None):
 
     suffixes = _get_suffixes()
 
+    # "mega-cmd" (the interactive shell launcher) is only shipped on Linux/macOS
+    # installs. Windows installs launch the shell via MEGAcmdShell.exe instead and
+    # never place a mega-cmd/.bat/.exe file alongside the mega-*.bat wrapper
+    # scripts, so requiring it there always fails an otherwise-valid install.
     required_binaries = [
-        "mega-cmd",
         "mega-whoami",
         "mega-login",
         "mega-logout",
@@ -98,6 +101,8 @@ def run(args=None):
         "mega-export",
         "mega-df"
     ]
+    if os.name != "nt":
+        required_binaries.insert(0, "mega-cmd")
 
     missing = []
     found = []

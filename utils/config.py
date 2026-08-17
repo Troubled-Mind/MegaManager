@@ -84,6 +84,13 @@ def cmd(name):
     else:
         dir_path = base_path
 
+    # On macOS/Linux, mega-whoami/mega-login/etc. are one-line shell scripts
+    # ("mega-exec whoami \"$@\"") that call mega-exec by bare name instead of
+    # a path relative to themselves, so they only find their sibling mega-exec
+    # binary if their own directory is on PATH. Make sure it is.
+    if dir_path and dir_path not in os.environ.get("PATH", "").split(os.pathsep):
+        os.environ["PATH"] = dir_path + os.pathsep + os.environ.get("PATH", "")
+
     return os.path.join(dir_path, target_binary)
 
 import re
