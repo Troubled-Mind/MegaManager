@@ -24,6 +24,23 @@ Common install locations:
 - macOS: `/Applications/MegaCMD.app/Contents/MacOS`
 - Linux: `/usr/bin`
 
+### macOS: "mega-exec: command not found"
+
+MegaCMD's helper scripts (`mega-login`, `mega-cd`, `mega-ls`, etc.) are one-liners that call `mega-exec` by name, expecting it to be on your `PATH` - they don't reference it by full path. MegaCMD's own installer is supposed to set this up, but it doesn't always run correctly, and even when it does, GUI apps like MegaManager launch with a minimal system `PATH` that doesn't include the MegaCMD app folder. When that happens, every account action fails with something like:
+
+```
+mega-login: line 2: mega-exec: command not found
+```
+
+Fix it by symlinking `mega-exec` into `/usr/local/bin`, which is on the default PATH for both Terminal and GUI apps:
+
+```
+sudo mkdir -p /usr/local/bin
+sudo ln -sf "/Applications/MegaCMD.app/Contents/MacOS/mega-exec" /usr/local/bin/mega-exec
+```
+
+One symlink is enough - every other `mega-*` helper script just shells out to `mega-exec` internally. Restart MegaManager afterward.
+
 ## rclone
 
 Download and install [rclone](https://rclone.org/downloads/) for your operating system. MegaManager uses rclone for all file uploads. Unlike MegaCMD, rclone maintains an independent session per account, which means multiple accounts can upload simultaneously with no session conflicts.
