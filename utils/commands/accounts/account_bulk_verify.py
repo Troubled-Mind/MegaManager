@@ -222,7 +222,7 @@ def run(command_args=None):
 
             if extracted_email != "Unknown":
                 for acc in accounts_data:
-                    if acc["email"] in extracted_email or extracted_email in acc["email"]:
+                    if acc["email"] in extracted_email or extracted_email in acc["email"] or (len(extracted_email) > 2 and acc["email"] in extracted_email[1:]):
                         matched_acc = acc
                         break
 
