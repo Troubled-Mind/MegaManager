@@ -69,3 +69,64 @@ def test_bulk_verify_success_flow(mock_reader, mock_db, mock_run, mock_process_a
         assert res["results"][0]["status"] == "Success"
         assert acc.status == "Active"
         mock_process_account.assert_called_once()
+
+def test_extract_mega_verification_links_ligatures():
+    """Verify that extract_mega_verification_links handles Unicode ligatures (fi -> ﬁ)."""
+    from utils.commands.accounts.account_bulk_verify import extract_mega_verification_links
+
+    # Text containing ligature 'ﬁ' in 'conﬁrm'
+    ligature_text = "Didn't work? Copy the link below:\nhttps://mega.nz/#conﬁrmQ29uZmlybUNvZGVWMlVC\nxOkTCQAJvGTUWwoAGmNvbnRhY3QrbW10MUB0cm91YmxlZG1p\nbmQudHJhZGUJTWVnYU1hbmFnZXK3klalSXH8-Q\n"
+
+    with patch('utils.commands.accounts.account_bulk_verify.PdfReader') as mock_reader, \
+         patch('utils.commands.accounts.account_bulk_verify.os.path.exists', return_value=True):
+
+        mock_page = MagicMock()
+        mock_page.extract_text.return_value = ligature_text
+        mock_page.__contains__.side_effect = lambda k: False
+        mock_instance = MagicMock()
+        mock_instance.pages = [mock_page]
+        mock_reader.return_value = mock_instance
+
+        links = extract_mega_verification_links("dummy.pdf")
+        assert len(links) == 1
+        assert "confirm" in links[0]
+        assert "conﬁrm" not in links[0]
+
+def test_extract_mega_verification_links_annots():
+    """Verify that extract_mega_verification_links extracts links from PDF annotations (/Annots)."""
+    from utils.commands.accounts.account_bulk_verify import extract_mega_verification_links
+
+    target_uri = "https://mega.nz/#confirmQ29uZmlybUNvZGVWMlVCxOkTCQAJvGTUWwoAGmNvbnRhY3QrbW10MUB0cm91YmxlZG1pbmQudHJhZGUJTWVnYU1hbmFnZXK3klalSXH8-Q"
+
+    with patch('utils.commands.accounts.account_bulk_verify.PdfReader') as mock_reader, \
+         patch('utils.commands.accounts.account_bulk_verify.os.path.exists', return_value=True):
+
+        mock_annot = MagicMock()
+        mock_annot.get_object.return_value = {
+            '/Subtype': '/Link',
+            '/A': {'/URI': target_uri}
+        }
+
+        mock_page = MagicMock()
+        mock_page.extract_text.return_value = ""
+        mock_page.__contains__.side_effect = lambda k: k == '/Annots'
+        mock_page.__getitem__.side_effect = lambda k: [mock_annot] if k == '/Annots' else None
+
+        mock_instance = MagicMock()
+        mock_instance.pages = [mock_page]
+        mock_reader.return_value = mock_instance
+
+        links = extract_mega_verification_links("dummy.pdf")
+        assert len(links) == 1
+        assert links[0] == target_uri
+
+def test_sample_pdf_verification_if_exists():
+    """Verify extraction against actual sample PDF if available on filesystem."""
+    import os
+    from utils.commands.accounts.account_bulk_verify import extract_mega_verification_links
+
+    sample_pdf = "/home/glados/Downloads/MEGA email verification required.pdf"
+    if os.path.exists(sample_pdf):
+        links = extract_mega_verification_links(sample_pdf)
+        assert len(links) == 28
+
