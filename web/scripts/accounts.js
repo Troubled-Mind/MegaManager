@@ -392,6 +392,11 @@ function createAccountRowHTML(acc, isStale = false) {
      : ""
  }
  <li>
+ <a class="dropdown-item text-info" href="#" onclick="showUpdatePasswordModal(${acc.id}, '${acc.email}')">
+ <i class="fas fa-key me-2"></i> Update Password
+ </a>
+ </li>
+ <li>
  <a class="dropdown-item text-danger" href="#" onclick="confirmDeleteAccount(${acc.id}, '${acc.email}')">
  <i class="fas fa-trash-alt me-2"></i> Delete Account
  </a>
@@ -1112,3 +1117,59 @@ document.getElementById("submitNewAccountBtn")?.addEventListener("click", async 
     }
   }
 });
+
+let updatePasswordTargetId = null;
+let updatePasswordTargetEmail = null;
+
+function showUpdatePasswordModal(accountId, email) {
+  updatePasswordTargetId = accountId;
+  updatePasswordTargetEmail = email;
+  
+  document.getElementById("updatePasswordEmail").textContent = email;
+  document.getElementById("newPasswordInput").value = "";
+  
+  const modal = new mdb.Modal(document.getElementById("updatePasswordModal"));
+  modal.show();
+}
+
+async function updateAccountPassword() {
+  const newPassword = document.getElementById("newPasswordInput").value.trim();
+  
+  if (!newPassword) {
+    showToast("Please enter a new password", "warning");
+    return;
+  }
+  
+  const submitBtn = document.getElementById("submitUpdatePasswordBtn");
+  const originalBtnHTML = submitBtn.innerHTML;
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Updating...';
+  
+  try {
+    const response = await fetch("/run-command", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        command: "account:update_password",
+        args: `${updatePasswordTargetId}:${newPassword}`
+      }),
+    });
+    
+    const result = await response.json();
+    
+    if (result.status === 200) {
+      showToast(`Password updated for ${updatePasswordTargetEmail}`, "success");
+      const modal = mdb.Modal.getInstance(document.getElementById("updatePasswordModal"));
+      modal.hide();
+      loadAccountTable(); // Refresh the table
+    } else {
+      showToast(result.message || "Failed to update password", "danger");
+    }
+  } catch (error) {
+    console.error("Error updating password:", error);
+    showToast("An error occurred while updating the password", "danger");
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = originalBtnHTML;
+  }
+}
