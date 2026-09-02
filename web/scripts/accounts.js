@@ -397,6 +397,16 @@ function createAccountRowHTML(acc, isStale = false) {
  </a>
  </li>
  <li>
+ <a class="dropdown-item text-warning" href="#" onclick="debugQuota(${acc.id}, '${acc.email}')">
+ <i class="fas fa-bug me-2"></i> Debug Quota
+ </a>
+ </li>
+ <li>
+ <a class="dropdown-item text-primary" href="#" onclick="emptyTrash(${acc.id}, '${acc.email}')">
+ <i class="fas fa-trash-restore me-2"></i> Empty Trash
+ </a>
+ </li>
+ <li>
  <a class="dropdown-item text-danger" href="#" onclick="confirmDeleteAccount(${acc.id}, '${acc.email}')">
  <i class="fas fa-trash-alt me-2"></i> Delete Account
  </a>
@@ -1161,7 +1171,7 @@ async function updateAccountPassword() {
       showToast(`Password updated for ${updatePasswordTargetEmail}`, "success");
       const modal = mdb.Modal.getInstance(document.getElementById("updatePasswordModal"));
       modal.hide();
-      loadAccountTable(); // Refresh the table
+      loadAccountTable();
     } else {
       showToast(result.message || "Failed to update password", "danger");
     }
@@ -1171,5 +1181,89 @@ async function updateAccountPassword() {
   } finally {
     submitBtn.disabled = false;
     submitBtn.innerHTML = originalBtnHTML;
+  }
+}
+
+async function debugQuota(accountId, email) {
+  if (!confirm(`Debug quota info for ${email}?\n\nThis will show detailed quota information from multiple sources.`)) {
+    return;
+  }
+  
+  showToast("Fetching quota debug info...", "info");
+  
+  try {
+    const response = await fetch("/run-command", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        command: "account:quota_debug",
+        args: String(accountId)
+      }),
+    });
+    
+    const result = await response.json();
+    
+    if (result.status === 200 && result.data) {
+      const data = result.data;
+      let message = `📊 Quota Debug for ${email}\n\n`;
+      
+      message += `📦 Database:\n`;
+      message += `  Used: ${formatBytes(data.database.used_quota)}\n`;
+      message += `  Total: ${formatBytes(data.database.total_quota)}\n`;
+      message += `  Free: ${formatBytes(data.database.free_space)}\n`;
+      message += `  Updated: ${data.database.updated_at}\n\n`;
+      
+      message += `🔧 Rclone:\n`;
+      message += `  Used: ${formatBytes(data.rclone.used)}\n`;
+      message += `  Total: ${formatBytes(data.rclone.total)}\n`;
+      message += `  Free: ${formatBytes(data.rclone.free)}\n`;
+      message += `  Trashed: ${formatBytes(data.rclone.trashed)}\n\n`;
+      
+      if (data.diagnosis && data.diagnosis.length > 0) {
+        message += `💡 Diagnosis:\n`;
+        data.diagnosis.forEach(d => message += `  ${d}\n`);
+      }
+      
+      console.log("Full debug data:", result.data);
+      alert(message);
+      showToast("Debug info logged to console", "success");
+    } else {
+      showToast(result.message || "Failed to get debug info", "danger");
+    }
+  } catch (error) {
+    console.error("Error debugging quota:", error);
+    showToast("An error occurred", "danger");
+  }
+}
+
+async function emptyTrash(accountId, email) {
+  if (!confirm(`Empty trash for ${email}?\n\nThis will permanently delete all files in the trash/rubbish bin and refresh the quota.\n\n⚠️ This cannot be undone!`)) {
+    return;
+  }
+  
+  showToast("Emptying trash and refreshing quota...", "info");
+  
+  try {
+    const response = await fetch("/run-command", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        command: "account:empty_trash",
+        args: String(accountId)
+      }),
+    });
+    
+    const result = await response.json();
+    
+    if (result.status === 200) {
+      const data = result.data;
+      showToast(`✅ Trash emptied! Free space: ${data.free_space_gb} GB`, "success");
+      loadAccountTable();
+    } else {
+      showToast(result.message || "Failed to empty trash", "danger");
+    }
+  } catch (error) {
+    console.error("Error emptying trash:", error);
+    showToast("An error occurred", "danger");
   }
 }

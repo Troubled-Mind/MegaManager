@@ -77,6 +77,68 @@ The indexing only processes folders matching configured date formats. If date fo
 Your folders must match the date patterns. For example, if you set `%Y-%m-%d`:
 ```
 ✅ /mnt/media/2024-09-02/Video.mkv  → Will be indexed
+
+---
+
+## 3. 🔍 Quota Debug Tools
+
+**Added:** Diagnostic tools for quota discrepancies
+
+**New Commands:**
+- `account:quota_debug` - Shows detailed quota info from database, rclone, and MEGAcmd
+- `account:empty_trash` - Empties trash folder and refreshes quota
+
+**Files Added:**
+- `utils/commands/accounts/account_quota_debug.py` (NEW)
+- `utils/commands/accounts/account_empty_trash.py` (NEW)
+
+**UI:**
+- "..." menu → "Debug Quota" - Shows comparison of values
+- "..." menu → "Empty Trash" - Empties trash and updates quota
+
+### Why Quota Might Be Wrong:
+
+1. **Trash Folder** (Most Common)
+   - Files in MEGA's trash/rubbish bin still count toward quota
+   - Even if you deleted them, they're not fully removed until trash is emptied
+   - Solution: Click "Empty Trash" in the account menu
+
+2. **MEGA API Caching**
+   - MEGA's servers may cache quota values for up to several hours
+   - Refreshing immediately after a large upload/delete may show old values
+   - Solution: Wait 10-15 minutes, then refresh again
+
+3. **Pending Uploads/Deletions**
+   - Large files may still be processing on MEGA's servers
+   - Solution: Wait for operations to complete, then refresh
+
+### How to Use Debug Tools:
+
+1. **If quota looks wrong:**
+   - Click "..." next to the account
+   - Select "Debug Quota"
+   - Check the console for detailed comparison
+
+2. **Common fixes:**
+   - If "Trashed" shows a large value → Click "Empty Trash"
+   - If database != rclone values → Click "Refresh" (sync icon)
+   - If still wrong after 15 mins → MEGA's cache is stale, try logging into MEGA web and checking there
+
+### Technical Details:
+
+**How quota is fetched:**
+1. User clicks "Refresh" button
+2. MEGAcmd logs into the account
+3. Rclone runs `rclone about --json` to get quota from MEGA's API
+4. Values saved to database
+5. Frontend calculates free space: `total - used`
+
+**Debug command shows:**
+- Database values (what the UI displays)
+- Rclone values (what MEGA API reports)
+- MEGAcmd output (alternative source)
+- Trash folder size
+- Diagnostic messages
 ❌ /mnt/media/September-2-2024/Video.mkv  → Won't match
 ```
 
