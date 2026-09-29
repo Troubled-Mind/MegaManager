@@ -438,33 +438,31 @@
                     </div>
                     <div class="card-body p-4">
                       <div class="alert alert-info py-2 px-3 mb-3 border-0 bg-info bg-opacity-10" style="font-size: 0.78rem">
-                        <i class="fas fa-calendar-check me-2"></i> Use standard <strong>strftime</strong> format codes (e.g.
-                        <code>%Y-%m-%d</code>). <br />
-                        <a href="https://strfti.me" target="_blank" rel="noopener noreferrer" class="text-info"
-                          >View full list of strftime format codes <i class="fas fa-external-link-alt ms-1" style="font-size: 0.65rem"></i
-                        ></a>
+                        <i class="fas fa-calendar-check me-2"></i> Click a code to insert it into the last-focused field below.
+                        Only these codes are recognised - anything else is matched as literal text, not a date.
                       </div>
+                      <div id="dateFormatTokenChips" class="d-flex flex-wrap gap-2 mb-3"></div>
                       <div class="row g-3">
                         <div class="col-md-4">
                           <label class="form-label text-muted small fw-bold">Full Date Pattern</label>
-                          <div class="form-outline border rounded p-1" data-mdb-input-init title="Full Date Example: 2024-10-18">
+                          <div class="form-outline border rounded p-1" data-mdb-input-init>
                             <input type="text" id="date_format_full" class="form-control form-control-sm border-0" placeholder="%Y-%m-%d" />
                           </div>
-                          <div class="x-small text-muted mt-1">e.g. 2024-10-18</div>
+                          <div class="x-small text-info mt-1" id="date_format_full_preview">Matches folder names like: 2024-10-18</div>
                         </div>
                         <div class="col-md-4">
                           <label class="form-label text-muted small fw-bold">Month & Year Pattern</label>
-                          <div class="form-outline border rounded p-1" data-mdb-input-init title="Year & Month Example: October 2024">
+                          <div class="form-outline border rounded p-1" data-mdb-input-init>
                             <input type="text" id="date_format_month" class="form-control form-control-sm border-0" placeholder="%B %Y" />
                           </div>
-                          <div class="x-small text-muted mt-1">e.g. October 2024</div>
+                          <div class="x-small text-info mt-1" id="date_format_month_preview">Matches folder names like: October 2024</div>
                         </div>
                         <div class="col-md-4">
                           <label class="form-label text-muted small fw-bold">Year Only Pattern</label>
-                          <div class="form-outline border rounded p-1" data-mdb-input-init title="Year Only Example: 2024">
+                          <div class="form-outline border rounded p-1" data-mdb-input-init>
                             <input type="text" id="date_format_year" class="form-control form-control-sm border-0" placeholder="%Y" />
                           </div>
-                          <div class="x-small text-muted mt-1">e.g. 2024</div>
+                          <div class="x-small text-info mt-1" id="date_format_year_preview">Matches folder names like: 2024</div>
                         </div>
                       </div>
                     </div>

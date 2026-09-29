@@ -393,7 +393,80 @@ document.getElementById("mega_passwords").addEventListener("input", function () 
 document.addEventListener("DOMContentLoaded", () => {
   const pwField = document.getElementById("app_password");
   if (pwField) pwField.addEventListener("input", updateSecurityStatus);
+  initDateFormatHelpers();
 });
+
+// Keep this list in sync with strftime_to_regex() in utils/commands/shared.py -
+// those are the only codes the actual folder-matching logic recognises. Any
+// other "%X" code is matched as literal text, not substituted, so advertising
+// more than this here would just be misleading.
+const DATE_FORMAT_TOKENS = [
+  { code: "%Y", label: "Year (4-digit)", example: "2024" },
+  { code: "%y", label: "Year (2-digit)", example: "24" },
+  { code: "%B", label: "Month name", example: "October" },
+  { code: "%b", label: "Month name (short)", example: "Oct" },
+  { code: "%m", label: "Month (2-digit)", example: "10" },
+  { code: "%-m", label: "Month, no leading zero", example: "9" },
+  { code: "%d", label: "Day (2-digit)", example: "18" },
+  { code: "%-d", label: "Day, no leading zero", example: "8" },
+  { code: "%e", label: "Day, space-padded", example: " 8" },
+  { code: "%j", label: "Day of year (3-digit)", example: "291" },
+];
+
+function previewDateFormat(pattern) {
+  if (!pattern || !pattern.trim()) return null;
+  let out = pattern;
+  // Longest codes first so "%-m"/"%-d" aren't partially consumed by a "%m"/"%d" replace first.
+  const ordered = [...DATE_FORMAT_TOKENS].sort((a, b) => b.code.length - a.code.length);
+  for (const { code, example } of ordered) {
+    out = out.split(code).join(example);
+  }
+  return out;
+}
+
+let lastFocusedDateFormatField = null;
+
+function initDateFormatHelpers() {
+  const fieldIds = ["date_format_full", "date_format_month", "date_format_year"];
+  const chipContainer = document.getElementById("dateFormatTokenChips");
+
+  if (chipContainer) {
+    chipContainer.innerHTML = DATE_FORMAT_TOKENS.map(
+      (t) =>
+        `<button type="button" class="btn btn-sm btn-outline-info py-1 px-2" style="font-size: 0.75rem" data-code="${t.code}" title="${t.label} - e.g. ${t.example}">${t.code}</button>`
+    ).join("");
+
+    chipContainer.querySelectorAll("button[data-code]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const target = lastFocusedDateFormatField || document.getElementById("date_format_full");
+        if (!target) return;
+        const code = btn.dataset.code;
+        const start = target.selectionStart ?? target.value.length;
+        const end = target.selectionEnd ?? target.value.length;
+        target.value = target.value.slice(0, start) + code + target.value.slice(end);
+        target.focus();
+        target.selectionStart = target.selectionEnd = start + code.length;
+        target.dispatchEvent(new Event("input", { bubbles: true }));
+      });
+    });
+  }
+
+  fieldIds.forEach((id) => {
+    const field = document.getElementById(id);
+    const preview = document.getElementById(`${id}_preview`);
+    if (!field || !preview) return;
+
+    const defaultText = preview.textContent;
+    const update = () => {
+      const result = previewDateFormat(field.value);
+      preview.textContent = result ? `Matches folder names like: ${result}` : defaultText;
+    };
+
+    field.addEventListener("focus", () => (lastFocusedDateFormatField = field));
+    field.addEventListener("input", update);
+    update();
+  });
+}
 
 async function discoverRclone() {
   const btn = document.getElementById("discoverRcloneBtn");
