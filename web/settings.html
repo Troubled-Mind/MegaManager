@@ -439,7 +439,12 @@
                     <div class="card-body p-4">
                       <div class="alert alert-info py-2 px-3 mb-3 border-0 bg-info bg-opacity-10" style="font-size: 0.78rem">
                         <i class="fas fa-calendar-check me-2"></i> Click a code to insert it into the last-focused field below.
-                        Only these codes are recognised - anything else is matched as literal text, not a date.
+                        Only these codes are recognised - anything else (including any symbols you type) is matched as literal text, not a date.
+                        <br />
+                        You can wrap or separate the codes with any symbols your own folder names actually use, e.g.
+                        <code>[%Y-%m-%d]</code> for folders like <code>[2024-03-05] ...</code>, or
+                        <code>| %Y-%m-%d</code> for folders like <code>... | 2024-03-05</code> - the pattern is searched for
+                        as a substring, so it just needs to appear in your folder names the same way, consistently.
                       </div>
                       <div id="dateFormatTokenChips" class="d-flex flex-column gap-2 mb-3"></div>
                       <div class="row g-3">
