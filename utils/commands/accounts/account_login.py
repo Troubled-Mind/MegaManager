@@ -33,9 +33,14 @@ def run(args=None):
         if result.get("status") != 200:
             overall_status = 500
 
-    # Invalidate stats cache so total quota updates
-    from utils.stats_cache import invalidate_and_refresh_async
-    invalidate_and_refresh_async()
+    # Recompute the stats cache synchronously (not the fire-and-forget
+    # invalidate_and_refresh_async()) so the totals are guaranteed fresh by
+    # the time this HTTP response reaches the client - the frontend re-fetches
+    # them right after this call returns to update the dashboard's used/
+    # available cards, and a fire-and-forget recompute could still be running
+    # when that re-fetch lands, serving the pre-refresh numbers back.
+    from utils.stats_cache import refresh_all_caches
+    refresh_all_caches()
 
     return {
         "status": overall_status,

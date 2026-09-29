@@ -161,6 +161,8 @@ function refreshAccount(id, options = {}) {
       if (dropdownToggle) new mdb.Dropdown(dropdownToggle);
 
       newRow.classList.add("flash-row");
+
+      refreshStatCards();
     })
     .catch((err) => {
       console.error(`Refresh for account ${id} failed:`, err);
@@ -475,6 +477,36 @@ function renderAccountsTable(accounts) {
   }
 }
 
+function updateStatCards(stats) {
+  stats = stats || {};
+  const totalCapacityBytes = stats.cloud_capacity !== undefined ? stats.cloud_capacity : 0;
+  const totalUsedBytes = stats.cloud_used !== undefined ? stats.cloud_used : 0;
+  const totalAvailableBytes =
+    stats.cloud_available !== undefined ? stats.cloud_available : Math.max(0, totalCapacityBytes - totalUsedBytes);
+  const totalAccountsCount = stats.total_accounts !== undefined ? stats.total_accounts : allAccountsData.length;
+
+  const statCapEl = document.getElementById("statTotalCapacity");
+  const statUsedEl = document.getElementById("statTotalUsed");
+  const statAvailEl = document.getElementById("statTotalAvailable");
+  const statAccsEl = document.getElementById("statTotalAccounts");
+
+  if (statCapEl) statCapEl.textContent = formatBytes(totalCapacityBytes);
+  if (statUsedEl) statUsedEl.textContent = formatBytes(totalUsedBytes);
+  if (statAvailEl) statAvailEl.textContent = formatBytes(totalAvailableBytes);
+  if (statAccsEl) statAccsEl.textContent = `${totalAccountsCount.toLocaleString()} Active`;
+}
+
+function refreshStatCards() {
+  return fetch("/run-command", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: `command=account_get_stats`,
+  })
+    .then((res) => res.json())
+    .then((data) => updateStatCards(data.stats))
+    .catch((err) => console.error("Failed to refresh stat cards:", err));
+}
+
 function loadAccountTable() {
   fetch("/run-command", {
     method: "POST",
@@ -486,22 +518,7 @@ function loadAccountTable() {
       const accounts = data.accounts || [];
       allAccountsData = accounts.map((acc) => ({ ...acc, ...computeAccountMeta(acc) }));
 
-      const stats = data.stats || {};
-      const totalCapacityBytes = stats.cloud_capacity !== undefined ? stats.cloud_capacity : 0;
-      const totalUsedBytes = stats.cloud_used !== undefined ? stats.cloud_used : 0;
-      const totalAvailableBytes =
-        stats.cloud_available !== undefined ? stats.cloud_available : Math.max(0, totalCapacityBytes - totalUsedBytes);
-      const totalAccountsCount = stats.total_accounts !== undefined ? stats.total_accounts : accounts.length;
-
-      const statCapEl = document.getElementById("statTotalCapacity");
-      const statUsedEl = document.getElementById("statTotalUsed");
-      const statAvailEl = document.getElementById("statTotalAvailable");
-      const statAccsEl = document.getElementById("statTotalAccounts");
-
-      if (statCapEl) statCapEl.textContent = formatBytes(totalCapacityBytes);
-      if (statUsedEl) statUsedEl.textContent = formatBytes(totalUsedBytes);
-      if (statAvailEl) statAvailEl.textContent = formatBytes(totalAvailableBytes);
-      if (statAccsEl) statAccsEl.textContent = `${totalAccountsCount.toLocaleString()} Active`;
+      updateStatCards(data.stats);
 
       populateAccountFilters();
       applyAccountFilters();
