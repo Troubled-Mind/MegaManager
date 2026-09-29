@@ -47,22 +47,31 @@ class CustomHandler(SimpleHTTPRequestHandler):
         if clean_path == "/api/status":
             try:
                 from database import get_db
-                from models import File
+                from models import File, MegaAccount
                 with get_db() as db_session:
                     active_count = db_session.query(File).filter(File.upload_status == "In Progress").count()
                     queued_count = db_session.query(File).filter(File.upload_status == "Queued").count()
                     uploads_active = (active_count + queued_count) > 0
                     state["uploads_active"] = uploads_active
+
+                    # First-run signal: a brand new install has no accounts and no
+                    # monitored folders configured yet - nudge the user toward
+                    # Settings instead of leaving them on an empty dashboard with
+                    # no indication of what to do next.
+                    account_count = db_session.query(MegaAccount).count()
+                    needs_setup = account_count == 0 and not settings.get("local_paths")
             except Exception:
                 active_count = 0
                 queued_count = 0
                 uploads_active = state.get("uploads_active", False)
+                needs_setup = False
 
             status_payload = {
                 **state,
                 "uploads_active": uploads_active,
                 "active_count": active_count,
-                "queued_count": queued_count
+                "queued_count": queued_count,
+                "needs_setup": needs_setup
             }
             self.send_response(200)
             self.send_header("Content-Type", "application/json")

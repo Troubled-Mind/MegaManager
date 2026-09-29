@@ -15,12 +15,33 @@ document.addEventListener("DOMContentLoaded", () => {
       <span id="updateBannerText"></span>
       <button id="updateBannerDismiss" style="margin-left: 12px; border: none; background: transparent; color: #05202b; font-weight: 700; cursor: pointer;">&times;</button>
     </div>
+    <div id="setupPromptOverlay" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9997; align-items: center; justify-content: center;">
+      <div class="card shadow-4" style="max-width: 480px; margin: 16px;">
+        <div class="card-body p-4">
+          <h5 class="card-title fw-bold">Welcome to MegaManager</h5>
+          <p class="card-text text-muted">
+            No accounts or monitored folders are configured yet. Head to Settings to
+            point MegaManager at your MegaCMD/rclone installs (auto-detect works for
+            most setups) and add the folders you want it to manage.
+          </p>
+          <div class="d-flex justify-content-end gap-2">
+            <button id="setupPromptDismiss" type="button" class="btn btn-sm btn-outline-secondary">Not now</button>
+            <a href="/settings.html" class="btn btn-sm btn-primary">Go to Settings</a>
+          </div>
+        </div>
+      </div>
+    </div>
   `;
   document.body.appendChild(uiOverlay);
 
   document.getElementById("updateBannerDismiss").addEventListener("click", () => {
     document.getElementById("updateBanner").style.display = "none";
     sessionStorage.setItem("mm-update-dismissed", "1");
+  });
+
+  document.getElementById("setupPromptDismiss").addEventListener("click", () => {
+    document.getElementById("setupPromptOverlay").style.display = "none";
+    sessionStorage.setItem("mm-setup-prompt-dismissed", "1");
   });
 
   pollSystemStatus();
@@ -69,6 +90,14 @@ window.pollSystemStatus = function () {
         document.getElementById("updateBannerText").textContent =
           `Updated to v${state.update_version} - restart the server to apply it.`;
         updateBanner.style.display = "block";
+      }
+
+      const setupPrompt = document.getElementById("setupPromptOverlay");
+      const currentPage = window.location.pathname.split("/").pop();
+      const skipPage = currentPage === "settings.html" || currentPage === "login.html";
+      if (setupPrompt && !skipPage) {
+        setupPrompt.style.display =
+          state.needs_setup && sessionStorage.getItem("mm-setup-prompt-dismissed") !== "1" ? "flex" : "none";
       }
     })
     .catch(err => console.error("Status polling failed:", err));

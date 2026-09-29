@@ -5,3 +5,4 @@ database.db
 *.txt
 rclone.conf
 server.log
+.venv/

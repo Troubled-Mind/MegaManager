@@ -13,7 +13,33 @@ Everything runs locally on your machine. A local SQLite database stores your acc
 
 # Requirements and Setup
 
-## MegaCMD
+## Quick start (recommended)
+
+Click `Code -> Download ZIP` at the top of this page to get the latest version, then extract it somewhere on your computer. Open a terminal (macOS/Linux) or double-click a `.bat` file (Windows) in the extracted folder:
+
+**Windows:** double-click `run.bat`
+
+**macOS/Linux:**
+```
+./run.sh
+```
+
+The first run automatically installs everything MegaManager needs - Python dependencies (in a local `.venv`, nothing installed system-wide), [MegaCMD](https://mega.io/cmd), and [rclone](https://rclone.org/) - then starts the server. Every run after that just starts the server; it only re-runs setup if something it needs goes missing.
+
+You can also run setup on its own without starting the server, e.g. to check everything installed correctly: `setup.bat` (Windows) or `./setup.sh` (macOS/Linux).
+
+Once running, open a browser and go to `http://localhost:6342`. Why port 6342? It spells MEGA on a T9 keypad.
+
+On a brand new install with no accounts or monitored folders configured yet, MegaManager will prompt you to visit Settings first.
+
+> [!NOTE]
+> The setup scripts install MegaCMD/rclone via each OS's standard package manager (winget/Chocolatey on Windows, Homebrew on macOS, apt/dnf on Linux) so they land on your system `PATH` automatically - no manual configuration needed afterward. If your distro/package manager isn't covered, the script tells you exactly what it couldn't do and points you at the manual steps below.
+
+## Manual install
+
+If you'd rather install things yourself, or the setup script couldn't handle something on your system:
+
+### MegaCMD
 
 Download and install [MegaCMD](https://mega.io/cmd) for your operating system. MegaManager uses MegaCMD for account management, quota checking, and file indexing.
 
@@ -24,7 +50,7 @@ Common install locations:
 - macOS: `/Applications/MegaCMD.app/Contents/MacOS`
 - Linux: `/usr/bin`
 
-### macOS: "mega-exec: command not found"
+#### macOS: "mega-exec: command not found"
 
 MegaCMD's helper scripts (`mega-login`, `mega-cd`, `mega-ls`, etc.) are one-liners that call `mega-exec` by name, expecting it to be on your `PATH` - they don't reference it by full path. MegaCMD's own installer is supposed to set this up, but it doesn't always run correctly, and even when it does, GUI apps like MegaManager launch with a minimal system `PATH` that doesn't include the MegaCMD app folder. When that happens, every account action fails with something like:
 
@@ -39,9 +65,9 @@ sudo mkdir -p /usr/local/bin
 sudo ln -sf "/Applications/MegaCMD.app/Contents/MacOS/mega-exec" /usr/local/bin/mega-exec
 ```
 
-One symlink is enough - every other `mega-*` helper script just shells out to `mega-exec` internally. Restart MegaManager afterward.
+One symlink is enough - every other `mega-*` helper script just shells out to `mega-exec` internally. Restart MegaManager afterward. (`setup.sh` does this automatically when it installs MegaCMD via Homebrew.)
 
-## rclone
+### rclone
 
 Download and install [rclone](https://rclone.org/downloads/) for your operating system. MegaManager uses rclone for all file uploads. Unlike MegaCMD, rclone maintains an independent session per account, which means multiple accounts can upload simultaneously with no session conflicts.
 
@@ -57,19 +83,13 @@ To install on Linux/macOS in one command:
 sudo -v ; curl https://rclone.org/install.sh | sudo bash
 ```
 
-## Python
+### Python
 
-Download and install [Python](https://www.python.org/downloads/) if you do not already have it.
+Download and install [Python](https://www.python.org/downloads/) 3.9 or newer if you do not already have it.
 
 When installing on Windows, make sure to tick the box labelled "Add Python to PATH". Without this, the commands below will not work.
 
-## MegaManager
-
-Click `Code -> Download ZIP` at the top of this page to get the latest version, then extract it somewhere on your computer.
-
-The application checks for updates on startup and will apply them automatically if a newer version is available. You will be prompted to restart after an update.
-
-## First-time setup
+### Running it manually
 
 Open a terminal, navigate to the folder you extracted MegaManager into, and run:
 
@@ -78,9 +98,7 @@ pip install -r requirements.txt
 python server.py
 ```
 
-Once running, open a browser and go to `http://localhost:6342`.
-
-Why port 6342? It spells MEGA on a T9 keypad.
+The application checks for updates on startup and will apply them automatically if a newer version is available. You will be prompted to restart after an update.
 
 
 # Configuration
