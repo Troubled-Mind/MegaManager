@@ -15,6 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
     applyFileFilters();
   });
   document.getElementById("filterTour")?.addEventListener("change", applyFileFilters);
+  document.getElementById("reuploadAllFlaggedBtn")?.addEventListener("click", reuploadAllFlagged);
   document.getElementById("clearFileFiltersBtn")?.addEventListener("click", () => {
     ["filterLocation", "filterAccount", "filterShow", "filterTour"].forEach((id) => {
       const el = document.getElementById(id);
@@ -324,6 +325,7 @@ function fetchFileDetails(fileId) {
 
 let configuredLocalRoots = [];
 let allFilesData = [];
+let currentFilteredFiles = [];
 
 function computeFileMeta(file) {
   const isLocal = !!file.is_local;
@@ -433,7 +435,37 @@ function applyFileFilters() {
   const activeCount = [locationVal, accountVal, showVal, tourVal].filter((v) => v !== "all").length + (sizeDiscrepancyOnly ? 1 : 0);
   updateFilterBadge("filesFilterActiveBadge", activeCount);
 
+  currentFilteredFiles = filtered;
+  const reuploadBtn = document.getElementById("reuploadAllFlaggedBtn");
+  if (reuploadBtn) {
+    const eligible = filtered.filter((f) => f.is_local && f.is_cloud);
+    reuploadBtn.classList.toggle("d-none", !(sizeDiscrepancyOnly && eligible.length > 0));
+    reuploadBtn.innerHTML = `<i class="fas fa-cloud-upload-alt me-1"></i> Re-upload All Flagged (${eligible.length})`;
+  }
+
   renderFilesTable(filtered);
+}
+
+function reuploadAllFlagged() {
+  const eligible = currentFilteredFiles.filter((f) => f.is_local && f.is_cloud);
+  if (eligible.length === 0) return;
+
+  const btn = document.getElementById("reuploadAllFlaggedBtn");
+  if (btn) btn.disabled = true;
+
+  showToast(`Queuing smart re-upload for ${eligible.length} flagged folder(s)...`, "bg-info");
+
+  // Staggered rather than all at once - each call does its own live quota
+  // check and DB write before handing off to the background upload worker
+  // pool (which has its own concurrency cap), so this just avoids bursting
+  // that many /run-command requests at the exact same instant.
+  eligible.forEach((file, i) => {
+    setTimeout(() => smartReupload(file.id), i * 400);
+  });
+
+  setTimeout(() => {
+    if (btn) btn.disabled = false;
+  }, eligible.length * 400 + 500);
 }
 
 function stripLocalPrefix(path) {
