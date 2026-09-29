@@ -400,18 +400,28 @@ document.addEventListener("DOMContentLoaded", () => {
 // those are the only codes the actual folder-matching logic recognises. Any
 // other "%X" code is matched as literal text, not substituted, so advertising
 // more than this here would just be misleading.
+// Demo date deliberately has a single-digit month and day (5th of March) so
+// the leading-zero vs no-leading-zero codes actually look different from
+// each other - a two-digit demo date like the 18th would make %d and %-d
+// render identically and hide the whole point of the distinction.
 const DATE_FORMAT_TOKENS = [
-  { code: "%Y", label: "Year (4-digit)", example: "2024" },
-  { code: "%y", label: "Year (2-digit)", example: "24" },
-  { code: "%B", label: "Month name", example: "October" },
-  { code: "%b", label: "Month name (short)", example: "Oct" },
-  { code: "%m", label: "Month (2-digit)", example: "10" },
-  { code: "%-m", label: "Month, no leading zero", example: "9" },
-  { code: "%d", label: "Day (2-digit)", example: "18" },
-  { code: "%-d", label: "Day, no leading zero", example: "8" },
-  { code: "%e", label: "Day, space-padded", example: " 8" },
-  { code: "%j", label: "Day of year (3-digit)", example: "291" },
+  { code: "%Y", label: "Long Year", example: "2024", group: "Year" },
+  { code: "%y", label: "Short Year", example: "24", group: "Year" },
+  { code: "%B", label: "Full Month", example: "March", group: "Month" },
+  { code: "%b", label: "Short Month", example: "Mar", group: "Month" },
+  { code: "%m", label: "Month (Leading 0)", example: "03", group: "Month" },
+  { code: "%-m", label: "Month (No Leading 0)", example: "3", group: "Month" },
+  { code: "%d", label: "Day (Leading 0)", example: "05", group: "Day" },
+  { code: "%-d", label: "Day (No Leading 0)", example: "5", group: "Day" },
+  { code: "%e", label: "Day (Space Padded)", example: "\u00A05", group: "Day" },
+  { code: "%j", label: "Day of Year", example: "065", group: "Day" },
 ];
+
+const DATE_FORMAT_GROUP_STYLES = {
+  Year: "btn-outline-info",
+  Month: "btn-outline-warning",
+  Day: "btn-outline-success",
+};
 
 function previewDateFormat(pattern) {
   if (!pattern || !pattern.trim()) return null;
@@ -431,10 +441,26 @@ function initDateFormatHelpers() {
   const chipContainer = document.getElementById("dateFormatTokenChips");
 
   if (chipContainer) {
-    chipContainer.innerHTML = DATE_FORMAT_TOKENS.map(
-      (t) =>
-        `<button type="button" class="btn btn-sm btn-outline-info py-1 px-2" style="font-size: 0.75rem" data-code="${t.code}" title="${t.label} - e.g. ${t.example}">${t.code}</button>`
-    ).join("");
+    const groups = ["Year", "Month", "Day"];
+    chipContainer.innerHTML = groups
+      .map((group) => {
+        const btnClass = DATE_FORMAT_GROUP_STYLES[group];
+        const chips = DATE_FORMAT_TOKENS.filter((t) => t.group === group)
+          .map(
+            (t) => `
+            <button type="button" class="btn btn-sm ${btnClass} px-2 py-1 text-center lh-sm d-flex flex-column align-items-center" style="font-size: 0.75rem" data-code="${t.code}" title="${t.code}">
+              <div class="fw-bold">${t.example}</div>
+              <div class="opacity-75" style="font-size: 0.65rem">${t.label}</div>
+            </button>`
+          )
+          .join("");
+        return `
+          <div class="d-flex align-items-center flex-wrap gap-2">
+            <span class="text-muted small fw-bold" style="min-width: 3.5rem">${group}</span>
+            ${chips}
+          </div>`;
+      })
+      .join("");
 
     chipContainer.querySelectorAll("button[data-code]").forEach((btn) => {
       btn.addEventListener("click", () => {
