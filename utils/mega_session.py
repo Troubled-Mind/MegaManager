@@ -47,8 +47,13 @@ def _do_login(email, password):
     for attempt in range(1, 4):
         try:
             print(f"INFO Logging in as {email} (attempt {attempt}/3)...")
+            # "--" stops mega-login's own option parser from reading the
+            # password positionally - without it, a password starting with
+            # "-" (e.g. randomly-generated ones from bulk import/registration)
+            # gets split into a cluster of single-letter flags and rejected
+            # with "Invalid argument", one per character.
             login_res = subprocess.run(
-                [cmd("mega-login"), email, password],
+                [cmd("mega-login"), "--", email, password],
                 capture_output=True, text=True, timeout=30
             )
 
