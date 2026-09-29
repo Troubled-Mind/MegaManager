@@ -1,7 +1,9 @@
 # Launches MegaManager. Runs setup.ps1 automatically first if the virtual
-# environment or dependencies aren't there yet.
+# environment or dependencies aren't there yet, then opens your browser to it.
 
 Set-Location -Path $PSScriptRoot
+
+$url = "http://localhost:6342"
 
 function Test-Command($name) {
     return [bool](Get-Command $name -ErrorAction SilentlyContinue)
@@ -33,4 +35,26 @@ if (-not (Test-Path ".venv\Scripts\python.exe")) {
     exit 1
 }
 
-& .venv\Scripts\python.exe server.py
+$serverProcess = Start-Process -FilePath (Resolve-Path ".venv\Scripts\python.exe") -ArgumentList "server.py" -NoNewWindow -PassThru
+
+# Account quota syncing and other startup work happens in the background once
+# the server is up - it doesn't block the server from accepting connections,
+# so we don't need to wait for it, just for the HTTP port itself to respond.
+Write-Host "==> Waiting for MegaManager to come up..." -ForegroundColor Green
+$ready = $false
+for ($i = 0; $i -lt 30; $i++) {
+    Start-Sleep -Seconds 1
+    try {
+        Invoke-WebRequest -Uri "$url/api/version" -UseBasicParsing -TimeoutSec 2 | Out-Null
+        $ready = $true
+        break
+    } catch {}
+}
+
+if ($ready) {
+    Start-Process $url
+} else {
+    Write-Host "WARNING MegaManager didn't respond within 30s - open $url manually once it's ready." -ForegroundColor Yellow
+}
+
+Wait-Process -Id $serverProcess.Id

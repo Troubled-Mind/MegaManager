@@ -24,11 +24,11 @@ Click `Code -> Download ZIP` at the top of this page to get the latest version, 
 ./run.sh
 ```
 
-The first run automatically installs everything MegaManager needs - Python dependencies (in a local `.venv`, nothing installed system-wide), [MegaCMD](https://mega.io/cmd), and [rclone](https://rclone.org/) - then starts the server. Every run after that just starts the server; it only re-runs setup if something it needs goes missing.
+The first run automatically installs everything MegaManager needs - Python dependencies (in a local `.venv`, nothing installed system-wide), [MegaCMD](https://mega.io/cmd), and [rclone](https://rclone.org/) - then starts the server and opens your default browser to it. Every run after that just starts the server; it only re-runs setup if something it needs goes missing.
 
 You can also run setup on its own without starting the server, e.g. to check everything installed correctly: `setup.bat` (Windows) or `./setup.sh` (macOS/Linux).
 
-Once running, open a browser and go to `http://localhost:6342`. Why port 6342? It spells MEGA on a T9 keypad.
+If your browser doesn't open automatically (e.g. headless/no display), go to `http://localhost:6342` yourself. Why port 6342? It spells MEGA on a T9 keypad.
 
 On a brand new install with no accounts or monitored folders configured yet, MegaManager will prompt you to visit Settings first.
 
