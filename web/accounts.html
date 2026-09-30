@@ -72,27 +72,17 @@
           <p class="text-muted mb-0 small">Manage cloud profiles and monitor storage health.</p>
         </div>
         <div class="d-flex flex-wrap gap-2 align-items-center">
-          <button
-            class="btn btn-outline-secondary"
-            id="addNewAccountsBtn"
-            title="Import accounts from CSV"
-          >
+          <button class="btn btn-outline-secondary" id="exportAccountsBtn" title="Export accounts to CSV">
+            <i class="fas fa-file-export me-1"></i> Export
+          </button>
+          <button class="btn btn-outline-secondary" id="addNewAccountsBtn" title="Import accounts from CSV">
             <i class="fas fa-file-csv me-1"></i> Import
           </button>
-          <button
-            class="btn btn-outline-secondary"
-            id="newAccountBtn"
-            title="Register a new Mega Account"
-          >
+          <button class="btn btn-outline-secondary" id="newAccountBtn" title="Register a new Mega Account">
             <i class="fas fa-plus me-1"></i> New
           </button>
           <div class="vr mx-1 opacity-25 d-none d-sm-block"></div>
-          <button
-            id="refreshAllBtn"
-            class="btn btn-danger"
-            onclick="refreshAllAccounts()"
-            title="Refresh quota and login status for every account"
-          >
+          <button id="refreshAllBtn" class="btn btn-danger" onclick="refreshAllAccounts()" title="Refresh quota and login status for every account">
             <i class="fas fa-sync-alt me-1" id="refreshAllIcon"></i> Refresh All
           </button>
         </div>
@@ -260,6 +250,26 @@
         </div>
       </div>
     </section>
+    <!-- Bulk-action toolbar — floats above table, visible only when rows are selected -->
+    <div id="bulkActionBar" class="container-fluid px-3 px-md-4 mb-2" style="display:none;">
+      <div class="d-flex align-items-center gap-3 px-4 py-2 rounded-3"
+           style="background:rgba(220,53,69,0.12);border:1px solid rgba(220,53,69,0.3);">
+        <span class="fw-semibold text-danger small">
+          <span id="bulkSelectedCount">0</span> selected
+        </span>
+        <div class="d-flex gap-2 ms-auto">
+          <button class="btn btn-sm btn-outline-secondary" onclick="exportSelectedCSV()">
+            <i class="fas fa-file-export me-1"></i> Export selected
+          </button>
+          <button class="btn btn-sm btn-danger" onclick="confirmBulkDelete()">
+            <i class="fas fa-trash-alt me-1"></i> Delete selected
+          </button>
+          <button class="btn btn-sm btn-outline-secondary" onclick="clearSelection()">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+    </div>
 
     <section class="container-fluid px-3 px-md-4 mb-5">
       <div class="card shadow-lg overflow-hidden">
@@ -268,7 +278,10 @@
             <table id="accountTable" class="table table-hover table-striped align-middle mb-0">
               <thead>
                 <tr>
-                  <th style="display: none">StaleFlag</th>
+              <th style="width:40px;">
+                <input type="checkbox" id="selectAllCheckbox" class="form-check-input" title="Select all">
+              </th>
+              <th style="display: none">StaleFlag</th>
                   <th>ID</th>
                   <th><i class="fas fa-envelope me-1"></i> Email</th>
                   <th><i class="fas fa-key me-1"></i> Password</th>
@@ -288,6 +301,29 @@
       </div>
     </section>
 
+    <!-- Bulk-delete confirmation modal -->
+    <div class="modal fade" id="bulkDeleteModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title"><i class="fas fa-trash-alt text-danger me-2"></i>Delete selected accounts</h5>
+            <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p id="bulkDeleteModalBody">Are you sure you want to delete the selected accounts?</p>
+            <small class="text-warning d-block mt-2">
+              No cloud data will be deleted — only local references will be removed from Mega Manager.
+            </small>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-outline-secondary" data-mdb-dismiss="modal">Cancel</button>
+            <button class="btn btn-danger" id="confirmBulkDeleteBtn">
+              <i class="fas fa-trash-alt me-1"></i> Delete <span id="confirmBulkDeleteCount"></span> accounts
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
     <!-- Delete account modal -->
     <div
       class="modal fade"
@@ -296,43 +332,6 @@
       aria-labelledby="deleteAccountModalLabel"
       aria-hidden="true"
     >
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="deleteAccountModalLabel">
-              Confirm Account Deletion
-            </h5>
-            <button
-              type="button"
-              class="btn-close"
-              data-mdb-dismiss="modal"
-              aria-label="Close"
-            ></button>
-          </div>
-          <div class="modal-body">
-            <p id="deleteAccountModalBody"></p>
-            <small class="text-warning d-block mt-3">
-              This action will remove all linked files from this program, but
-              they will remain in your MEGA cloud drive.
-              <br />
-              No cloud data will be deleted - only local references will be
-              lost.
-            </small>
-          </div>
-          <div class="modal-footer">
-            <button
-              type="button"
-              class="btn btn-outline-secondary"
-              data-mdb-dismiss="modal"
-            >
-              Cancel
-            </button>
-            <button type="button" id="confirmDeleteBtn" class="btn btn-danger">
-              Delete Account
-            </button>
-          </div>
-        </div>
-      </div>
     </div>
     <!-- Verify account modal -->
     <div

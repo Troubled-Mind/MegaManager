@@ -58,6 +58,23 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Export all accounts as CSV
+  document.getElementById("exportAccountsBtn")?.addEventListener("click", exportAccountsCSV);
+
+  // Bulk-delete confirmation modal
+  document.getElementById("confirmBulkDeleteBtn")?.addEventListener("click", executeBulkDelete);
+
+  // Select-all checkbox (delegates to per-row checkboxes)
+  document.getElementById("selectAllCheckbox")?.addEventListener("change", (e) => {
+    const checked = e.target.checked;
+    document.querySelectorAll(".row-select-checkbox").forEach((cb) => {
+      cb.checked = checked;
+      const id = parseInt(cb.dataset.id);
+      if (checked) selectedIds.add(id); else selectedIds.delete(id);
+    });
+    updateBulkBar();
+  });
+
   initFilterPanel("accountsFilterToggle", "accountsFilterPanel", "accountsFilterChevron");
 
   ["filterAccountPicker", "filterStatus", "filterType", "filterActivity"].forEach((id) => {
@@ -325,6 +342,11 @@ function createAccountRowHTML(acc, isStale = false) {
   const staleFlag = isStale ? 1 : 0;
 
   return `
+ <td class="text-center" style="width:40px;" onclick="event.stopPropagation()">
+   <input type="checkbox" class="form-check-input row-select-checkbox" data-id="${acc.id}"
+     ${selectedIds.has(acc.id) ? "checked" : ""}
+     onchange="(function(cb){const id=parseInt(cb.dataset.id);if(cb.checked)selectedIds.add(id);else selectedIds.delete(id);updateBulkBar();})(this)">
+ </td>
  <td style="display: none !important;">${staleFlag}</td>
  <td class="text-muted small fw-bold">#${acc.id}</td>
  <td class="fw-bold">
@@ -455,17 +477,22 @@ function renderAccountsTable(accounts) {
   tbody.innerHTML = staleRowsHtml + recentRowsHtml;
   tbody.querySelectorAll(".dropdown-toggle").forEach((toggle) => new mdb.Dropdown(toggle));
 
-  $("#accountTable").DataTable({
+  const dt = $("#accountTable").DataTable({
     responsive: true,
     lengthMenu: [50, 100, 250, 500, 1000],
-    order: [[0, "desc"]],
+    order: [[1, "desc"]],
     columnDefs: [
-      {
-        targets: 0,
-        visible: false,
-        searchable: false,
-      },
+      { targets: 0, orderable: false, searchable: false },
+      { targets: 1, visible: false, searchable: false },
     ],
+  });
+
+  // Re-apply checked state after every DataTable page/sort/search redraw.
+  dt.on("draw", () => {
+    document.querySelectorAll(".row-select-checkbox").forEach((cb) => {
+      cb.checked = selectedIds.has(parseInt(cb.dataset.id));
+    });
+    updateBulkBar();
   });
 
   const countEl = document.getElementById("accountsFilterResultCount");
@@ -1282,5 +1309,120 @@ async function emptyTrash(accountId, email) {
   } catch (error) {
     console.error("Error emptying trash:", error);
     showToast("An error occurred", "danger");
+  }
+}
+// ── Selection state ─────────────────────────────────────────────────────────
+
+const selectedIds = new Set();
+
+function updateBulkBar() {
+  const bar = document.getElementById("bulkActionBar");
+  const countEl = document.getElementById("bulkSelectedCount");
+  const n = selectedIds.size;
+  if (bar) bar.style.display = n > 0 ? "block" : "none";
+  if (countEl) countEl.textContent = n;
+  // Keep select-all checkbox in sync
+  const selectAll = document.getElementById("selectAllCheckbox");
+  if (selectAll) {
+    const total = document.querySelectorAll(".row-select-checkbox").length;
+    selectAll.checked = total > 0 && n === total;
+    selectAll.indeterminate = n > 0 && n < total;
+  }
+}
+
+function clearSelection() {
+  selectedIds.clear();
+  document.querySelectorAll(".row-select-checkbox").forEach((cb) => (cb.checked = false));
+  const selectAll = document.getElementById("selectAllCheckbox");
+  if (selectAll) { selectAll.checked = false; selectAll.indeterminate = false; }
+  updateBulkBar();
+}
+
+// ── Export ───────────────────────────────────────────────────────────────────
+
+async function exportAccountsCSV() {
+  await _doExportCSV([...allAccountsData.map((a) => a.id)], "mega_accounts_all.csv");
+}
+
+async function exportSelectedCSV() {
+  if (selectedIds.size === 0) return;
+  await _doExportCSV([...selectedIds], `mega_accounts_selected_${[...selectedIds].join("-")}.csv`);
+}
+
+async function _doExportCSV(ids, filename) {
+  try {
+    // Filter from cached data — no extra round-trip needed.
+    const rows = allAccountsData.filter((a) => ids.includes(a.id));
+    if (rows.length === 0) { showToast("No accounts to export.", "warning"); return; }
+
+    const lines = ["Email,Password"];
+    rows.forEach((a) => {
+      // Wrap fields in quotes; escape any literal quotes inside values.
+      const email = `"${String(a.email || "").replace(/"/g, '""')}"`;
+      const pw    = `"${String(a.password || "").replace(/"/g, '""')}"`;
+      lines.push(`${email},${pw}`);
+    });
+
+    const blob = new Blob([lines.join("\r\n")], { type: "text/csv;charset=utf-8;" });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast(`✅ Exported ${rows.length} account(s) to ${filename}`, "success");
+  } catch (err) {
+    console.error("CSV export failed:", err);
+    showToast("Export failed: " + err.message, "danger");
+  }
+}
+
+// ── Bulk delete ───────────────────────────────────────────────────────────────
+
+function confirmBulkDelete() {
+  const n = selectedIds.size;
+  if (n === 0) return;
+  const bodyEl = document.getElementById("bulkDeleteModalBody");
+  const countEl = document.getElementById("confirmBulkDeleteCount");
+  if (bodyEl) {
+    bodyEl.innerHTML = `You are about to permanently remove <strong>${n} account${n === 1 ? "" : "s"}</strong> from Mega Manager.<br><br>
+    <span class="text-muted small">No MEGA cloud data will be deleted — only local references and linked file records will be removed.</span>`;
+  }
+  if (countEl) countEl.textContent = n;
+  const modal = mdb.Modal.getInstance(document.getElementById("bulkDeleteModal")) ||
+                new mdb.Modal(document.getElementById("bulkDeleteModal"));
+  modal.show();
+}
+
+async function executeBulkDelete() {
+  const ids = [...selectedIds];
+  if (ids.length === 0) return;
+
+  const modal = mdb.Modal.getInstance(document.getElementById("bulkDeleteModal"));
+  const btn = document.getElementById("confirmBulkDeleteBtn");
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Deleting…'; }
+
+  try {
+    const res = await fetch("/run-command", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ command: "account_bulk_delete", args: ids.join(",") }),
+    });
+    const data = await res.json();
+    if (modal) modal.hide();
+    if (data.status === 200) {
+      showToast(`✅ ${data.message}`, "success");
+      clearSelection();
+      loadAccountTable();
+    } else {
+      showToast("❌ " + (data.message || "Bulk delete failed"), "danger");
+    }
+  } catch (err) {
+    console.error("Bulk delete error:", err);
+    showToast("❌ Request failed: " + err.message, "danger");
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-trash-alt me-1"></i> Delete <span id="confirmBulkDeleteCount"></span> accounts'; }
   }
 }
