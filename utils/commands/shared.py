@@ -1,10 +1,16 @@
 import os
 import re
+import unicodedata
 import json
 import subprocess
 from utils.config import settings, cmd
 from database import get_db
 from models import File
+
+def _nfc(s):
+    """NFC-normalise a string — covers all Unicode (umlauts, Japanese, accents, etc.)."""
+    return unicodedata.normalize('NFC', s) if s else s
+
 
 BYTE_MULTIPLIERS = {
     "B":1,
@@ -153,11 +159,13 @@ def _size_within_tolerance(a, b, size_tolerance=0.005, min_tolerance_bytes=1024 
 def match_local_to_cloud(session, l_path, l_folder_name, l_max_file_size):
     """Find an existing MEGA-only File row corresponding to a local release folder.
 
-    Tries an exact folder/file name match first (fast path for already-conforming
-    content), then falls back to matching within the same Show/Venue scope by comparing
-    the local folder's largest single file against each cloud candidate's size
-    (exact byte match preferred, small tolerance as a fallback safety margin).
+    Tries an exact folder-name match first (NFC-normalised on both sides so
+    macOS NFD filenames match MEGA's NFC names), then falls back to matching
+    within the same Show/Venue scope by comparing the local folder's largest
+    single file against each cloud candidate's size.
     """
+    l_folder_name = _nfc(l_folder_name)
+
     existing = session.query(File).filter(
         File.m_folder_name == l_folder_name,
         File.l_path == None
@@ -165,10 +173,19 @@ def match_local_to_cloud(session, l_path, l_folder_name, l_max_file_size):
     if existing:
         return existing
 
+    # NFC fallback: entries written before normalisation may be NFD in the DB.
+    # Limit to the same Show/Venue scope to avoid a full-table scan.
+    scope = strip_local_base(l_path, get_local_paths())
+    if scope:
+        for cand in session.query(File).filter(
+            File.l_path == None, File.m_path == scope
+        ).all():
+            if _nfc(cand.m_folder_name or '') == l_folder_name:
+                return cand
+
     if not l_max_file_size:
         return None
 
-    scope = strip_local_base(l_path, get_local_paths())
     if not scope:
         return None
 
@@ -197,10 +214,11 @@ def match_local_to_cloud(session, l_path, l_folder_name, l_max_file_size):
 def match_cloud_to_local(session, m_path, m_folder_name, m_size_bytes=None):
     """Find an existing local-only File row corresponding to a cloud item.
 
-    Mirror of match_local_to_cloud, used while indexing MEGA content. m_size_bytes is
-    frequently unavailable at scan time (cloud sizes are only fetched on demand via
-    "Update Details"), in which case only the exact-name fast path applies.
+    Mirror of match_local_to_cloud. NFC-normalises both sides so macOS NFD
+    local names match MEGA's NFC cloud names.
     """
+    m_folder_name = _nfc(m_folder_name)
+
     existing = session.query(File).filter(
         File.l_folder_name == m_folder_name,
         File.m_path == None
@@ -208,14 +226,22 @@ def match_cloud_to_local(session, m_path, m_folder_name, m_size_bytes=None):
     if existing:
         return existing
 
-    if not m_size_bytes:
-        return None
-
+    # NFC fallback for pre-existing NFD entries scoped to the same path.
     local_paths = get_local_paths()
     candidate_l_paths = [
         os.path.join(base.rstrip(os.sep), m_path.lstrip("/").replace("/", os.sep))
         for base in local_paths
     ]
+    if candidate_l_paths:
+        for cand in session.query(File).filter(
+            File.m_path == None, File.l_path.in_(candidate_l_paths)
+        ).all():
+            if _nfc(cand.l_folder_name or '') == m_folder_name:
+                return cand
+
+    if not m_size_bytes:
+        return None
+
     if not candidate_l_paths:
         return None
 
@@ -233,6 +259,8 @@ def match_cloud_to_local(session, m_path, m_folder_name, m_size_bytes=None):
         if best is None and _size_within_tolerance(cand_size, m_size_bytes):
             best = cand
     return best
+
+
 
 def get_account_files(account_id):
     """Call mega-find to get all paths, extract root dated folders and add to the files table."""
@@ -261,9 +289,8 @@ def get_account_files(account_id):
         added = 0
         updated = 0
 
-        for folder in root_dated_folders:
             path, folder_name = os.path.split(folder.rstrip("/"))
-            normalized_folder_name = folder_name.strip()
+            folder_name = _nfc(folder_name.strip())   # normalise + fix dead-code bug (was using un-stripped name)
 
             existing = session.query(File).filter_by(m_path=path, m_folder_name=folder_name).first()
             if existing:

@@ -472,6 +472,38 @@
                       </div>
                     </div>
                   </div>
+
+                  <!-- Ignored Files Card -->
+                  <div
+                    class="card shadow-sm border border-white border-opacity-10"
+                    style="background: rgba(18, 20, 29, 0.75); backdrop-filter: blur(16px); border-radius: 14px"
+                  >
+                    <div class="card-header border-bottom border-white border-opacity-10 bg-transparent py-3 px-4">
+                      <h5 class="fw-bold mb-0 text-white">
+                        <i class="fas fa-ban text-warning me-2"></i> Ignored Files
+                      </h5>
+                      <p class="text-muted small mb-0 mt-1">
+                        Filenames (or glob patterns like <code>*.txt</code>) excluded from size calculations and sync comparisons.
+                        <code>.DS_Store</code>, <code>Thumbs.db</code> and macOS resource forks are always ignored.
+                      </p>
+                    </div>
+                    <div class="card-body p-4">
+                      <div class="alert alert-info py-2 px-3 mb-3 border-0 bg-info bg-opacity-10" style="font-size: 0.78rem">
+                        <i class="fas fa-info-circle me-1"></i>
+                        One entry per line. Exact names (<code>notes.txt</code>) or glob patterns (<code>*.txt</code>, <code>._*</code>).
+                        Matching files won't count toward folder size — useful for personal trade notes that only exist locally.
+                      </div>
+                      <label class="form-label text-muted small fw-bold">Ignored Filenames / Patterns</label>
+                      <textarea
+                        id="ignored_filenames"
+                        class="form-control bg-transparent font-monospace small"
+                        rows="5"
+                        placeholder="notes.txt&#10;*.txt&#10;._*"
+                        style="border-color: rgba(255,255,255,0.15); resize: vertical"
+                      ></textarea>
+                    </div>
+                  </div>
+
                 </div>
               </div>
 

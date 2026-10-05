@@ -12,7 +12,7 @@ def run(args=None):
     if not isinstance(args, dict):
         return {"status": 400, "message": "Invalid data format"}, 400
 
-    valid_keys = {"app_password", "megacmd_path", "rclone_path", "mega_email", "mega_passwords", "local_paths", "date_format_full", "date_format_month", "date_format_year", "login_max_attempts"}
+    valid_keys = {"app_password", "megacmd_path", "rclone_path", "mega_email", "mega_passwords", "local_paths", "ignored_filenames", "date_format_full", "date_format_month", "date_format_year", "login_max_attempts"}
     updates = []
 
     with get_db() as session:
@@ -20,8 +20,8 @@ def run(args=None):
             for key in valid_keys:
                 if key in args:
                     value = args[key]
-                    if key == "local_paths":
-                        value = json.dumps(value)  # convert list to JSON string
+                    if key in ("local_paths", "ignored_filenames"):
+                        value = json.dumps(value) if isinstance(value, list) else value
                     elif key == "megacmd_path" and value:
                         clean_val = os.path.expandvars(os.path.expanduser(str(value).strip()))
                         if os.path.isfile(clean_val) or os.path.basename(clean_val).startswith("mega-cmd"):

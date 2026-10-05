@@ -1,5 +1,13 @@
 # MegaManager Changes
 
+## 1.3.2 - Bug Fixes
+
+- Fixed local/cloud folder matching failing for folders containing non-ASCII characters (e.g. umlauts, accented letters) due to macOS using NFD Unicode and MEGA using NFC. All folder names are now normalised before comparison.
+- Fixed renamed folders (e.g. after BootlegOrganiser removes a trailing space) causing the local collection to appear doubled. Stale local entries are now cleared on each re-index.
+- Fixed `.DS_Store`, `Thumbs.db` and macOS resource forks being counted toward local folder size, causing false size mismatches with cloud.
+- Added configurable ignored filenames/patterns in Settings (Folders tab). Supports exact names and glob patterns (e.g. `*.txt`). Useful for local-only note files that shouldn't affect sync comparisons.
+
+
 ## 1. ✅ Password Update Feature
 
 **Added:** Account password update functionality

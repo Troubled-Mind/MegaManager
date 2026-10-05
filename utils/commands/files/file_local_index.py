@@ -1,11 +1,45 @@
+import unicodedata
+import fnmatch
 import os
 import json
+import threading
 from utils.commands.shared import extract_root_dated_folders, match_local_to_cloud
 from models import File  # unified `files` table
 from database import get_db
 from utils.config import settings
 
-import threading
+# Always-ignored system/metadata files (added on top of user-configured list).
+_SYSTEM_IGNORED = {'.DS_Store', 'Thumbs.db', 'desktop.ini', '.localized'}
+
+def _ignored_patterns():
+    """Return the combined set of ignore patterns from settings + system defaults."""
+    raw = settings.get("ignored_filenames", "[]")
+    try:
+        user = json.loads(raw) if isinstance(raw, str) else (raw or [])
+    except Exception:
+        user = []
+    return list(_SYSTEM_IGNORED) + [p for p in user if p]
+
+def _is_ignored_file(name):
+    """True when a filename matches any system default or user-configured pattern."""
+    if name.startswith('._'):   # macOS resource forks
+        return True
+    for pat in _ignored_patterns():
+        if fnmatch.fnmatch(name, pat) or name == pat:
+            return True
+    return False
+
+def _is_ignored_dir(name):
+    """Directories whose names match any ignore pattern are skipped entirely."""
+    for pat in _ignored_patterns():
+        if fnmatch.fnmatch(name, pat) or name == pat:
+            return True
+    return False
+
+def _nfc(s):
+    """NFC-normalise a string — covers all Unicode, not just umlauts."""
+    return unicodedata.normalize('NFC', s) if s else s
+
 
 def run(args=None):
     """Index folders from local paths into the files table in a background thread."""
@@ -45,6 +79,7 @@ def index_folders_in_background(local_paths):
 
             for full_path in root_folders:
                 base_path, folder_name = os.path.split(full_path.rstrip("/"))
+                folder_name = _nfc(folder_name)
                 folder_size = calculate_folder_size(full_path)
                 max_file_size = calculate_folder_max_file_size(full_path)
 
@@ -76,8 +111,25 @@ def index_folders_in_background(local_paths):
                 ))
                 new_count += 1
 
+            # Stale-entry sweep: clear local fields for entries whose disk path no
+            # longer exists (e.g. after BootlegOrganiser renames a folder).
+            # Scoped to configured local_paths so offline/unmounted drives are safe.
+            local_prefixes = tuple(p.rstrip(os.sep) + os.sep for p in local_paths)
+            stale_count = 0
+            for entry in session.query(File).filter(File.l_path != None).all():
+                if not any(entry.l_path.startswith(pfx.rstrip(os.sep)) for pfx in local_prefixes):
+                    continue
+                full = os.path.join(entry.l_path, entry.l_folder_name or "")
+                if not os.path.exists(full):
+                    entry.l_path = None
+                    entry.l_folder_name = None
+                    entry.l_folder_size = None
+                    entry.l_largest_file_size = None
+                    session.add(entry)
+                    stale_count += 1
+
             session.commit()
-            print(f"Background indexing done. {new_count} new, {linked_count} linked, {updated_count} updated.")
+            print(f"Background indexing done. {new_count} new, {linked_count} linked, {updated_count} updated, {stale_count} stale cleared.")
 
             from utils.stats_cache import invalidate_and_refresh_async
             invalidate_and_refresh_async()
@@ -87,10 +139,13 @@ def index_folders_in_background(local_paths):
 
 
 def calculate_folder_size(path):
-    """Return folder size in bytes."""
+    """Return folder size in bytes, excluding OS metadata and {ne}-tagged files."""
     total_size = 0
-    for dirpath, _, filenames in os.walk(path):
+    for dirpath, dirs, filenames in os.walk(path):
+        dirs[:] = [d for d in dirs if not _is_ignored_dir(d)]
         for filename in filenames:
+            if _is_ignored_file(filename):
+                continue
             fp = os.path.join(dirpath, filename)
             try:
                 if os.path.exists(fp):
@@ -100,11 +155,15 @@ def calculate_folder_size(path):
     return total_size
 
 
+
 def calculate_folder_max_file_size(path):
-    """Return the size in bytes of the largest single file within a folder."""
+    """Return the size in bytes of the largest single file, excluding metadata/ignored files."""
     max_size = 0
-    for dirpath, _, filenames in os.walk(path):
+    for dirpath, dirs, filenames in os.walk(path):
+        dirs[:] = [d for d in dirs if not _is_ignored_dir(d)]
         for filename in filenames:
+            if _is_ignored_file(filename):
+                continue
             fp = os.path.join(dirpath, filename)
             try:
                 if os.path.exists(fp):
@@ -114,13 +173,14 @@ def calculate_folder_max_file_size(path):
     return max_size
 
 
+
 def collect_all_subfolders(base_paths):
-    """Recursively collect all subfolders under the given paths."""
+    """Recursively collect all subfolders under the given paths, skipping {ne} dirs."""
     print("Collecting all subfolders...")
     all_paths = []
     for base in base_paths:
         for root, dirs, _ in os.walk(base):
+            dirs[:] = [d for d in dirs if not _is_ignored_dir(d)]
             for d in dirs:
-                folder_path = os.path.join(root, d)
-                all_paths.append(folder_path)
+                all_paths.append(os.path.join(root, d))
     return all_paths

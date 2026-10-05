@@ -121,6 +121,17 @@ async function loadSettings(repeater) {
     });
   }
 
+  // Handle ignored_filenames — stored as JSON array, displayed as newline-separated text
+  let ignoredFilenames = data.ignored_filenames;
+  if (typeof ignoredFilenames === "string") {
+    try { ignoredFilenames = JSON.parse(ignoredFilenames); } catch (e) { ignoredFilenames = []; }
+  }
+  const ignoredTextarea = document.getElementById("ignored_filenames");
+  if (ignoredTextarea && Array.isArray(ignoredFilenames)) {
+    ignoredTextarea.value = ignoredFilenames.join("\n");
+  }
+
+
   testMegaCmd(true);
   testRclone(true);
   updateSecurityStatus();
@@ -353,6 +364,10 @@ document.getElementById("settingsForm").addEventListener("submit", async (e) => 
     local_paths: Array.from(document.querySelectorAll('input[name^="folder_paths"][name$="[local_paths]"]'))
       .map((el) => el.value)
       .filter((v) => v.trim() !== ""),
+    ignored_filenames: (document.getElementById("ignored_filenames")?.value || "")
+      .split("\n")
+      .map((s) => s.trim())
+      .filter((s) => s !== ""),
   };
 
   const response = await fetch("/run-command", {
