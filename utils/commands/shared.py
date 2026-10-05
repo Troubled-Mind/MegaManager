@@ -54,15 +54,20 @@ def strip_local_base(full_path, local_paths):
 
     Requires a path-separator boundary at the match (not just a string prefix), so a
     root like "/mnt/media" doesn't falsely match a sibling directory "/mnt/media2/...".
+
+    Normalises backslashes to forward slashes before comparing so that Windows-style
+    paths in settings (e.g. E:\\Musicals) match regardless of which slash style the
+    caller supplies.
     """
+    norm_full = full_path.replace("\\", "/").rstrip("/")
     for local_base in local_paths:
-        base = local_base.rstrip(os.sep)
+        base = local_base.replace("\\", "/").rstrip("/")
         if not base:
             continue
-        if full_path == base:
+        if norm_full == base:
             return "/"
-        if full_path.startswith(base + os.sep):
-            return "/" + full_path[len(base):].lstrip(os.sep)
+        if norm_full.startswith(base + "/"):
+            return "/" + norm_full[len(base):].lstrip("/")
     return None
 
 def strftime_to_regex(fmt):
@@ -114,10 +119,16 @@ def extract_root_dated_folders(paths):
     root_folders = set()
 
     for path in paths:
-        parts = path.strip("/").split("/")
+        # Normalise to forward-slashes internally; track whether this was a
+        # Unix-absolute path so we restore the leading '/' on MEGA cloud paths
+        # without wrongly prepending one to Windows local paths (e.g. E:\...).
+        norm = path.replace("\\", "/")
+        is_unix_abs = norm.startswith("/")
+        parts = [p for p in norm.split("/") if p]  # drop empty segments
         for i in range(len(parts)):
             if combined_pattern.search(parts[i]):
-                root_folder = "/" + "/".join(parts[:i + 1])
+                joined = "/".join(parts[:i + 1])
+                root_folder = ("/" + joined) if is_unix_abs else joined.replace("/", os.sep)
                 root_folders.add(root_folder)
                 break
 
