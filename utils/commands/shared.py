@@ -289,6 +289,7 @@ def get_account_files(account_id):
         added = 0
         updated = 0
 
+        for folder in root_dated_folders:
             path, folder_name = os.path.split(folder.rstrip("/"))
             folder_name = _nfc(folder_name.strip())   # normalise + fix dead-code bug (was using un-stripped name)
 
@@ -298,7 +299,7 @@ def get_account_files(account_id):
                 continue
 
             # Try to match a local-only entry by name, or by same Show/Venue scope + size
-            fallback = match_cloud_to_local(session, path, normalized_folder_name, None)
+            fallback = match_cloud_to_local(session, path, folder_name, None)
 
             if fallback:
                 print(f"INFO Updating local-only entry to MEGA: {folder}")
